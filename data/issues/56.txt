@@ -1,0 +1,6 @@
+Can't override hostname for route
+due to #54 I renamed my ArgoCD instance from "argocd" to "argocdinstance". This then causes the default route hostname to change from argocd-server-argocd.apps.my.cluster to argocdinstance-server-argocd.apps.my.cluster. According to the [docs](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#server-options), it should be possible to set the route hostname via spec.server.host, but this doesn't seem to impact the hostname of the exposed route.
+Thanks for pointing this out @wrichter, I have a fix for this in the works.
+Thanks by the way for the awesome operator :-) 
+Thanks for the kind words! I just merged #58 that will fix the issue that forced you to change the name of the cluster. Using `argocd` for the cluster name will be supported once again. In addion to that I am working on fixing the issue that prevents overriding the hostname on the Route. 
+Released in v0.0.8

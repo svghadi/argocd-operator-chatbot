@@ -1,0 +1,12 @@
+Utilize a standardized ClusterInventory API for the automatic import of clusters into ArgoCD
+**Is your feature request related to a problem? Please describe.**
+There are several community multicluster platforms that have the concept of a cluster inventory or cluster registry. When a user installs the argocd-operator, it would be beneficial to have an option that enables automatic importing of all these clusters into ArgoCD. This way, users wouldn't have to add them manually one by one.
+
+**Describe the solution you'd like**
+The k8s multicluster-SIG community is working on a plan to introduce a standardized ClusterInventory API. This API aims to facilitate the interaction between various multicluster platforms and third-party consumers like ArgoCD. By adopting this new API, the ArgoCD operator will be able to automatically import clusters into ArgoCD without the need to reference other third-party APIs.
+
+**Describe alternatives you've considered**
+Although scripting the import of clusters is possible, it's not user friendly.
+
+**Additional context**
+[Cluster Inventory API](https://docs.google.com/document/d/1sUWbe81BTclQ4Uax3flnCoKtEWngH-JA9MyCqljJCBM)

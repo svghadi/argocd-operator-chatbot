@@ -1,0 +1,42 @@
+Failed to load initial state of resource
+**Describe the bug**
+After install ArgoCD using Operator on Openshift, Application and Cluster show errors for many such resources and the namespace added in the cluster
+failed to sync cluster [https://172.21.0.1:443](https://172.21.0.1/): failed to load initial state of resource Service: services is forbidden: User "system:serviceaccount:gm4c-devops-factory:argocd-gm4c-argocd-application-controller" cannot list resource "services" in API group "" in the namespace "dev"
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+1. Install the latest version of ArgoCD Operator in a single Namespace on OpenShift
+2. Creat an instance of ArgoCD using the steps given here-
+3. https://argocd-operator.readthedocs.io/en/latest/usage/basics/
+4. Once the instance is Available, set the spec:server: route: enabled: true
+5. Access ArgoCD on the Route created.
+6. Login to the ArgoCD using admin
+7. Add namespace dev to the in-cluster
+8. Add Git repository
+9. Create an application, choose namespace dev
+10. Application shows multiple error messages as in the screenshot
+11. Cluster shows error as in the screenshot
+
+**Expected behavior**
+The application should not show errors.
+The Cluster should show a connected status
+
+**Screenshots**
+![image](https://github.com/argoproj-labs/argocd-operator/assets/92920391/f9693aac-63ea-40b0-8e4f-82cc3c2069e9)
+![image](https://github.com/argoproj-labs/argocd-operator/assets/92920391/bdc89ea1-2353-4492-89bf-ecd8089e7a51)
+
+
+**Additional context**
+the below log is for many such resources  and namespaces 
+failed to sync cluster https://172.21.0.1:443: failed to load initial state of resource DaemonSet.apps: daemonsets.apps is forbidden: User "system:serviceaccount:gm4c-devops-factory:argocd-gm4c-argocd-application-controller" cannot list resource "daemonsets" in API group "apps" in the namespace "dev"
+
+**We want to use ArgoCD for deploying only on a few Namespaces of OpenShift**
+
+
+
++1
+
+<img width="1343" alt="image" src="https://github.com/argoproj-labs/argocd-operator/assets/34639446/7b215cdf-10e5-4eaa-9de2-d3739e04b695">
+
+and many errors : watch failed

@@ -1,0 +1,16 @@
+Supporting controller.config.repoServerTimeouSecondes
+**Is your feature request related to a problem? 
+
+Context dealine with gitea 
+
+**Describe the solution you'd like**
+Extend controller spec to include a way to customize repoServerTimeoutSeconds
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+
+
+**Additional context**
+Add any other context or screeshots about the feature r
+Hi @abdennour. I think this is already supported. I have added documentation around it in the following PR - https://github.com/argoproj-labs/argocd-operator/pull/790/files . Does this solve your problem? 
+Yeah! i got it actually. Thank you for your time!

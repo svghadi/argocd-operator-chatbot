@@ -1,0 +1,2 @@
+ Verify Namespace Required for ClusterRoleBinding
+I think that `namespace` in deploy/role_binding.yaml can be removed. OLM handles the role bindings for the operator and on my OpenShift cluster, the ClusterRoleBinding does not have a namespace associated.

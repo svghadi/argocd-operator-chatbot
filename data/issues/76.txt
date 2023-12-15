@@ -1,0 +1,37 @@
+ArgoCD doesn't work in a disconnected environment
+Hi,
+
+I've been testing ArgoCD operator version 0.0.8 and it seems the ArgoCD controller and server are deployed fine in a disconnected environment in OpenShift (using cluster-wide proxy). But when I tried to deploy an Application, the server cannot reach an external repository like Github.
+
+Would be possible to add the cluster-wide proxy env vars to server ? Or any method so we can add custom environment variables ?
+
+Environment:
+- Openshift 4.3
+- ArgoCD operator 0.08
+- ArgoCD 1.5.2
+
+Hey @aelbarkani , thanks for trying out the operator!
+
+I think the operator should be able to support this use-case with minor changes hopefully. :)
+
+Have you been able to make this work using the standard upstream Argo CD install manifests? If so, would you mind sharing the ENV VARs that you added?
+
+@aelbarkani I just wanted to check in and let you know that I have not forgotten about this issue. Did you have a chance to see my question above?
++1.  We need a way to tell the operator to set proxy server params in each relevant pod.  In the meantime, do this....
+
+```
+BASE_DOMAIN=your.domain.com
+WILDCARD=apps.$BASE_DOMAIN
+HTTPS_PROXY=http://1.2.3.4:3128
+HTTP_PROXY=http://1.2.3.4:3128
+NO_PROXY=argocd-server-argocd,argocd-dex-server,.$WILDCARD,.$BASE_DOMAIN,127.0.0.1,localhost,.local,.internal,172.30.0.0/16
+
+PATCHLINE="{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"argocd-server\",\"env\":[{\"name\":\"HTTPS_PROXY\",\"value\":\"$HTTPS_PROXY\"},{\"name\":\"HTTP_PROXY\",\"value\":\"$HTTP_PROXY\"},{\"name\":\"NO_PROXY\",\"value\":\"$NO_PROXY\"}]}]}}}}"
+oc patch deploy argocd-server --patch "$PATCHLINE"
+
+PATCHLINE="{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"argocd-repo-server\",\"env\":[{\"name\":\"HTTPS_PROXY\",\"value\":\"$HTTPS_PROXY\"},{\"name\":\"HTTP_PROXY\",\"value\":\"$HTTP_PROXY\"},{\"name\":\"NO_PROXY\",\"value\":\"$NO_PROXY\"}]}]}}}}"
+oc patch deploy argocd-repo-server --patch "$PATCHLINE"
+
+```
+I will take on this.
+Proxy env vars are propagated to argocd workloads.

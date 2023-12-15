@@ -1,0 +1,71 @@
+Add Support for Custom TLSConfig on Routes
+The operator should allow a user to specify the TLS configuration for each Route that the operator manages.
+Hi. I was just checking an issue raised by our team. We'd like the argocd-server route to show same self-signed certificate as the routes we are using for other applications on OpenShift. So this would be a very welcome feature.
+Hey it would be nice to have this for ingress as well.  Use of annotations such as `cert-manager.io/cluster-issuer: letsencrypt-staging` for each `host` that is set (server & grpc).
+It feels like ingress is almost working except `spec > tls > hosts` is using the name from ArgoCD `metadata > name` rather then then using the `host` as set and used by http:
+
+``` yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    kubernetes.io/ingress.class: traefik
+  creationTimestamp: "2020-05-14T15:59:10Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/name: example-argocd
+    app.kubernetes.io/part-of: argocd
+    example: ingress
+  name: example-argocd
+  namespace: my-argocd-operator
+  ownerReferences:
+  - apiVersion: argoproj.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ArgoCD
+    name: example-argocd
+    uid: 35df8564-6f5f-49d8-874c-d2cee895b588
+  resourceVersion: "97592"
+  selfLink: /apis/extensions/v1beta1/namespaces/my-argocd-operator/ingresses/example-argocd
+  uid: 432325f9-894e-46b7-85dd-651c46eff6af
+spec:
+  rules:
+  - host: argocd.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: example-argocd-server
+          servicePort: http
+        path: /
+  tls:
+  - hosts:
+    - example-argocd
+    secretName: argocd-secret
+status:
+  loadBalancer: {}
+```
+@eldis80 As I have been thinking about all of this more I wanted to see if your particular case, have you tried the `Server.Insecure` flag?
+
+``` yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+spec:
+  server:
+    insecure: true
+    route: true
+```
+
+That should disable the built-in argo cert and use what is provided by OpenShift on the Route automatically.
+
+If you need to override the cert with your own from somewhere else (not from openshift), you can set the `tls.cert` and `tls.key` properties manually on the `argocd-tls` Secret and leave `insecure` false to have Argo sever use your cert. You could create that secret with your cert details before creating the ArgoCD CR for example.
+Hi. I haven't tried setting the Server.Insecure as false. I'll have to test it next week. Would the Dex and other components still use secure communication or would it just change the ArgoCD UI?
+With `Server.Insecure` false (the default), argo-server (the UI) runs an HTTPS endpoint and the Route is configured to passthrough and use that for secured client connections.
+
+When `Server.Insecure` is set to true, the argo-server does not provide TLS and simply exposes it's endpoint via HTTP. The Route is then configured to edge and will use the cluster TLS for secured client connections.
+
+To clients from the outside, it's always a secured connection.
+Hi. I've now tested the changing the Server.Insecure to true and that seems to do what we require. I was maybe too worried by ArgoCD documentation stating that the --insecure flag should be used only for testing. I don't think that's such an issue with OpenShift as the external traffic is coming through the Route which has TLS already.
+The Route enhancements have been merged into master as part of #100 and will go out in the next release.

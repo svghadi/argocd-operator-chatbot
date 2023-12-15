@@ -1,0 +1,22 @@
+ArgoCD Operator image 0.7.0 available before the actual release
+**Describe the bug**
+
+Despite the latest version of the operator being [0.6.0](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.6.0), the docker image for 0.7.0 is already available (I assume by mistake).
+I got notified because we have [Renovate](https://github.com/renovatebot/renovate) automation creating PRs for new versions of docker images of the components we use.
+
+The docker image should be removed to avoid others using it before the actual release.
+
+**To Reproduce**
+- Visit https://quay.io/repository/argoprojlabs/argocd-operator?tab=tags&tag=latest
+- Observe the `v0.7.0` tag available despite the release not happened yet
+- Run `docker pull quay.io/argoprojlabs/argocd-operator:v0.7.0` to ensure the image is indeed publicly accessible.
+
+**Expected behavior**
+The docker image `quay.io/argoprojlabs/argocd-operator:v0.7.0` should be removed from the registry.
+
+**Screenshots**
+Not applicable
+
+**Additional context**
+Not applicable
+Release happened, closing the issue: https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.7.0

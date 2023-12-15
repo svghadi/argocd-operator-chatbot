@@ -1,0 +1,199 @@
+Using custom TLS certificates with ArgoCD
+/question
+
+I am trying to deploy Argo CD on OpenShift,  my OpenShift router is patched to use my TLS certs (letsenctypt). When I try to use the same certificates with argocd via secret in the Operator CR, it does not pick it up.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels: {}
+  namespace: argocd
+spec:
+  dex:
+    image: quay.io/redhat-cop/dex 
+    version: v2.22.0-openshift
+    openShiftOAuth: true
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, system:cluster-admins, role:admin
+    scopes: '[groups]'
+  server:
+    route: 
+      enabled: true
+  tls:
+    ca:
+      secretName: my-dev-ca
+```
+Anything I am missing here?
+tls.ca.secretName doesn't work for us as well, we are using the following:
+```
+  tls:
+    initialCerts:
+      example.com: |
+        -----BEGIN CERTIFICATE-----
+        Mx ...
+```
+But from security perspective we want to use Kind: Secret (for ex. prepare with SealedSecrets) and secret name in argo spec
+Is there any update on this at all? As an alternative to using re-encrypt on our route, it would simplify things if we could just use passthrough on the route and have ArgoCD use our cert that we are generating with Cert-Manager instead of the self-signed cert that the operator is generating.
+I am specifying the cert that we are generating in the CR like this:
+
+  tls:
+     ca:
+        secretName: argocd-devops-cert
+
+But even after deleting the CR and allowing the entire instance to rebuild all resources, I still see that it is using the self signed cert.
+![Screen Shot 2020-09-30 at 1 18 36 PM](https://user-images.githubusercontent.com/20927898/94718344-a5796d00-031f-11eb-823f-381dbe9a80c3.png)
+
+I'll take a look into this.
+I'm setting up to do some manual testing for this, but this is where my implementation's at:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels: {}
+  namespace: argocd
+spec:
+  server:
+    host: test.example.com
+  tls:
+    ca:
+      secretName: my-dev-ca
+```
+
+It looks up the secret named `my-dev-ca`, and if there's a `ca.crt` key in the Data, then it uses it with the `spec.server.host` to generate the key into the `argocd-tls-certs-cm` configmap.
+
+If this sounds ok, I might change that `secretName` to be a _LocalObject_ called `secret` so you'd do:
+
+```yaml
+  tls:
+    ca:
+      secret:
+        name: my-dev-ca
+```
+Maybe I'm misunderstanding the thought behind the original purpose of that value. Currently the operator is generating a self-signed certificate and storing it in a secret named _name_-tls. In our case, our chosen name is argocd-devops, so our secret that it is generating by default looks like this:
+
+```kind: Secret
+apiVersion: v1
+metadata:
+  namespace: argocd-devops
+  name: argocd-devops-tls
+  labels:
+    app.kubernetes.io/name: argocd-devops-tls
+    app.kubernetes.io/part-of: argocd
+    argocd.argoproj.io/instance: argocd-devops
+data:
+  tls.crt: >-  LS0tLS1CRUdJTiBDRVJU...
+  tls.key: >-  LS0tLS1CRUdJTiBSU0Eg...
+type: kubernetes.io/tls
+```
+
+We use [CertManager](https://cert-manager.io/docs/) in our cluster to interface with our Venafi server to issue certificates with our enterprise CA. We are generating a certificate secret using that and it is being created in the same namespace as a secret named argocd-devops-cert. It looks like this:
+
+```kind: Secret
+apiVersion: v1
+metadata:
+  name: argocd-devops-cert
+  namespace: argocd-devops
+  annotations:
+    cert-manager.io/certificate-name: argocd-devops-cert
+    cert-manager.io/issuer-kind: ClusterIssuer
+    cert-manager.io/issuer-name: venafi
+data:
+  ca.crt: ''
+  tls.crt: >- LS0tLS1CRUdJTiBDR...
+  tls.key: >- LS0tLS1CRUdJTiBSU...
+type: kubernetes.io/tls
+```
+
+My hope was that by adding that secret name to the CR, the operator would use this certificate and key for the argocd-server container instead of the argocd-tls self-signed certificate, therefore avoiding the security warning from browsers when hitting the ArgoCD console due to the untrusted self-signed cert.
+@jdziedzic the `tls.ca.secretName` is not actually doing anything (it doesn't get used in reconciliation)
+
+My interpretation is that it's within the `ca` key, which implies that it's defining a CA Certificate?
+
+It feels like there are perhaps two different issues? one for the CA issue, and another for your use case?
+@bigkevmcd I am re-reading the initial post again and I guess I misunderstood what they were trying to achieve. I can open a new issue.
+@jdziedzic Upon rereading it, I come to a different view, and I think it's the the same thing, I suspect that it's confused by the use of the previously unused field `ca`.
+
+Most of the work I've done here is reusable, I'll come up with something that works, probably outside of that key, along the lines you're describing there.
+Hi @bigkevmcd,
+
+I upgraded the operator to .14 and I do see the ca.crt in the secret now, which is great. However, when I switch the route to re-encrypt with the annotations for the cert-utils operator to modify the route, the operator is constantly overriding the changes to the route that cert-utils is making. Any idea why this is happening?
+
+**Spec:**
+```
+route:
+      annotations:
+        cert-utils-operator.redhat-cop.io/certs-from-secret: "argocd-devops-cert"
+        cert-utils-operator.redhat-cop.io/destinationCA-from-secret: "argocd-devops-ca"
+      enabled: true
+      path: /
+      tls:
+        termination: reencrypt
+        insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
+```
+
+**Error in operator logs:**
+{"level":"error","ts":1603738968.2680197,"logger":"controller-runtime.controller","msg":"Reconciler error","controller":"argocd-controller","request":"argocd-devops/argocd-devops","error":"Operation cannot be fulfilled on routes.route.openshift.io \"argocd-devops-server\": the object has been modified; please apply your changes to the latest version and try again","stacktrace":"github.com/go-logr/zapr.(*zapLogger).Error\n\t/home/john/go/pkg/mod/github.com/go-logr/zapr@v0.1.1/zapr.go:128\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\n\t/home/john/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.6.0/pkg/internal/controller/controller.go:258\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/home/john/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.6.0/pkg/internal/controller/controller.go:232\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).worker\n\t/home/john/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.6.0/pkg/internal/controller/controller.go:211\nk8s.io/apimachinery/pkg/util/wait.BackoffUntil.func1\n\t/home/john/go/pkg/mod/k8s.io/apimachinery@v0.18.3/pkg/util/wait/wait.go:155\nk8s.io/apimachinery/pkg/util/wait.BackoffUntil\n\t/home/john/go/pkg/mod/k8s.io/apimachinery@v0.18.3/pkg/util/wait/wait.go:156\nk8s.io/apimachinery/pkg/util/wait.JitterUntil\n\t/home/john/go/pkg/mod/k8s.io/apimachinery@v0.18.3/pkg/util/wait/wait.go:133\nk8s.io/apimachinery/pkg/util/wait.Until\n\t/home/john/go/pkg/mod/k8s.io/apimachinery@v0.18.3/pkg/util/wait/wait.go:90"}
+@jdziedzic I'll take a look and see
+
+Let me see if I understand what you're doing, you've got a TLS secret `argocd-devops-cert` and a CA in `argocd-devops-ca` you're configuring these in the operator, and it's writing them out correctly to the argocd secrets,  _but_ the route is being rewritten by the operator, and it's causing issues with cert-utils?
+@jdziedzic How are you applying those annotations? manually?
+
+The operator applies annotations from the server route configuration, something like this should work:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: ingress
+spec:
+  server:
+    route:
+      annotations:
+        cert-utils-operator.redhat-cop.io/certs-from-secret: "argocd-devops-cert"
+        cert-utils-operator.redhat-cop.io/destinationCA-from-secret: "argocd-devops-ca"
+```
+@bigkevmcd, yes, I am including the annotations in the ArgoCD spec, I just only included the relevant part of the yaml. When I go to the route in the OpenShift Console, I can see the page constantly flashing between the certificate boxes being populated and then blank. That message above is from the ArgoCD operator logs and appears each time it resets the certificates back to null (which is about every second). It appears that the ArogCD operator is creating the route as expected with the correct annotations, but when the cert-utils operator sees those annotations on the route and attempts to populate the certificate information on the route, the ArgoCD operator is seeing this route as changed and attempting to set it back to the spec state. 
+
+Removing additional configurations from the spec, our ArgoCD resource looks like this:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  namespace: argocd-devops
+  name: argocd-devops
+spec:
+
+    host: 'argocd-devops.apps.{{ $root.Values.cluster }}.openshift.cignacloud.com'
+    insecure: false
+    route:
+      annotations:
+        cert-utils-operator.redhat-cop.io/certs-from-secret: "argocd-devops-cert"
+        cert-utils-operator.redhat-cop.io/destinationCA-from-secret: "argocd-devops-ca"
+      enabled: true
+      path: /
+      tls:
+        termination: reencrypt
+        insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
+```
+
+What we are trying to achieve here is having the server present a certificate to the browser that matches the route name so we don't get a security warning. argocd-devops-cert is a cert we are generating using cert-manager and argocd-devops-ca is created by the ArgoCD operator and contains the ca.crt from the self-signed certificate that the operator is generating. We are using a rennecrypt route to present our custom certificate to the browser, and then trusting the self-signed CA on the backend.
+@jdziedzic thanks for the update, I'll do some digging and see what we can do
+Thanks @bigkevmcd!
+
+I am not sure if this alternative would be any easier to implement, but it would almost be more ideal to just be able to tell the operator to use the certificate we are generating with cert-manager instead of having to do re-encrypt. This way the server side would just present the custom cert and I could use passthrough on the route avoiding the need for the annotations and route modification all together.
+Hi @bigkevmcd @jdziedzic 
+I got this working by storing the certificate generated by cert-manager in the already existing secret `argocd-tls` and setting the `spec.route.termination` to `passthrough` in the ArgoCD definition. 
+Storing the certificate in any other secret did not work for me.
+
+Unfortunately, the documentation of the operator is missing those use cases IMHO.

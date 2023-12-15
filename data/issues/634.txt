@@ -1,0 +1,105 @@
+Dex can't be disabled
+**Describe the bug**
+
+Hi, the documentation describing how to disable Dex is not correct. The following subscription configuration does NOT disable it:
+
+
+**To Reproduce**
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd-operator
+spec:
+  # channel: alpha
+  name: argocd-operator
+  # source: argocd-catalog
+  source: operatorhubio-catalog
+  sourceNamespace: olm
+  config:
+    env:
+      - name: DISABLE_DEX
+        value: "true"
+      - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+        value: argocd
+```
+
+**Expected behavior**
+
+The configuration to stop dex from starting.
+
+**Additional context**
+
+Deployed version: v2.3.3-07ac038
+
+Hi @Morriz , we havn't made any changes to this behavior recently and it is expected to work. Let me try at my end.
+I can reproduce the error. Thanks for reporting the issue :)
+Hi @Morriz, could you also provide the version of Openshift and the ArgoCD operator. Thanks
+Not on openshift. ArgoCD operator is installed by OLM, so their maintainers should know what is published? All I am interested in is the maturity, which states level 5. That should mean we don't have to keep track of versions manually.
+I have tried to reproduce this bug and it looks intermittent in nature. I am unable to see this issue in the argocd operator.  
+@Morriz could you provide some logs for the issue? Are the pods stuck in pending and have a service account related error? This issue seems intermittent to me, are you always hitting this problem?
+I always see Dex starting, yes. I am only offered a very simple interface, which is setting env `DISABLE_DEX` to `"true"`. Are you saying you don't see dex pods starting? Then that would be strange.  @iam-veeramalla seems to be able to reproduce
+I do see dex pods starting by default, but when I disable dex in subscription - only sometimes, instead of deleting the deployment, it gets stuck in pending (and the log shows service account cannot be found error. ) and even this I see only in gitops-operator (which uses Argocd Operator as upstream) on Openshift. I cannot reproduce this for the community operator using olm.
+@iam-veeramalla and @saumeya were not able to reproduce it in argocd operator, correct? Let's don't throw gitops operator into the mix.
+@Morriz what is the version of argocd operator you are seeing this problem? Also, please provide the cluster (openshift, etc)?
+> Not on openshift. ArgoCD operator is installed by OLM.
+
+We're on k8s 1.22 lately.
+I'd have to run the installer again to check argocd operator version installed by OLM. Will do when I get to it.
+@Morriz @wtam2018 @saumeya 
+
+Sorry for the confusion. I should have provided more details on the steps I followed to test it.
+
+I was able to reproduce the issue on the latest version of Argo CD Operator on my K8s cluster(`v1.23.4`).
+
+Steps Followed:
+1. Follow the below steps to install OLM and Argo CD Operator on your Kuberentes cluster 
+    -  https://operatorhub.io/operator/argocd-operator   (Click on Latest) 
+2. Use the below Argo CD CR to install Argo CD.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: oauth
+spec:
+  dex:
+    openShiftOAuth: true
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, system:cluster-admins, role:admin
+    scopes: '[groups]'
+  server:
+    route:
+      enabled: true
+```
+3. Use the steps provided in the documentation to Disable Dex.
+    https://argocd-operator.readthedocs.io/en/latest/usage/dex/#disable-dex
+    
+
+I expect operator to delete the dex pods from all the namespaces in which Argo CD is installed. 
+
+Note: After thinking hard, I understood why @saumeya  was not able to reproduce the issue. I used the Argo CD CR configuration from [examples](https://github.com/argoproj-labs/argocd-operator/blob/master/examples/argocd-oauth.yaml) folder that is similar to GitOps Operator (has `.spec.dex.openShiftOAuth: true`), I think @saumeya did not have this configuration in her CR or may be she is using the OOTB Argo CD CR that comes by installing Argo CD from OpenShift console.
+
+**This issue can be fixed in two ways.**
+
+1. Handle the Dex pod deletion even when `.spec.dex.openshiftOAuth: true`
+**(or)**
+2. To prevent the backward compatibility we can just update our documentation(both upstream and downstream) to first remove the `.spec.dex.openShiftOAuth: true`(if present) along with adding `DISABLE_DEX` to subscription resource.
+Does @Morriz have .`spec.dex.openShiftOAuth: true` in the CR?
+Is that related to openshift? Did I not state twice already that we are _not_ on openshift?
+
+So the answer is again: no. We have nothing from openshift.
+@Morriz Thanks for the patience :). Were you able to get to your Kubernetes cluster and try to reproduce it one more time ? If you were able to reproduce it, Please share your Argo CD CR.
+
+Will wait for your reply.
+I will deploy now
+@Morriz Thanks for your clarification and patient  It is very much appreicated.
+@iam-veeramalla Your theory does not hold as the correspondent did not have `.spec.dex.openShiftOAuth: true` in the CR
+@wtam2018 I asked @Morriz to reproduce the bug one more time and share the Argo CD CR with us.
+
+@Morriz any update on this?
+I redeployed everything fresh and could not reproduce it. I think this can be closed until we run into it again. 
+@Morriz Thanks a lot.

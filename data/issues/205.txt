@@ -1,0 +1,109 @@
+ArgoCD Export running before import is completed
+# Summary
+We configured ArgoCD export to make an export to a Azure storage account every 5 min.
+We just redeployed our OpenShift cluster and synced our basic cluster configuration with FluxCD.
+
+In this unique situation we found out the ArgoCD export was ran before the ArgoCD import was completed.
+This resulted in a backup that only contained the basic ArgoCD configuration, after which this was applied with the import.
+This means all our original ArgoCD configuration is lost...
+
+# Motivation
+
+After a cluster redeploy export ran before import which causes data loss...
+
+# Proposal
+
+We would like some sort of mechanism to make sure the import is completed before a new export is started.
+My initial idea is to add an init container to check if ArgoCD is running. I'm not sure if this is a good idea in all Export use cases.
+
+
+Please let me know what's your opinion of this feature request.
+@wouter2397 sorry to hear that, personally, I'd recommend using Git for storing your ArgoCD configuration, perhaps following this https://argoproj.github.io/argo-cd/operator-manual/cluster-bootstrapping/#app-of-apps-pattern 
+
+We'll discuss ways of improving the functionality tho'
+@bigkevmcd Thank you for you reply. We are using Git for storing our ArgoCD configuration, but only affects the initial code.
+
+The issue we have with storing everything in Git is that we want a fully automated process to manage repo's within ArgoCD.
+Because the repo's are not know to us at initial configuration we cannot include it in this config.
+
+At a later point in time we want to fully automate the git repo management process so we are not in between the deloyment process of individual teams.
+
+I hope you understand the situation I tried to explain.
+I'm curious if you have any experience on how to sort this.
+@bigkevmcd To come back on this issue. I really like the idea on using apps of apps for storing all configuration within Git. The only thing I don't know how to store in Git is the repo information. If we can manage this from Git also then the app of apps mechanism would indeed be an option to implement.
+
+Do you have any idea/experence on how to manage the repo code from Git?
+@wouter2397 I'm not quite sure what you're asking, the "app of apps" (AoA)...which is being replaced by a formalisation of this in https://github.com/argoproj-labs/applicationset, is a way to bootstrap multiple `Application` objects.
+
+So, each of the sub-applications would need to record which git repository that it was deploying from, adding new applications to the AoA repository results in the new `Application` being created and this triggers the deployment from this repository.
+
+Can you maybe explain a bit more about what you want to do, and I'll see what I can do to advise.
+@bigkevmcd Thank you for making time to help us. I will try to explain our situation better.
+
+We use ArgoCD as our application delivery platform. All teams connected to our OpenShift clusters also get an AppProject we provision for them. Al this AppProjects are stored and provisioned using GitOps. We can store almost all ArgoCD config within Git except the git repository config. As far as I know the only way to provision new git repo's is by using the ArgoCD CLI or UI. The new git repo config will not be stored within Git so when we have to recover or redeploy this configuration is lost.
+
+To solve this we setup the ArgoCD export/import setup. By using this feature we are able to restore the complete ArgoCD config, including all git repo's.
+
+The main question I have now is: Is there a way to store the git repo config in Git but keep users in control of managing their own git repo's. (We do not want to add every git repo for them). If not then I guess the export/import is a good solution to restore all configuration. The question then would be: Is there a way to make sure the import is ran before the new export? Otherwise our correct export file will be overwritten by an incorrect one...
+
+Hopefully this explanation will make our situation more clear.
+Hi @wouter2397 ok, I think I understand your requirements a bit better.
+
+If I'm reading it correctly, you need to be able to do the equivalent of this:
+
+```shell
+argocd repo add git@github.com:argoproj/argocd-example-apps.git --ssh-private-key-path ~/.ssh/id_rsa
+```
+
+These are actually stored in a config-map by ArgoCD https://argoproj.github.io/argo-cd/operator-manual/argocd-cm.yaml
+
+Ideally, these would be separate objects, and you'd simply create a new `Repository` object and it would solve the problem for you.
+
+But, they're ConfigMap keys, and so adding them requires being able to change the ConfigMap safely, I'll have a look at what we could do in the operator around this, but my sense is that this wouldn't fix your problem, unless it was separate objects, because you want to allow users to manage them individually, and _not_ grant them access to the ArgoCD resource that the operator manages?
+@bigkevmcd You are exactly on the point!
+
+I agree that the best solution would be to manage those repositories individually.
+
+If you cannot find a workable solution from within the operator, wouldn't the next step be to make a feature request to ArgoCD itself?
+@wouter2397 This is something I'm interested in pursuing, I think there are two issues tho', delegation of repository configuration, and a slightly more fundamental one, the backup/restore mechanism isn't safe to use.
+
+I'm also trying to think about how we can lock the backup, while the restore is happening.
+@wouter2397 I'm not sure if you're aware of https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#initial-repositories I appreciate that it doesn't allow delegated Repository access, so it may not fit your needs.
+@bigkevmcd I'm aware of the initial repo setup. But indeed this does not solve our issue.
+
+I agree with you that there are 2 issues:
+1) delegation of repository configuration
+I discussed this again with a co-worker of mine and if we fix the delegation of repo config we still have not all configuration in Git as the ArgoCD Application config is also not within our control. Due to this fact improving the delegation of repository configuration has a low priority for us.
+
+2) backup/restore mechanism safety
+To go back to my original issue/question, this is the real issue we are facing. We would have a lot of benefit if we can improve the safety of the backup/restore mechanism.
+
+Is it an option to add an extra check before the export is started to check if the argocd-application-controller is running? This container has the init container that performs the import. So we need to make sure this init container has run before a new export is started.
+
+@bigkevmcd Do you have any updates on this topic? It's been some time now.
+Would be nice if we can find a solution to improve this.
+Hi @wouter2397 We've had discussions internally on the backup/restore functionality, and what to do about it, but we don't _yet_ have a plan to fix the functionality.
+
+I've looked into the feasibility of preventing backups while the import is running, and it's not particularly easy.
+
+We've also looked at things like timestamping the backup files (which is actually a nice option), but this adds complexity to the restoration process, and we'd need to ensure that we limited the number of retained files (filling up a disk would be nearly as bad as this).
+
+I'm actively considering it, but I don't have a solution just now.
+@bigkevmcd Good to hear that you are (still) actively working on this. I understand that the issue is not something you can solve with a minor change to the code.
+
+I will wait for you to come back on this with additional information.
+If you need/want help from my side, please let me know.
+I will do my best to help in the best way possible.
+@bigkevmcd A month has pasted without any update, so I'm curious to hear if you were able to make any progress on this issue.
+If not can you give some sort of indication on the timeline we need to think of for an available fix/improvement.
+
+Also if there is anything I can help with please let me know. This issue is still affecting our current recovery procedure, so we have a lot of interest to help to resolve the issue.
+Hi @wouter2397 sorry, this isn't a high priority for us just now, I do appreciate that it's a really bad bug, but fixing is non-trivial to get it right, and the Red Hat GitOps operator _does not support_ the export/restore mechanism.
+
+I do care about this, because it's not operating as it should, but fixing it is not _currently_ a priority.
+@bigkevmcd Thank you for you clarification.
+We are also planning to move to the Red Hat GitOps operator somewhere in the future.
+
+So I think the best way forward for us is to develop our own export/restore mechanism that works with with the ArgoCD Operator and the Red Hat GitOps operator.
+
+I'm not sure if this is something you still want to address in the future, if not feel free to close this issue, as we will move forward to an workable solution we will develop on our own.

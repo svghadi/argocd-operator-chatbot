@@ -1,0 +1,14 @@
+uid_entrypoint.sh renamed to entrypoint.sh, breaks using v2.1.0 
+**Describe the bug**
+```
+argocd-repo-server-6dc987d959-q75xr   0/1     CreateContainerError
+```
+- because of hardcoded uid_entrypoint.sh which was renamed here
+
+https://github.com/argoproj/argo-cd/commit/4ae1d876fd6c66ae665db996a0d2e9c43fdac7e6
+https://github.com/argoproj/argo-cd/blob/master/entrypoint.sh
+
+**To Reproduce**
+install version 2.1.0 argocd
+This has been fixed in v2.1.1 of Argo CD, there now is a symlink `uid_entrypoint.sh -> entrypoint.sh`. Since upstream operator issue is closed, can we close this as well? 
+ah yes.

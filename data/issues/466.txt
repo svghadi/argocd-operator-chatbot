@@ -1,0 +1,26 @@
+Pods keep being recreated on clusters when env vars are added.
+**Describe the bug**
+Building a latest version of the operator from source(master) creates the below issue.
+
+The PR #437 adds a logic to support adding custom environment variables into repo-server, server and controller. While this allows adding the env vars into the workloads, the order of the env vars is not same every-time. This is causing the below reconciliation condition on repo-server to fail(similarly for server and controller as well).
+https://github.com/argoproj-labs/argocd-operator/blob/b674bea5d139859ffae5d6b2add03db1975369d2/controllers/argocd/deployment.go#L952
+
+The above reconciliation uses `reflects.DeepEqual` which bothers about the order of the slice.
+
+This issue is most commonly reproduced on clusters which are behind proxy as operator+olm adds the proxy env vars into the workloads. so every-time the order of the env vars is changed a new container/pod is created. 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create a latest version of the operator from master.
+2. Run the operator on a cluster behind proxy or add multiple env vars.
+
+**Expected behavior**
+Pods should not be recreated.
+
+**Screenshots**
+NA
+
+**Additional context**
+NA
+
+cc: @jannfis 

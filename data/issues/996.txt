@@ -1,0 +1,82 @@
+breaking change when upgrading to argocd-operator:v0.7.0 ("managed-by" not working anymore in newly created namespaces - openshift/okd)
+**Describe the bug**
+We upgraded our ArgoCD-operator from v0.5.0 to v0.7.0 and noticed that new namespaces are not able to be managed by the correct ArgoCD-instance anymore when adding 
+```bash
+oc label namespace <namespace> \
+argocd.argoproj.io/managed-by=<namespace>
+```
+ref. [this upstream argocd operator documentation](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/usage/deploy-to-different-namespaces.md) and [this upstream openshift/okd documentation](https://docs.openshift.com/container-platform/4.13/cicd/gitops/setting-up-argocd-instance.html#gitops-deploy-resources-different-namespaces_setting-up-argocd-instance)
+
+**example of error message:**
+
+>Namespace "renovate-bot" for ConfigMap "renovate-config" is not managed
+
+**expected behavior:**
+
+the following rolebindings should get created automatically when adding the above mentioned label:(this does not happen in `0.7.0`)
+
+```yaml
+Role/argocd-application-controller   
+Role/argocd-grafana                  
+Role/argocd-redis                    
+Role/argocd-server 
+```
+
+**Screenshots**
+New namespaces don't show up automatically under "NAMESPACES" when adding the above mentioned label in different namespaces.
+![argocd_example](https://github.com/argoproj-labs/argocd-operator/assets/22170516/216326b5-fd36-4b55-a5d2-033470c96e3c)
+
+
+**Additional info**
+OKD-version: `4.13.0-0.okd-2023-08-04-164726`
+k8s-version: `v1.26.6+73ac561`
+
+When rolling back to v0.5.0, it immediately works again.
+
+
+
+@jonasbartho its a label not an annotation 
+> @jonasbartho its a label not an annotation
+Sorry, small typo, I fixed the description now. :)
+
+Additional info: 
+
+We are running the default "namespace scoped instance" of ArgoCD, we are **not** running a [Cluster Scoped Instance](https://argocd-operator.readthedocs.io/en/latest/usage/basics/#cluster-scoped-instance). 
+Hi @jaideepr97 
+
+After some digging we found out the following permission issue in `v0.7.0`(`oc logs -f -c manager <argocd operator pod> -n openshift-operators`):
+
+```
+cannot list resource "prometheusrules" in API group "monitoring.coreos.com" at the cluster scope
+```
+
+When we add a custom Clusterrole that remediates the permission issue, it immediately starts working again! :)
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-operator-promrules-fix
+rules:
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - prometheusrules
+    verbs:
+      - list
+      - watch
+```
+
+Shall I or someone else create a PR on this?
+
+Suggested fix is to add 
+```yaml
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - prometheusrules
+    verbs:
+      - list
+      - watch
+```
+under `argocd-operator/config/rbac/role.yaml`
+This is probably linked to https://github.com/argoproj-labs/argocd-operator/pull/925 ? 

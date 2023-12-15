@@ -1,0 +1,41 @@
+Changing the properties of the ArgoCD resource has no effect
+Our stand is:
+
+- OpenShift 4.5.2
+- ArgoCD Operator v0.0.12 (is installed from UI)
+- ArgoCD Resource:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  server:
+    route:
+      enabled: true
+```
+
+If we add or modify some specifications on ArgoCD resource - should the ArgoCD operator detect these changes and make changes to the required resources (argocd itself, route, ingress etc.)?
+
+For ex.: I want to add insecure/TLS options:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  server:
+    insecure: true
+    route:
+      enabled: true
+      TLS:
+        termination: edge
+```
+
+But after applying these changes, nothing happens. (oc apply -f ...)
+
+When playing with ingress, I found I had to change `enabled` to `false` and then back to `true`. So you probably need to do the same thing for `route`.

@@ -1,0 +1,29 @@
+Operator doesn't handle deletion of an ArgoCD resource
+If you delete an `ArgoCD` resource, it continues to reconcile the resources while it's being deleted.
+
+```shell
+$ k get argocd/argocd -n argocd -o yaml | grep deletionTimestamp
+  deletionTimestamp: "2020-09-28T10:49:18Z"
+```
+
+This is UTC
+
+```
+{"level":"info","ts":1601290514.7307775,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290516.216858,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290516.4492362,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290524.0344138,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290524.8260667,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290525.55301,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290525.6632104,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290529.9416995,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+{"level":"info","ts":1601290530.0737073,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"argocd"}
+```
+
+
+```
+ $ date --date='@1601290530'
+Mon 28 Sep 10:55:30 GMT 2020
+```
+
+It's reconciling for around 6 minutes at that time, the ArgoCD server resources keep being removed and recreated.

@@ -1,0 +1,13 @@
+Add SECURITY.md
+The Argo maintainers recently agreed to require all Argoproj Labs project repositories to contain a `SECURITY.md` file which documents:
+* Contact information for reporting security vulnerabilities
+* Some minimal information about policies, practices, with possibly links to further documentation with more details
+
+This will help direct vulnerability reporting to the right parties which can fix the issue.
+
+You are free to use the following as examples/templates:
+* [Argoproj](https://github.com/argoproj/argoproj/blob/master/SECURITY.md)
+* [Workflows](https://github.com/argoproj/argo-workflows/blob/master/SECURITY.md)
+* [CD](https://github.com/argoproj/argo-cd/blob/master/SECURITY.md)
+
+Also, please note that in the future we are exploring a requirement that argoproj-labs projects perform a [CII self-assessment](https://bestpractices.coreinfrastructure.org/en) to better inform its users about which security best practices are being followed.

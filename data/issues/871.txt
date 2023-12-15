@@ -1,0 +1,30 @@
+controller exception
+**Describe the bug**
+1.678063366456958e+09   ERROR   controller-runtime.source       if kind is a CRD, it should be installed before calling Start   {"kind": "Prometheus.monitoring.coreos.com", "error": "no matches for kind \"Prometheus\" in version \"monitoring.coreos.com/v1\""}
+sigs.k8s.io/controller-runtime/pkg/source.(*Kind).Start.func1.1
+        /go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/source/source.go:137
+k8s.io/apimachinery/pkg/util/wait.runConditionWithCrashProtectionWithContext
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:233
+k8s.io/apimachinery/pkg/util/wait.WaitForWithContext
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:660
+k8s.io/apimachinery/pkg/util/wait.poll
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:594
+k8s.io/apimachinery/pkg/util/wait.PollImmediateUntilWithContext
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:545
+sigs.k8s.io/controller-runtime/pkg/source.(*Kind).Start.func1
+        /go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/source/source.go:131
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. use operator-sdk install olm to k8s
+2. execute kubectl create -f https://operatorhub.io/install/argocd-operator.yaml
+
+**Expected behavior**
+no exception and controller working
+
+**Screenshots**
+![image](https://user-images.githubusercontent.com/2573426/222996227-7cb23de3-5a6b-4b7d-aba9-cc849cea6009.png)
+
+**Additional context**
+using alicloud ack cluster
+

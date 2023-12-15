@@ -1,0 +1,9 @@
+How do you set users.session.duration?
+How do I edit users.session.duration? 
+
+If I edit argocd-cm directly, any changes are reverted immediately by openshift.
+Hi @rcfja , sorry for getting back late on this one. 
+
+Yes, any manual changes to the Argo CD Config map are reverted back by the operator. You can make use of the extraConfig feild in the Argo CD CR.
+https://argocd-operator.readthedocs.io/en/latest/usage/extra-config/
+thank you!

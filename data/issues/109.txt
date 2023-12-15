@@ -1,0 +1,9 @@
+Operator isn't respecting version field after CR update
+In the following scenario, I'm seeing that the operator isn't picking up an updated version field if it wasn't originally specified as part of the ArgoCD CR:
+
+At first I deploy an ArgoCD that doesn't specify a version as I just wanted to deploy whatever the latest is. However after some time I realize I want to pin to an older version (ex: v1.5.4) so I updated the CR with `version: v1.5.4`. After applying this update to the CR, the operator doesn't actually pick up this change and redeploy ArgoCD at the specified version and instead just lets things remain running at the original "latest" version.
+
+Is this a bug? Or am I just misunderstanding the expected behavior of the operator
+This is a bug that I am currently investigating. You are correct that the operator should notice the version, if specified and redeploy the components.
+I have added #115 to address this. Will go out in the next release.
+This has been merged into master and will go out in the next release.

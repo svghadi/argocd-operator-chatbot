@@ -1,0 +1,5 @@
+Update CRD Properties After Creation
+The operator is not watching for updates to all of the properties on the CRD. Once the CRD has been created, making changes to the `ResourceCustomizations` property for example, has no effect and the `argocd-cm` ConfigMap is not updated as expected.
+Working on this in the [crd_update](https://github.com/argoproj-labs/argocd-operator/tree/crd_update) branch.
+This has been merged into master and will go out in the v0.0.6 release.
+Released as part of v0.0.6.

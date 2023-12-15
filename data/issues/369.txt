@@ -1,0 +1,38 @@
+Missing securityContext
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+How to control securityContext
+
+I have k8s cluster with installed pod security policy.
+
+My cluster setup for operator 0.15 and argocd 2.0.4
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd-1
+spec:
+  image: quay.io/argoproj/argocd
+  version: v2.0.4 
+  redis:
+    image: redis
+    version: 6.2.4-alpine  
+  dex: 
+    image: quay.io/dexidp/dex
+    version: sha256:01e996b4b60edcc5cc042227c6965dd63ba68764c25d86b481b0d65f6e4da308
+  ha:
+    enabled: false
+    redisProxyImage: haproxy
+    redisProxyVersion: "2.0.4"
+```
+In CRD there should be a possibility to run redis image as non root. 
+
+How to control securityContext ?
+The same here I have with haproxy image in ha setup.
+
+
+This same problem exists for quite a few configurables required for modifying argocd for [argocd-vault-integration](https://argocd-vault-plugin.readthedocs.io/en/stable/installation/).
+
+You can't set security context, mountSAtoken doesn't work, serviceAccountName doesn't work.

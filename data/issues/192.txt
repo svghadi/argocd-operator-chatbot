@@ -1,0 +1,17 @@
+Username of logged in user
+Add user mapping of logging in user (via OAuth) to `USER INFO` section - it is currently blank. There is currently no way to see which user is logged in, just group memberships.
+
+Not sure if this is possible considering the supported RBAC options, but would be helpful.
+
+![image](https://user-images.githubusercontent.com/33630630/96768889-5d90b780-13ac-11eb-8036-43b5b579121c.png)
+
+Hi @arctiqhart, thank you for the suggestion and trying out the operator. I will have a look to see if this is something that we can add from the operator side, but it may be that Argo CD itself would need a change for this.
+
+@bigkevmcd Any ideas?
+Hey @jmckind 
+upstream argo-cd does display the user's name in user-info
+
+![user-ino-argo](https://user-images.githubusercontent.com/21956986/99816905-3bf52e00-2b1a-11eb-9637-847e0f6c159f.png)
+
+I think there should be a way to fix this in the operator
+I could try to look into it if that's alright 

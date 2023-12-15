@@ -1,0 +1,41 @@
+issue in phase reconciliation logic 
+**Describe the bug**
+Currently, Argo CD phase reconciliation seems to be broken. Phase appears as available even if one or more core components (app-controller, server, repo-server, redis) are still pending. This is happening because phase is being manipulated in multiple places (including while setting the host status for the instance). 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. deploy the operator
+2. create an argo-cd instance 
+```
+cat <<EOF | oc apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+EOF
+
+```
+3. verify that phase is initially set to `Available` and core components are `running`
+4. edit argo-cd to set the image version to an invalid version:
+```
+spec:
+  version: dummy-version
+```
+5. See that core component pods are restarted with invalid image and stuck in `pending`
+6. Confirm that argo-cd instance phase is still set to `available`  
+
+**Expected behavior**
+Phase should ONLY be set to available if all core components are running AND there is a valid host set 
+
+
+**Additional context**
+Add any other context about the problem here.
+
+
+**Screenshots**
+![phase](https://github.com/argoproj-labs/argocd-operator/assets/21956986/ced5b4c5-624a-4594-b0ff-cc5e9f5356d8)
+
+**Additional context**
+Add any other context about the problem here.
+

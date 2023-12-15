@@ -1,0 +1,17 @@
+ARM Images
+Any change that ARM images could be published? They can be built via e.g. `buildx` or `podman` cross-build support to avoid requiring access to ARM hardware.
+
+I'd like to use these on my Raspberry Pi cluster, but I'm sure that there are also folks who want to use them on their Graviton-powered EKS clusters.
+It can be useful on RPI 4 cluster on `arm64 arch`.
+Hi @DWSR , ArgoCD does not support ARM as of today. 
+
+Do you want to move this issue to [argoproj/argocd](https://github.com/argoproj/argo-cd) ? I think that is a better place for this issue :)
+There's already an open issue: https://github.com/argoproj/argo-cd/issues/4211
+
+There's no reason to wait for ArgoCD to support ARM though, IMO. You can easily run mixed architecture clusters (I'm running one at home) and introducing ARM support in the operator isn't blocked on ARM support in ArgoCD itself.
+Any update on this one in the past year or so?
+Anyone in the community willing to contribute to this ?
+I can take a look at this.
+Following up on this.  `quay.io/argoprojlabs/argocd-operator` image still does not support ARM.  Deployed using Alpha channel which is on v0.6.0
+
+Manager container returns `exec /manager: exec format error`

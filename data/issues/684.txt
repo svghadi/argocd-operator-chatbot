@@ -1,0 +1,20 @@
+Ability to customize UI options
+**Is your feature request related to a problem? Please describe.**
+Not all config options of ArgoCD server (argocd-cm) can be controlled by the operator (or I wasn't able to figure out how).
+When running multiple ArgoCD instances I'd like to alter the UI with custom stylesheets in order to better distinguish them in the browser.
+
+**Describe the solution you'd like**
+Add a section in the ArgoCD operator resource schema where one can control custom styles as documented here:
+https://argo-cd.readthedocs.io/en/stable/operator-manual/custom-styles/
+
+
+Hi @thomascube , Thanks for reaching out.
+
+We have understood the problem that we currently do not support all the config options available for argocd-cm and these config options will keep growing. To fix the problem we have introduced the support for extraConfig in Argo CD CR through which you can add entries to argocd-cm.
+
+PR:
+https://github.com/argoproj-labs/argocd-operator/pull/642
+
+This fix is already merged to master and it will be out in the next release `0.4.0` which is planned with in a couple of weeks from now.
+Please try this with the new release(once it is released) and feel free to re-open the issue. **I am closing this as a duplicate of** #641 
+Perfect. Thanks for the fast response!

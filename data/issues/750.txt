@@ -1,0 +1,38 @@
+operator resources should have unique labels.
+**Describe the bug**
+The operator deployment and other resources created by `operator-sdk` has the default label `control-plane: controller-manager` without any prefix or suffix. Also, by default all the operators running in `all-namespaces` mode will be installed in `openshift-operators` namespace. So, if the default `labels` and `selectors` are not updated a request from operator service `x` might be sent to operator pod `y`.
+
+One of our downstream users has reported a similar issue when `gitops-runner` operator and `gitlab-operator` are installed on their cluster.
+```
+I have a customer on xxxx on 4.9.37 who have got these operators installed from the OperatorHub.
+Red Hat OpenShift GitOps  -----> 1.5.4 provided by Red Hat Inc.
+GitLab Runner ----> 1.9.0 provided by GitLab, Inc.
+The target namespace for these operators in "openshift-operators" and cannot be overridden.
+The GitLab runner installs  3 services with a pod selector "control-plane=controller-manager".
+This pod selector matches pods installed by both operators, hence customer is getting random deployment errors like:
+```
+
+```
+one or more objects failed to apply, reason: Internal error occurred: 
+failed calling webhook "mrunner.kb.io": 
+failed to call webhook: Post "[https://gitlab-runner-controller-manager-service.xxxxxxx.com/xxxxxxxxxx-com-v1beta2-runner?timeout=10s](https://gitlab-runner-controller-manager-service.xxxxxx.com/xxxx-xx-gitlab-com-v1beta2-runner?timeout=10s)": 
+dial tcp xx:xxx:xx:xx:x443: connect: connection refused
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to 'OperatorHub'
+2. Install `argocd-operator`
+3. Install `gitlab runner operator`
+4. Wait for the GitLab operator to create services and other resources.
+5. Login to any node and try to access GitLab service using the service endpoint. See if the request is sent to GitLab operator pod or argocd-operator pod, repeat this step multiple times.
+
+**Expected behavior**
+Every operator resources should have unique labels and selectors.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Additional context**
+NA
+

@@ -1,0 +1,24 @@
+When a `host` is provided for the ingress it is not used for the TLS host
+When a `host` is provided along with ingress=true then the operator will create an ingress that uses the host value in the `rules` section. However, the TLS section will always use `${cr.Name}` for the TLS host. The result is that the TLS endpoint is not available.
+
+It seems like if the host is provided it should be used in both places within the ingress
+
+## ArgoCD CSV
+
+`argocd-operator.v0.0.8` 
+
+## CR
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+  server:
+    host: argocd-tools.{ingress subdomain}
+    ingress: true
+    insecure: true
+```
+
+Merged #97 to address this issue, thanks!

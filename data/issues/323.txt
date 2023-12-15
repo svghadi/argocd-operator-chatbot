@@ -1,0 +1,125 @@
+Auto-upgrade to 0.0.15 on OpenShift 4.5 causing unexpected behaviour
+**Describe the bug**
+An auto-update occurred on 25th May to version 0.0.15. After it, multiple things are happening:
+
+1. Sync started to fail with `deployments.apps "myapp" is forbidden: User "system:serviceaccount:argocd:argocd-argocd-application-controller" cannot patch resource "deployments" in API group "apps" in the namespace "mynamespace"`
+
+From the error, I realised new RBAC resources have been created with an additional `argocd-` prefix. The namespace hosting ArgoCD is `argocd`, not sure if something has changed in this version.
+Service Accounts:
+![image](https://user-images.githubusercontent.com/22155710/119517813-d9eadf00-bd6f-11eb-8139-ca097d1cb251.png)
+
+
+1. DEX server is not starting (already reported in https://github.com/argoproj-labs/argocd-operator/issues/322)
+
+**To Reproduce**
+Steps to reproduce the behavior:
+Difficult to reproduce...
+1. OpenShift cluster (in my case v4.5) with a ArgoCD Operator version before 0.0.15
+2. Auto-Upgrade to 0.0.15
+
+**Expected behavior**
+
+ArgoCD should keep working as normal.
+
+**Screenshots**
+
+-
+
+**Additional context**
+
+-
+We are also experiencing this issue on OpenShift 4.6 and 4.7. Where is this extra prefix coming from?
+Is it from this change? https://github.com/argoproj-labs/argocd-operator/commit/3d1c5897c53961fbee8a28f7a9cbbd7d591aad0a#diff-3296585f4de9b03d27051f38cd4384a5cbc24d646119172333fd5b152dbdc215R50
+changes on
+https://github.com/argoproj-labs/argocd-operator/blob/3d1c5897c53961fbee8a28f7a9cbbd7d591aad0a/pkg/controller/argocd/deployment.go#L349
+broke our setup
+@GerbenWelter @vyckou Any luck fixing this issue in your side?
+I cannot find where ArgoCD points to `argocd-argocd-application-controller` instead of `argocd-application-controller`.
+I guess this can be solved updating certain Role bindings, but not sure if should be the new or the old files...
+
+
+_Closed issue by mistake_
+@samuanv altering role bindings and adding new service account also leaving an old one, in case folks will revert it back 😸 
+We experience the same as described in OP regarding SA argocd-argocd-application-controller and need to updated the rolebindings to reflect the new Service Account, but is the creation of the new SA intended or a mistake and will be fixed?
+Experience the same here. Updated the rolebindings manually.
+Thanks folks. As you pointed out, updating `argocd-application-controller` Cluster role binding to point to `argocd-argocd-application-controller` ServiceAccount fixed the issue. 
+Just realised that there is a new rolebinding `argocd-argocd-argocd-application-controller`. This resource with 3x `argocd` is the winner 😄 
+@samuanv We just had too much issues due to the changed ServiceAccounts / RoleBindings. Those problems were exacerbated by our Gatekeeper policies preventing proper creation. Additionally users were also having problems with applications using Helm that worked before the update. We just decided to disable the automatic update, uninstall the operator, clean up all the mess and reinstall 0.0.14.
+@GerbenWelter How did you reinstall 0.0.14? I am unable to install the old version via OLM 
+![image](https://user-images.githubusercontent.com/64945785/119680302-adfa5700-be5e-11eb-9034-911c232ca1b2.png)
+
+You need to create the Subscription yourself like this:
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd-operator
+spec:
+  channel: alpha
+  installPlanApproval: Manual
+  name: argocd-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: argocd-operator.v0.0.14
+```
+@GerbenWelter  any spotted bumps, while downgrading it?
+configuration schema changes etc
+@vyckou Not that I'm aware of. Users are happy again.
+@sbose78 @wtam2018 @bigkevmcd @chetan-rns Any idea if this new naming will be reverted or not? We're trying to decide whether to rollback to 0.0.14 or roll forward and adjust to the new SA name, but it's not clear if this is a permanent change or should be considered a bug (as it's a breaking change) :/
+> @sbose78 @wtam2018 @bigkevmcd @chetan-rns Any idea if this new naming will be reverted or not? We're trying to decide whether to rollback to 0.0.14 or roll forward and adjust to the new SA name, but it's not clear if this is a permanent change or should be considered a bug (as it's a breaking change) :/
+
+Hi @chrisob , Thanks for reaching out. This is a change that was introduced  as part of the commit 3d1c589 . Unfortunately, This is a breaking change. I will create an issue to document the upgrade path with minimum or no issues. 
+
+cc: @wtam2018 @jannfis @sbose78 
+
++1. It would help to have an upgrade doc similar to https://argoproj.github.io/argo-cd/operator-manual/upgrading/1.8-2.0/
+@iam-veeramalla , with all respect, according to [semver](https://semver.org/), breaking changes, should go under major version bump, not patch or minor version changes
+Documentation is a good start, but an automatic update is a no-go in such scenarios, as it is used in production systems, where production services are being maintained by argo.cd 
+Please consider following semversion and please opt-in the levers for major version bumps to go manually
+> @iam-veeramalla , with all respect, according to [semver](https://semver.org/), breaking changes, should go under major version bump, not patch or minor version changes
+> Documentation is a good start, but an automatic update is a no-go in such scenarios, as it is used in production systems, where production services are being maintained by argo.cd 
+> Please consider following semversion and please opt-in the levers for major version bumps to go manually
+
+Thanks @vyckou . Feedback acknowledged. We are currently working on getting a new release and we are also looking at the versioning and documentation.
+@vyckou Just to play devil's advocate, semver also says that:
+
+> [Major version zero (0.y.z) is for initial development. Anything MAY change at any time. The public API SHOULD NOT be considered stable.](https://semver.org/#spec-item-4)
+
+So the argo devs are still adhering to semver :neckbeard: 
+@iam-veeramalla Any update on a possible new release? We are currently holding off on all argocd-operator updates given the issues with updating to 0.0.15.
+> @iam-veeramalla Any update on a possible new release? We are currently holding off on all argocd-operator updates given the issues with updating to 0.0.15.
+
+I currently do not have the release date but it is in our bucket. 
+
+The new release will not handle/fix the breaking changes introduced with roles/ rolebindings and service accounts. This will continue as a breaking change enhancement. 
+
+The new release would fix the issues with Dex and documenting possible workarounds for issues with upgrades.
+Any news on this like approx month when the new release of the operator will be available ? 
+Will it work when upgrading from 0.0.14->0.0.XX in Openshift 4.6 , 4.7, 4.8 ?
+Hi @bortek , The new release would add a lot of enhancements so we need to perform some good testing. we have plans to release a new version in Sep or probably early October.  
+
+> Will it work when upgrading from 0.0.14->0.0.XX in Openshift 4.6 , 4.7, 4.8 ?
+
+The new release would have some breaking changes for sure but we will document the steps for a proper upgrade. 
+It's been a while since the last comment. Are there any updated on this ?
+@bortek A new release v0.1.0 is out. Can you give it a try ? 
+we see now the following issue and I think its related to this.
+
+argocd-server pod uses serviceAccount: `argocd-server` while the Service Account accually has the name `prefix-argocd-server`
+
+here it is set correctly (for new deployments)
+https://github.com/argoproj-labs/argocd-operator/blob/master/controllers/argocd/deployment.go#L1035
+
+but on an existing deployment the serviceAccountName are not managed/updated by the controller
+https://github.com/argoproj-labs/argocd-operator/blob/v0.1.0/controllers/argocd/deployment.go#L1045
+
+
+I'm a bit disappointed that despite this issue being reported and reproducibly confirmed 6 months ago and promises of improvement this has not happened. Especially since this issue seems like a no-brainer for a Helm chart.
+
+Does the project need help with managing issues?
+@splattner @bo0ts I agree that we have introduced some breaking changes in the latest versions but they were required due to the operator-sdk upgrade, enhancing the existing behavior and other reasons. 
+
+We have upgraded and released a new version v0.1.0 as there are breaking changes. We will make sure to avoid breaking changes going ahead.
+@iam-veeramalla Good that you mention it. What are the breaking changes in v0.1.0? I don't see them documented in the release notes.
+any updates on this? major breaking issues with such delays is not such a good thing (anybody who has to go through a lot of trouble just to fix issues related to a minor upgrade can second me on this)

@@ -1,0 +1,28 @@
+RFE: Allow setting environment variables via operator
+For quite a few cases the option to supply environment variables via operator would be really useful. Especially for corporate proxies, but also secrets. 
+I suggest something simple in the form of:
+```yaml
+environment:
+  - name: VAR
+    value: VAL
+  - name: VAR2
+    configmapRef:
+      name: public
+      key: key
+  - name: VAR3
+    secretKeyRef:
+      name: secret
+      key: key
+```
+Which, while verbose, should translate well to the actual deployments. I could imagine this as global for all deployments or service specific.
+@lhw You envision these for the operator container or the actual argocd components?
+Hey. Thanks for your work on this project.
+
+I meant these mostly for the ArgoCD components themselves. I skimmed the operator source code and couldn't find any way to add generic environment variables to the resulting deployments. I based my suggestion on the vault-operator here.
+I could see this being useful even for making values available to the build environment while using `config-management-plugins`, especially if you happen to also be using your own custom build of the `repo-server` image.
+
+@lhw In your example above, you mention being able to read these values from secrets/configmaps. I would assume that the user would be responsible for creating those outside of the scope of the operator, but is that how you're also imagining that this would work?
+Separating the secrets from the deployment is a good practice in my opinion. The way we add secrets to the deployment namespaces in most of our cases is using bitnamis sealedsecrets or godaddys external-secrets. This way no secret is found anywhere in a non-encrypted form outside the cluster. And inside the cluster we can easily limit the access to these secrets as well.
+
+Syntax-wise this should translate well to the deployment itself, being a basically 1:1 copy. 
+Being able to use a separate secret for dex client secrets or even external TLS would be great addition, or argocd root password from secret even

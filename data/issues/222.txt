@@ -1,0 +1,23 @@
+Segregation of multiple ArgoCD instances in a shared cluster
+Dear ArgoCD fellows,
+I really love the recent changes done in this project. So far we use an additional self-made operator in order to mange the service accounts and role bindings of all ArgoCD instances.
+
+However, I don't like that for the "read all" role a cluster role binding is used, as I have many security concerns when running a third-party operator with the permission to create cluster role bindings. Furthermore the idea of having multiple ArgoCD instances on a shared cluster implies that an ArgoCD instance should have access only to a subset of namespaces (otherwise you could simply use one instance). 
+
+To achieve proper segregation we also created an additional CR called `ArgoCDNamespace`  which is added to a (application) namespace in order to specify by which ArgoCD this namespace can be accessed (read and write). The additional operator automatically creates the role binding for the ArgoCD service accounts to the cluster role scoped to that specific namespace. It also updates the cluster secret for ArgoCD in order to add the namespace to the cluster configuration. This allows us to use multiple ArgoCD instances in a shared cluster without a need for cluster role bindings.
+
+**Suggestions/Questions**
+- Would it be possible to add an environment variable (flag, property in the CR) in order to enable/disable the reconcile of cluster role bindings?
+- How do you like the idea of adding a resource like `ArgoCDNamespace` to the operator?
+
+Please let me know what you think of these ideas, if you like them I'm also willing to create a PR for the suggested changes.
+
+Cheers,
+Norwin
+
+Update: I created another version of the operator extension using labels instead of a customer resource in order to define the subset of namespaces which are managed by an Argo CD instance running in namespaced mode. 
+
+Check it out: https://github.com/snorwin/argocd-operator-extension
+
+Furthermore, I added a detailed description of the use case to the repo: https://github.com/snorwin/argocd-operator-extension#use-case
+

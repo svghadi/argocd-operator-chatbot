@@ -1,0 +1,7 @@
+Configure argocd SAs to watch cluster-scoped or namespace-scoped objects
+* As an Argo Admin, I wish to enable ArgoCD to manage namespace-scoped resources only.
+* As an Argo admin, I wish to enable ArgoCD to manage cluster-scoped resources too.
+
+While the above is a configuration in ArgoCD itself, based on the intention of the admin, the underlying roles/rolebindings/clusterbindings should be created based on the principle of minimum privilege. 
+
+If the admin doesn't wish to have the argocd instance manage cluster-scoped resources, the `application-controller` service account should not be powerful enough to read/watch cluster-scoped resources.

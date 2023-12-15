@@ -1,0 +1,25 @@
+Ingress annotations getting ignored
+While trying to configure ArgoCD resource with this operator I've got an problem when "annotations" for ingress would be ignored and resulting ingress gets "nginx" ingress class.
+Maybe I'm doing something wrong(there is no example how this annotation should be written)
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  labels:
+    env: devenv
+spec:
+  ingress:
+    enabled: true
+    path: /
+    annotations:
+       kubernetes.io/ingress.class: nginx-yandex-main
+```
+Thank you for this, will have a look to address the problem that you are seeing.
+@Unb9rn thank you again for the report. I have added a fix for this issue that you are seeing and will make it into the v0.0.5 release this week. I will also add better documentation for this feature here shortly prior to the release.
+
+It should be noted that currently this is an all or nothing option for all Ingress resources that get created and will override any of the default annotations that get added for the nginx ingress.
+
+I plan on adding finer-grained control for this in #3 that will allow for control of the annotations for each individual Ingress resource (Server, Grafana, Prometeus, etc.) Currently, custom annotations apply to all of the Ingress resources. I hope that makes sense.
+Added an example for advanced ingress options that includes custom annotations. This should be available in the official documentation for the v0.0.5 release.  
+Released as part of v0.0.5.

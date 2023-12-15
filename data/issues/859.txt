@@ -1,0 +1,7 @@
+Provide a way to pass extra arguments in ArgoCD application controller.
+**Is your feature request related to a problem? Please describe.**
+
+ArgoCD application controller has the option to expose application labels in Prometheus metric using "--metrics-appication-labels" as mentioned in this document (https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/metrics.md). According to the documentation, this requires extra parameters to be provided to argocd-application-controller. When using the operator the StatefulSet for the controller is managed by the operator, hence it's not possible to add the aforementioned parameters.
+
+So can anyone please help me to understand if is there any way by which I can pass metrics application argument in argocd-application-controller.
+

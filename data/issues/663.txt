@@ -1,0 +1,18 @@
+upon applying manifests, k8s suggest some security context to be set
+run make deploy
+gives below error 
+
+W0527 14:34:01.484120   73360 warnings.go:67] would violate PodSecurity "restricted:latest": allowPrivilegeEscalation != false (container "kube-rbac-proxy" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (containers "kube-rbac-proxy", "manager" must set securityContext.capabilities.drop=["ALL"]), seccompProfile (pod or containers "kube-rbac-proxy", "manager" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
+
+proposal:
+add security context to manifest
+
+@rishabh625 can you explain a bit about your proposal?
+Hi @ishitasequeira There is already a PR FOR THIS BY @jopit #675 
+Closing this issue as https://github.com/argoproj-labs/argocd-operator/pull/675 has been merged
+Hi @jopit  in #675 fix i think we missed on this 
+
+Warning: would violate PodSecurity "restricted:v1.24": allowPrivilegeEscalation != false (container "kube-rbac-proxy" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (containers "kube-rbac-proxy", "manager" must set securityContext.capabilities.drop=["ALL"]), seccompProfile (pod or containers "kube-rbac-proxy", "manager" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
+/reopen
+
+Closing this issue as resolved.

@@ -1,0 +1,12 @@
+Transition to New Operator Bundle Format
+The format for operator bundles is changing and the operator should support this new format.
+
+See
+
+https://github.com/operator-framework/community-operators/issues/1680
+
+and 
+
+https://github.com/operator-framework/bundle-example
+This has been added along with #91.
+Merged as part of #99 and will go out in the v0.1.0 release.

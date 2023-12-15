@@ -1,0 +1,53 @@
+In Manual Install not all Service Accounts are created causing failure
+After applying all steps in [Manual Installation](https://argocd-operator.readthedocs.io/en/latest/install/manual/) and tried to create  an [example](https://argocd-operator.readthedocs.io/en/latest/usage/basics/#usage-basics) ArgoCD deployment. Pods in `example-argocd-server`, `example-argocd-application-controller` and `example-argocd-dex-server` will not start:
+
+```
+> kubectl get deploy -n argocd
+
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+argocd-operator                         1/1     1            1           133m
+example-argocd-application-controller   0/1     0            0           12m25s
+example-argocd-dex-server               0/1     0            0           12m25s
+example-argocd-redis                    1/1     1            1           12m25s
+example-argocd-repo-server              1/1     1            1           12m25s
+example-argocd-server                   0/1     0            0           12m25s
+```
+
+
+- Investigating the cause:
+```
+> kubectl describe replicaset example-argocd-server-6c664fc64c -n argocd
+
+...
+  Warning  FailedCreate  16s (x14 over 58s)  replicaset-controller  Error creating: pods "example-argocd-server-6c664fc64c-" is forbidden: error looking up service account argocd/argocd-server: serviceaccount "argocd-server" not found
+...
+```
+
+- No Service Accounts were created for `example-argocd-server`, `example-argocd-application-controller` and `example-argocd-dex-server`:
+```
+> kubectl get sa -n argocd
+
+NAME              SECRETS   AGE
+argocd-operator   1         12m
+default           1         156m
+```
+I tried to set **cluster-admin role** to **argocd-operator service account** to give extra permission, but still the same issue occurs.
+
+
+
+- Another noticeable point in [rolebinding.yaml:](https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/role_binding.yaml)
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-operator
+subjects:
+- kind: ServiceAccount
+  name: argocd-operator
+  namespace: argocd (this line is missing)
+roleRef:
+  kind: Role
+  name: argocd-operator
+  apiGroup: rbac.authorization.k8s.io
+```
+@rv-silva Thanks for reporting the issue. The service accounts are actually created by the operator controller. Looks like the operator image in `deploy/operator.yaml` is outdated which is deploying an older version of the operator.

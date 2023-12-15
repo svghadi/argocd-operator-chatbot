@@ -1,0 +1,22 @@
+The affinity of the redis-ha-server is incorrect in the release-0.3 branch
+**Describe the bug**
+
+The redis-ha-server pods being placed into a single node.
+
+I look at the current affinity settings in the release-0.3 branch as follows:
+
+https://github.com/argoproj-labs/argocd-operator/blob/df5eeb9eb1fe8203b2f07735f08624890543b4ec/controllers/argocd/statefulset.go#L140-L162
+
+But this problem has been fixed in the pr [#517](https://github.com/argoproj-labs/argocd-operator/pull/517/files#diff-86116e7eaae460f3ca901a2ee3f41c2e8e65b126ed1e17204c1103042a80adbbR141) of the master branch.
+
+https://github.com/argoproj-labs/argocd-operator/blob/7d0356b79d4bd4cb099605455f2b1e41582944b4/controllers/argocd/statefulset.go#L140-L151
+
+**To Reproduce**
+
+Install argocd-operator using the branch-0.3 branch.
+
+**Expected behavior**
+
+The redis-ha-server pods should be distributed to different nodes.
+
+Note that has been fixed in v0.4.0.

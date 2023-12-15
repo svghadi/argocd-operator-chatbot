@@ -1,0 +1,60 @@
+Something is wrong with password passing
+I am trying to create a new instance with this config:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd-main
+  namespace: argocd
+  labels:
+    env: prod
+spec:
+  image: argoproj/argocd
+  version: v1.4.2
+  ha:
+    enabled: false
+  server:
+    autoscale:
+      enabled: false
+    grpc:
+      host: grpcsome.domain
+      ingress: true
+    host: some.domain
+    ingress: true
+    insecure: true
+    service:
+      type: ClusterIP
+  redis:
+    image: redis
+    resources: {}
+    version: 5-alpine
+  statusBadgeEnabled: true
+  usersAnonymousEnabled: false
+  grafana:
+    enabled: false
+  prometheus:
+    enabled: false
+```
+It creates everything and there is a pod named `argocd-main-server-765b55b765-pv6w7`
+When I try to use it as a password to "admin" account it fails to log me in.
+I even tried to patch a secret with password with something as simple as 12345 in bcrypt hash, yet it won't work for some reason. I think it may be related to #29 issue as OLM automatically installs 0.0.6... Maybe it's time to create bet branch for semi-stable versions? =)
+And.. yep, I was right... After reading @jmckind notes to latest commits I've realized that another secret may override default argocd's behaviour. So I got this secret, unbase64'd the value and... voila =) I think it should be either fixed or properly documented.
+@Unb9rn the new password features were just merged into master yesterday and 0.0.6 has not been released yet. The only thing that exists for that version are the initial CSV manifest in master. As long as you are on 0.0.5 nothing should have changed for you.
+
+
+Are you using the "latest" tag for the operator image?
+I think I am not good enough with OLM, although I like the concept pretty much(I thought it is supposed to auto update any operator I am subscribed on) So I am using the config mentioned in docs:
+[Here](https://argocd-operator.readthedocs.io/en/latest/install/olm/)
+After checking in kube subscription object I see:
+
+>   installedCSV: argocd-operator.v0.0.6
+
+That's why I thought it would be a good idea to have another channel (like beta) for everything semi-stable.
+For now, how can I set operator version?)
+I see now what is happening and I need to ensure that the images used in the manifests in the `deploy` directory in the master branch use tags/digests that point to the most recent release.
+
+The CatalogSource that you were using from the `deploy` directory was using the `latest` tag, whch was using v0.0.6 version you saw.
+
+I have updated the image digests in master to point to v0.0.5 and I will ensure that I do use the `latest` tag any longer in the master branch.
+You should be able to follow the same process now and get the `v0.0.5` version.
+Thanks! It seems to work)

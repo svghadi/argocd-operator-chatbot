@@ -1,0 +1,58 @@
+Unable to change admin password
+Hi,
+
+I used the ArgoCD 0.0.14 OpenShift operator to deploy an ArgoCD cluster, however we seem to be unable to change the admin password using the instructions documented here: https://argoproj.github.io/argo-cd/faq/#i-forgot-the-admin-password-how-do-i-reset-it
+
+Our cluster looks like this:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: test
+  namespace: tim-argocd-test
+spec:
+  usersAnonymousEnabled: false
+  controller:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1024Mi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  server:
+    host: <snip>
+    insecure: true
+    route:
+      annotations:
+        kubernetes.io/tls-acme: 'true'
+      enabled: true
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: edge
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1024Mi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  dex:
+    openShiftOAuth: false
+```
+
+The logs are showing these errors:
+```
+time="2021-01-20T11:41:35Z" level=warning msg="User admin failed login 1 time(s)"
+time="2021-01-20T11:41:36Z" level=info msg="finished unary call with code Unauthenticated" error="rpc error: code = Unauthenticated desc = Invalid username or password" grpc.code=Unauthenticated grpc.method=Create grpc.service=session.SessionService grpc.start_time="2021-01-20T11:41:35Z" grpc.time_ms=944.012 span.kind=server system=grpc
+```
+
+We would like to use the OpenShift OAuth, however we also want to specify who can login and, especially, who cannot.
+The operator sets up the password using a different mechanism.
+
+You'll want to modify the secret https://argocd-operator.readthedocs.io/en/latest/usage/basics/#secrets which is based on your argocd resource name, for example "example-argocd-cluster"  in the "argocd" namespace..
+
+This needs to be a bcrypt hashed string and can be generated in the same way as the argocd documentation recommends.
+Ok, I feel like an idiot now. Thanks for your help. Case closed.
+@tsterk I think we can maybe improve the documentation around this, I'd definitely say it's non-trivial to find (I only knew because I have read the code).
+I'm reopening this, because I think we can do a better job of documenting this problem.

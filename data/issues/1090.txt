@@ -1,0 +1,16 @@
+Moving the Argo CD API out of `argoproj.io` and into its own group 
+Hi all
+
+First off, thanks for being a part of the Argo CD Operator community. We appreciate everyone's contribution and involvement in making this project what it is today!
+
+As you all are aware, this project has introduced the Argo CD CRD as a part of the `argoproj.io` group from the very beginning, and we have been maintaining it as is ever since. 
+As a part of the v0.8.0 release we had to introduce breaking changes to the Argo CD API. There were multiple reasons for doing this, ranging from staying in sync with upstream Argo CD's deprecation of `resource.customizations` to needing to simplify the operator's SSO provider configuration options. 
+
+Since there were breaking changes involved in the API, we bumped the Argo CD API version from `v1alpha1` to `v1beta1`. This change while seemingly unavoidable has advanced the entire `argoproj.io` group to `v1beta1` version, causing a separate issue. It is worth noting that the `argoproj.io` group is owned by the maintainers of the `argoproj` project. It also contains a number of other CRDs including `AppProject` and `Application` (among others) which are deployed by the upstream Argo projects.  and are still at version `v1alpha1`.
+
+As such, advancing the `argoproj.io` group to `v1beta1` has caused some confusion within the community, raising questions about whether these CRDs are no longer being supported since they are currently missing from the `v1beta1` version of the group.
+
+After some internal discussions we came to the conclusion that possibly a better way to move forward would be to move the Argo CD (and possibly ArgoCDExport) APIs into a new group that would be separate from the Argoproj project, so that we are able to have more control over how to progress with this API in the future
+
+We would like to hear from the community as well, since you are all users of this API. Please use this issue to make your thoughts known if you have specific objections to this change, or have other thoughts about this
+Thanks in advance! 

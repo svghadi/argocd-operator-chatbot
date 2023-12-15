@@ -1,0 +1,35 @@
+ArgoCDExport wrong service account names
+I have an argocd-operator that was manually deployed using your documentation [here](https://argocd-operator.readthedocs.io/en/latest/install/manual/). Now, I want to store backups in the AWS S3 bucket, for this purpose, I use your documentation [here](https://argocd-operator.readthedocs.io/en/latest/usage/export/#aws). 
+
+However, I have some troubles with that, here is an example of an error that I have:
+![image](https://user-images.githubusercontent.com/34510252/123134799-d4a9ae80-d459-11eb-80a5-9e63ea36cd2d.png)
+Accounts that I have in the `argocd-operator` namespace:
+![image](https://user-images.githubusercontent.com/34510252/123134896-eee38c80-d459-11eb-8078-f6ce541e1de2.png)
+Backup configuration file:
+![image](https://user-images.githubusercontent.com/34510252/123135451-7b8e4a80-d45a-11eb-9f5d-ee7f4c3f90ab.png)
+
+Can you, please, advise, what I should do with that?
+
+I have the same problem, but with a different setup. I have a namespace called argocd-operator, where the argocd-operator pod is deployed. In this namespace a service-account argocd-application-controller exists.
+
+The argocd and argocdexport resources have been created in the argocd namespace. Therefore, all argocd pods are launched in the argocd namespace.
+
+The job that is created automatically for the argocdexport runs into the same issue that has been described by @EugeneLugovtsov .
+
+If I create the argocdexport resource in the argocd-operator namespace the service-account is found, but the pod launched by the export job runs in to the following issue: configmaps \"argocd-cm\" not found"
+
+The only way I found to solve the issue is to have the argocd-operator and the argocd application in the same namespace. If that is true, then the argocd export job works like a charm.
+
+ 
+> I have the same problem, but with a different setup. I have a namespace called argocd-operator, where the argocd-operator pod is deployed. In this namespace a service-account argocd-application-controller exists.
+> 
+> The argocd and argocdexport resources have been created in the argocd namespace. Therefore, all argocd pods are launched in the argocd namespace.
+> 
+> The job that is created automatically for the argocdexport runs into the same issue that has been described by @EugeneLugovtsov .
+> 
+> If I create the argocdexport resource in the argocd-operator namespace the service-account is found, but the pod launched by the export job runs in to the following issue: configmaps "argocd-cm" not found"
+> 
+> The only way I found to solve the issue is to have the argocd-operator and the argocd application in the same namespace. If that is true, then the argocd export job works like a charm.
+
+Thanks for the feedback !!
+This is fixed in the latest version of the operator. Specifically by the PR #507. 

@@ -1,0 +1,35 @@
+Question about setting ArgoCD image to patch the argocd components
+**Is your feature request related to a problem? Please describe.**
+Regarding CVE-2022-24348  "Path traversal and dereference of symlinks when passing Helm value files" I want to upgrade to ArgoCD version 2.2.5, quay.io/argoproj/argocd:v2.2.5.
+
+I have set the property [Image](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#image) to argocd image 2.2.5:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+spec:
+  image: quay.io/argoproj/argocd@sha256:bac1aeee8e78e64d81a633b9f64148274abfa003165544354e2ebf1335b6ee73
+```
+```
+Failed to apply default image tag "quay.io/argoproj/argocd@sha256:bac1aeee8e78e64d81a633b9f64148274abfa003165544354e2ebf1335b6ee73@sha256:358c244c96313ca3bf9f588
+dc870d8123fc22ffa5c231c57da10f77b8d671c66": couldn't parse image reference
+"quay.io/argoprojargocd@sha256:bac1aeee8e78e64d81a633b9f64148274abfa003165544354e2ebf1335b6ee73@sha256:358c244c96313ca3bf9f588dc870d8123fc22ffa5c231c57da10f77b8d671c66":
+invalid reference format
+```
+
+**Expected behaviour
+I would expect that setting the Image property in ArgoCD CR would make the argocd componenents to use the image specified.
+Hi @jonaslar, Please make the below correction to your CR.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+spec:
+  image: quay.io/argoproj/argocd
+  version: sha256:bac1aeee8e78e64d81a633b9f64148274abfa003165544354e2ebf1335b6ee73
+```
+
+Hi, 
+
+setting version as described above solved the problem. I find now that the property version is documented, https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#version
+
+Thank you for the help

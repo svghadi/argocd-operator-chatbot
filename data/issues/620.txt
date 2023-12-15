@@ -1,0 +1,63 @@
+Argo CD .status.host field is not updated when using Ingress on OpenShift clusters. 
+**Describe the bug**
+PR #514 adds a new field(host) to the Argo CD CR `.status`. This is useful to retrieve the Argo CD server host name. 
+
+While this feature works as expected when customers use `Ingress on Kubernetes` and `Route on OpenShift`, it does not work when a customer use `Ingress on OpenShift`.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Get a OpenShift cluster.
+2. Install and run the operator using `make install run`
+3. Deploy the Argo CD instance using below example.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: ingress
+spec:
+  server:
+    ingress:
+      enabled: true
+    insecure: true
+``` 
+4. Wait for the operator to reconcile and create the pods.
+5. Wait for the pods to move into running state.
+6. Describe or Edit the Argo CD instance to identify that `.status` does not have any `host` field.
+
+**Expected behavior**
+host details should be updated in the Argo CD CR `.status`.
+
+**Additional context**
+As per my initial analysis, I have noticed that operator adds a Ingress Class annotation that is specific to `Nginx Ingress Controller`. By default the Ingress controller deployed in the OpenShift clusters is `HAProxy`, so the annotation hard coded [here](https://github.com/argoproj-labs/argocd-operator/blob/f67e04db076c8700260e100721391e8bfb570da3/controllers/argocd/ingress.go#L33) should be removed. 
+
+One of the below conditions has to be met for the HA Proxy Ingress controller to read any Ingress resource
+https://haproxy-ingress.github.io/docs/configuration/keys/#class-matter
+
+A user has to be provided with an option to define their own Ingress class through the Argo CD CR.
+First-time contributor; @iam-veeramalla, is this issue for grabs? If so, I would like to take a stab at it
+> First-time contributor; @iam-veeramalla, is this issue for grabs? If so, I would like to take a stab at it
+
+Hi @Vikaspogu , This is actually fixed. I will close this with details.
+
+Thanks for your interest in contributing. Please take a look at good-first-time labelled issues.
+Use this example to fix this issue.
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: ingress
+spec:
+  server:
+    host: example-argocd-<yourcluster.example.com>
+    grpc:
+      ingress:
+        enabled: true
+    ingress:
+      enabled: true
+    insecure: true
+```

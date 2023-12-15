@@ -1,0 +1,13 @@
+Add support to restrict login to optional list of groups using Dex
+**Is your feature request related to a problem? Please describe.**
+Dex allows the admin to restrict login to optional list of groups. Which means, only the users **who are part of any of the these groups** will be able to login into Argo CD.
+
+**Describe the solution you'd like**
+Enhance the Argo CD CR(specifically the Dex field) to support this.
+
+**Describe alternatives you've considered**
+NA
+
+**Additional context**
+https://dexidp.io/docs/connectors/openshift/#dex-configuration
+

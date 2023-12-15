@@ -1,0 +1,16 @@
+Add resource compare option to CRD
+Hello,
+
+ArgoCD supports capability to ignore aggregated `ClusterRoles` by adding following to Argo's ConfigMap:
+```
+  resource.compareoptions: |
+    # if ignoreAggregatedRoles set to true then differences caused by aggregated roles in RBAC resources are ignored.
+    ignoreAggregatedRoles: true
+```
+
+It would be great if this could be configured using ArgoCD CRD.
+
+Best regards,
+Bostjan
+Was this ever implemented?
+I played around with it and saw that this can be sorted with `spec.extraConfig.resources.compareoptions.ignoreAggregatedRoles: true`

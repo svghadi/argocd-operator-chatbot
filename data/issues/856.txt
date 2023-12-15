@@ -1,0 +1,17 @@
+Missing `ClusterRole` and `ClusterRoleBinding` that ArgoCD can fetch data about cluster resources
+**Describe the bug**
+
+ArgoCD deployed by the operator misses permission to show cluster resources, as there is not `ClusterRole` and `ClusterRoleBinding` for the `argocd-application-controller`.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Set `clusterResources=true` in `default-cluster-config`
+2. Applications will fail as the controller tries to fetch the cluster resources, but fails as there is no permission set for that.
+
+**Expected behavior**
+The `argocd-application-controller` should have permission to fetch those resources as in the installation stack of ArgoCD.
+See: https://github.com/argoproj/argo-cd/tree/master/manifests/cluster-rbac/application-controller
+
+**Additional context**
+Applying the `ClusterRole` and `ClusterRoleBinding` from the link above resolves the problem.
+

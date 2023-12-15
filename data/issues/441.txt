@@ -1,0 +1,33 @@
+Manual install documentation is old and not usefull
+**Describe the bug**
+The documentation for manual install is too fuzzy... it speaks about a deploy/folder for several yaml files:
+
+kubectl create -f deploy/service_account.yaml
+kubectl create -f deploy/role.yaml
+kubectl create -f deploy/role_binding.yaml
+kubectl create -f deploy/cluster_role.yaml
+kubectl create -f deploy/cluster_role_binding.yaml
+
+kubectl create -f deploy/argo-cd
+
+kubectl create -f deploy/crds
+
+but the fact is you cannot find this deploy folder anywhere and is no mention on where it is.
+
+**To Reproduce**
+Read the documentation is not possible to repoduce the install process over cli
+
+**Expected behavior**
+Reproduce the installation process using the information provided on the documentation without having to guess
+
+**Screenshots**
+No Screenshots
+
+**Additional context**
+Documentation should be simple and straight forward without guessing if the importation required is not there then the person following it simply gets lost...
+
+@aladrocMatiner Thanks for reporting, I will take a look :)
+theoretically all this can be fix on openshift using a subscription to install the operator, in any case the idea is the cli install or manual is not updated for long time and is kind of necesary on the process to automatize things... anyway thanks for taking a look :D i really appreciate it
+If you are looking into this, the Operator Lifecycle Manager deployment method also relies on the deploy/ directory that appears to be eluding me at this time..
+@Carus11 @jopit is already working on this.
+@iam-veeramalla Related to https://github.com/argoproj-labs/argocd-operator/issues/470 . This one can probably be closed as well

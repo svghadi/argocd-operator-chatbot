@@ -1,0 +1,31 @@
+Optimize ServiceAccount configuration/customization
+**Is your feature request related to a problem? Please describe.**
+As an ArgoCD user on AWS EKS, I would like assign AWS IAM roles to the ArgoCD service accounts, so that I can use the AWS API in ArgoCD (e.g. in order to decrypt sops with KMS). The assignment of IAM roles is done through an annotation on the corresponding ServiceAccount.
+
+**Describe the solution you'd like**
+I would like to have the possibility to add annotations to each of the ServiceAccounts that the operator creates/manages. Ideally, there should be a new field for this purpose in the `ArgoCd` custom resource (e.g. `server.serviceAccount.annotations`).
+
+In a perfect world, the ServiceAccounts should be fully configurable so that I can decide...
+* ...the name of the ServiceAccount
+* ...whether I want to create the ServiceAccount myself or use the one created by the operator
+* ...which annotations to put on the ServiceAccount
+* ...whether I want to auto-mount the ServiceAccount token
+
+Each ArgoCd component should have such a section:
+
+```
+server:
+  serviceAccount:
+    create: true
+    name: argocd-server
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam:foo/role:bar
+    autoMountServiceAccountToken: true
+```
+
+Similar to what a lot of Helm charts already do (see [this example](https://github.com/aws/eks-charts/blob/master/stable/aws-load-balancer-controller/values.yaml#L19))
+
+**Describe alternatives you've considered**
+The quick and ugly way is to annotate the ServiceAccount with `kubectl`, but that's a huge no-no. The nicer and declarative way is to use the [Resource Locker Operator](https://github.com/redhat-cop/resource-locker-operator) - with this approach the patch at least is a yaml file that can be managed through ArgoCD.
+
+It would be very useful this enhacement.

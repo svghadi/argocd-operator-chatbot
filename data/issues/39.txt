@@ -1,0 +1,12 @@
+[Feature] Support ArgoCD 1.5 (Helm 3, much faster, ...)
+Hi,
+
+could you support ArgoCD v1.5 in the next release? It contains support for Helm 3 and is much (!) faster than ever.
+
+Thanks a lot and greetings,
+
+Josef
+Now that 1.5 is released, will add support for it in the next release.
+Working on this in the [argo_15](https://github.com/argoproj-labs/argocd-operator/tree/argo_15) branch.
+This has been merged to master and will go out in the v0.0.6 release.
+Released as part of v0.0.6.

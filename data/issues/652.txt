@@ -1,0 +1,6 @@
+Add ingressClassName field
+We need to add `ingressClassName` support to customize ingress.
+and `host`
+Hi @adubkov, I guess this [PR](https://github.com/argoproj-labs/argocd-operator/pull/636/) might suffice the request. WDYT?
+@ishitasequeira Yes, it looks like it would solve this issue.
+closing this as its a duplicate of [626](https://github.com/argoproj-labs/argocd-operator/issues/626)

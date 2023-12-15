@@ -1,0 +1,82 @@
+Unable to create project on OpenShift with RBAC
+Hi 👋 I've followed the [example in the documentation](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#dex-openshift-oauth-example) for RBAC on OpenShift.
+
+Login is successful. User-info request returns:
+```json
+{
+  "loggedIn":true,
+  "username":"admin-extase",
+  "iss":"https://argocd-server.apps.ocp-lab2.regsys.brreg.no/api/dex",
+  "groups":["OCP-admins","system:authenticated","system:authenticated:oauth"]
+}
+```
+
+The group _OCP-admins_ has a ClusterRoleBinding to `cluster-admin`:
+```yaml
+> oc get clusterrolebinding cluster-admin-0 -o yaml | yq r - roleRef
+apiGroup: rbac.authorization.k8s.io
+kind: ClusterRole
+name: cluster-admin
+> oc get clusterrolebinding cluster-admin-0 -o yaml | yq r - subjects
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: OCP-admins
+```
+
+Relevant ArgoCD configuration is:
+```yaml
+dex:
+  image: quay.io/redhat-cop/dex
+  openShiftOAuth: true
+  version: v2.22.0-openshift
+rbac:
+  defaultPolicy: role:readonly
+  policy: |
+    g, system:cluster-admin, role:admin
+  scopes: '[groups]'
+```
+
+**Note**: I believe the documentation is wrong, with plural `system:cluster-admins`, though I've tried both.
+
+When creating a new project in web-ui, the response has status 403 with body:
+```json
+{
+  "error":"permission denied: projects, create, extase, sub: CiQ2N2ZlMWFmZi03YmUxLTQzYTgtODI2OC00MDBmY2QwMDJhYjMSCW9wZW5zaGlmdA, iat: 2020-12-07T14:04:56Z",
+  "code":7,
+  "message":"permission denied: projects, create, extase, sub: CiQ2N2ZlMWFmZi03YmUxLTQzYTgtODI2OC00MDBmY2QwMDJhYjMSCW9wZW5zaGlmdA, iat: 2020-12-07T14:04:56Z"
+}
+```
+
+Any ideas what I'm doing wrong?
+Log in argocd-server:
+```
+time="2020-12-07T14:15:26Z"
+level=info msg="received unary call /project.ProjectService/Create"
+grpc.method=Create grpc.request.claims="{\"at_hash\":\"B_mYfqemD7S-K3jxvSbIoA\",\"aud\":\"argo-cd\",\"email\":\"admin-extase\",\"email_verified\":false,\"exp\":1607436296,\"groups\":[\"OCP-admins\",\"system:authenticated\",\"system:authenticated:oauth\"],\"iat\":1607349896,\"iss\":\"https://argocd-server.apps.ocp-lab2.regsys.brreg.no/api/dex\",\"name\":\"admin-extase\",\"preferred_username\":\"admin-extase\",\"sub\":\"CiQ2N2ZlMWFmZi03YmUxLTQzYTgtODI2OC00MDBmY2QwMDJhYjMSCW9wZW5zaGlmdA\"}"
+grpc.request.content="project:<TypeMeta:<kind:\"\" apiVersion:\"\" > metadata:<name:\"extase\" generateName:\"\" namespace:\"\" selfLink:\"\" uid:\"\" resourceVersion:\"\" generation:0 creationTimestamp:<0001-01-01T00:00:00Z> clusterName:\"\" > spec:<description:\"\" > status:<> > "
+grpc.service=project.ProjectService grpc.start_time="2020-12-07T14:15:26Z"
+span.kind=server system=grpc
+
+time="2020-12-07T14:15:26Z"
+level=warning msg="finished unary call with code PermissionDenied"
+error="rpc error: code = PermissionDenied desc = permission denied: projects, create, extase, sub: CiQ2N2ZlMWFmZi03YmUxLTQzYTgtODI2OC00MDBmY2QwMDJhYjMSCW9wZW5zaGlmdA, iat: 2020-12-07T14:04:56Z"
+grpc.code=PermissionDenied grpc.method=Create grpc.service=project.ProjectService grpc.start_time="2020-12-07T14:15:26Z"
+grpc.time_ms=1.129 span.kind=server system=grpc
+```
+OK, so I got it working by changing the `rbac.policy` to:
+```csv
+g, OCP-admins, role:admin
+```
+
+Seems the documentation is incorrect.
+The ArgoCD documentation on RBAC is a bit light on `g, kubernetes-group, argocd-role` too, https://argoproj.github.io/argo-cd/operator-manual/rbac/
+Hi :) Glad this worked.
+
+Would you have guidance on how you would want the docs to be improved in this area?
+I guess one should reach out to argocd and verify the meaning of `g, <maybe-group-name>, <maybe-argocd-role>`?
+
+Has the current documentation worked in other versions of openshift? We are running openshift 4.6.4.
+@arve0 Thank you so much! :tada: 
+I nearly lost my mind trying to figure this out. 
+
+IMHO the operator documentation needs a lot more extensive examples, currently only the basics are documented.

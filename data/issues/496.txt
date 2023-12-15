@@ -1,0 +1,10 @@
+When multiple envs are merged, the pods may be coordinated many times due to unsorted
+**Describe the bug**
+
+argocd-operator: v0.1.0
+
+**Fixed**
+https://github.com/argoproj-labs/argocd-operator/pull/495
+> ### Looking forward to a better env sorting method
+will be fixed by #467 or #495 
+fixed in latest.

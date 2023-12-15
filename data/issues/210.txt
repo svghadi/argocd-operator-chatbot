@@ -1,0 +1,18 @@
+OperatorHub image is using Docker v1 Schema
+Hi Team,
+
+The ArgoCD image on OperatorHub (quay.io/redhat-cop/argocd-operator@sha256:d661aba8a5bc7c8a69cd7d5da8193585118b93f3e7ef14a213e1fa9c2684b47c) is of manifest type v1 schema and not v2.
+
+V1 is legacy and has been deprecated by Docker and this project should really be used v2.
+https://docs.docker.com/registry/spec/deprecated-schema-v1/
+
+This is also limiting the ability to perform disconnected installs of this Operator using the OpenShift provided manuals as the schemas are changes by Skopeo / Docker resulting in a SHA digest change and the image not being able to be located by the OLM.
+
+See below for the manifest-inspect.
+```
+./manifest-tool inspect quay.io/redhat-cop/argocd-operator@sha256:d661aba8a5bc7c8a69cd7d5da8193585118b93f3e7ef14a213e1fa9c2684b47c
+ERRO[0001] application/vnd.docker.distribution.manifest.v1+prettyjws not supported 
+ERRO[0001] Unknown descriptor type:  
+```
+
+Ack. This is problematic. @jmckind could you re-build and re-push the specific image ?

@@ -1,0 +1,180 @@
+configmap argocd-tls-certs-cm does not get populated with cr.spec.tls.initialCerts (v0.0.9)
+Hello, 
+we want to insert a root CA certificate into argocd repo server in order to connect to our private Git Repos without the "insecure" option. According to the documentation (https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#tls-options) we are using the following spec: 
+
+```yaml
+spec:
+  tls:
+    initialCerts:
+      root-ca.example.com: |-
+        -----BEGIN CERTIFICATE-----
+        MIIGbzCCBFegAwIBAgIQeM4J2V9oU5dCeqHWP/0dXzANBgkqhkiG9w0BAQsFADBt
+        ...
+        -----END CERTIFICATE-----
+```
+
+But the configmap "argocd-tls-certs-cm" contains no data after configuring the argocd object: 
+
+```
+[user@host ~]$ oc get cm argocd-tls-certs-cm
+NAME                  DATA   AGE
+argocd-tls-certs-cm   0      15m
+```
+
+Is it a bug or am I doing something wrong? 
+The documentation says something about "The following properties are available for configuring the Grafana component.". But I think this is not for grafana, it's supposed to be for the repo-server, isn't it?
+
+Thanks!
+@ThomasVitt Hi, it works for me (v0.12.0) and your yaml looks working.
+
+I have found that deleting the config-map and allowing the operator to re-create it resolves this. However, the server containers don't seem to pickup the change until they are rolled. Perhaps there is a watch missing on the config-map for changes to initialCerts? Or was the intention that this value would only be set at initial cluster creation and not updated after the ArgoCD cluster is up?
+/assign
+Hello, it seems we're facing the same issue in our OpenShift cluster.
+We have written the ArgoCD yaml as the following but the ConfigMap is then cleared to 0 bytes just few seconds later:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  creationTimestamp: "2021-11-03T17:54:27Z"
+  finalizers:
+  - argoproj.io/finalizer
+  generation: 345
+  name: openshift-gitops
+  namespace: openshift-gitops
+  resourceVersion: "366676868"
+  uid: 81e50515-67e8-4b9c-9115-d2fce79fb89f
+spec:
+  applicationSet:
+    resources:
+      limits:
+        cpu: "2"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+  controller:
+    processors: {}
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+    sharding: {}
+  dex:
+    openShiftOAuth: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+  grafana:
+    enabled: false
+    ingress:
+      enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+    route:
+      enabled: false
+  ha:
+    enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+  initialSSHKnownHosts: {}
+  prometheus:
+    enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: false
+  rbac:
+    policy: g, system:cluster-admins, role:admin
+    scopes: '[groups]'
+  redis:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+  repo:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  resourceExclusions: |
+    - apiGroups:
+      - tekton.dev
+      clusters:
+      - '*'
+      kinds:
+      - TaskRun
+      - PipelineRun
+  server:
+    autoscale:
+      enabled: false
+    grpc:
+      ingress:
+        enabled: false
+    ingress:
+      enabled: false
+    insecure: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 125m
+        memory: 128Mi
+    route:
+      enabled: true
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: edge
+    service:
+      type: ""
+  tls:
+    ca: {}
+    initialCerts:
+      ourgithuburl.sitename.domain: |-
+        -----BEGIN CERTIFICATE-----
+        MIIFRzCCAy+gAwIBASAGDASOGDOASDGADASLDASNMTcxMTE3MTgyMzE0WhgPM
+        ...
+        C9adNQgHRd/txMe3mo+ZbGvhz8aZTmV6Hihp59xwEQzGdyhYiOGK88gc89WpLt47
+        ydH+6RTwFPzxWTY=
+        -----END CERTIFICATE-----
+        -----BEGIN CERTIFICATE-----
+        MIIFaDCCA1CgAwIBAgIQQXP9vjnBLEmFyWPMnRc6WjANBgkqhkiG9w0BAQsFADBE
+       ...
+        pbpt4oTjAa6VoMbXZfT74/rJ48qOflDYwCIRInEzTX4TVMGZT58FhoU3Hb0=
+        -----END CERTIFICATE-----
+status:
+  applicationController: Running
+  dex: Running
+  phase: Available
+  redis: Running
+  repo: Running
+  server: Running
+  ssoConfig: Success
+```
+Anybody has solutions on similar cases ? 
+
+
+Apologies, we were overwriting the ArgoCD yaml from a repo without realizing it.

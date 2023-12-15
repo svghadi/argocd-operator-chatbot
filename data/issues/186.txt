@@ -1,0 +1,107 @@
+Pods stuck in crashloop after update to 0.0.14
+Hi :) 
+
+First thanks for the great Operator :)! 
+
+I updated our Dev Cluster today from 0.0.13 to 0.0.14 and since then two pods are crashlooping :( 
+
+See below logs :) 
+
+argocd-repo-server
+```
+time="2020-10-14T11:48:10Z" level=info msg="Initializing GnuPG keyring at /app/config/gpg/keys"
+time="2020-10-14T11:48:10Z" level=fatal msg="stat /app/config/gpg/keys/trustdb.gpg: permission denied"
+```
+argocd-application-controller
+```
+time="2020-10-14T11:48:10Z" level=info msg="appResyncPeriod=3m0s"
+time="2020-10-14T11:48:10Z" level=info msg="Application Controller (version: v1.7.7+33c93ae, built: 2020-09-29T04:56:38Z) starting (namespace: argocd)"
+time="2020-10-14T11:48:10Z" level=info msg="Starting configmap/secret informers"
+time="2020-10-14T11:48:10Z" level=info msg="Configmap/secret informer synced"
+E1014 11:48:10.261304       1 runtime.go:78] Observed a panic: "assignment to entry in nil map" (assignment to entry in nil map)
+goroutine 63 [running]:
+k8s.io/apimachinery/pkg/util/runtime.logPanic(0x1cbec40, 0x227bc80)
+	/go/pkg/mod/k8s.io/apimachinery@v0.18.8/pkg/util/runtime/runtime.go:74 +0xa3
+k8s.io/apimachinery/pkg/util/runtime.HandleCrash(0x0, 0x0, 0x0)
+	/go/pkg/mod/k8s.io/apimachinery@v0.18.8/pkg/util/runtime/runtime.go:48 +0x82
+panic(0x1cbec40, 0x227bc80)
+	/usr/local/go/src/runtime/panic.go:967 +0x166
+github.com/argoproj/argo-cd/util/settings.addStatusOverrideToGK(...)
+	/go/src/github.com/argoproj/argo-cd/util/settings/settings.go:508
+github.com/argoproj/argo-cd/util/settings.(*SettingsManager).GetResourceOverrides(0xc0000f78c0, 0xc000ecaed0, 0x0, 0x0)
+	/go/src/github.com/argoproj/argo-cd/util/settings/settings.go:485 +0x468
+github.com/argoproj/argo-cd/controller/cache.(*liveStateCache).loadCacheSettings(0xc00030db80, 0x10, 0xc0004a1380, 0x1ac619d)
+	/go/src/github.com/argoproj/argo-cd/controller/cache/cache.go:113 +0x9b
+github.com/argoproj/argo-cd/controller/cache.(*liveStateCache).Init(0xc00030db80, 0x2309518, 0xc000639c20)
+	/go/src/github.com/argoproj/argo-cd/controller/cache/cache.go:417 +0x2f
+github.com/argoproj/argo-cd/controller.(*ApplicationController).Run(0xc0004c9680, 0x22ead00, 0xc0004b9580, 0x14, 0xa)
+	/go/src/github.com/argoproj/argo-cd/controller/appcontroller.go:454 +0x26d
+created by main.newCommand.func1
+	/go/src/github.com/argoproj/argo-cd/cmd/argocd-application-controller/main.go:109 +0x90c
+panic: assignment to entry in nil map [recovered]
+	panic: assignment to entry in nil map
+
+goroutine 63 [running]:
+k8s.io/apimachinery/pkg/util/runtime.HandleCrash(0x0, 0x0, 0x0)
+	/go/pkg/mod/k8s.io/apimachinery@v0.18.8/pkg/util/runtime/runtime.go:55 +0x105
+panic(0x1cbec40, 0x227bc80)
+	/usr/local/go/src/runtime/panic.go:967 +0x166
+github.com/argoproj/argo-cd/util/settings.addStatusOverrideToGK(...)
+	/go/src/github.com/argoproj/argo-cd/util/settings/settings.go:508
+github.com/argoproj/argo-cd/util/settings.(*SettingsManager).GetResourceOverrides(0xc0000f78c0, 0xc000ecaed0, 0x0, 0x0)
+	/go/src/github.com/argoproj/argo-cd/util/settings/settings.go:485 +0x468
+github.com/argoproj/argo-cd/controller/cache.(*liveStateCache).loadCacheSettings(0xc00030db80, 0x10, 0xc0004a1380, 0x1ac619d)
+	/go/src/github.com/argoproj/argo-cd/controller/cache/cache.go:113 +0x9b
+github.com/argoproj/argo-cd/controller/cache.(*liveStateCache).Init(0xc00030db80, 0x2309518, 0xc000639c20)
+	/go/src/github.com/argoproj/argo-cd/controller/cache/cache.go:417 +0x2f
+github.com/argoproj/argo-cd/controller.(*ApplicationController).Run(0xc0004c9680, 0x22ead00, 0xc0004b9580, 0x14, 0xa)
+	/go/src/github.com/argoproj/argo-cd/controller/appcontroller.go:454 +0x26d
+created by main.newCommand.func1
+	/go/src/github.com/argoproj/argo-cd/cmd/argocd-application-controller/main.go:109 +0x90c
+```
+Hey @Numblesix thanks for the kind words and I am sorry that you are having an issue. I thought we had that handled, let me do a little digging to see if I can get a solution for you. 
+No Problem.
+
+Ill try to make a rollback to v0.0.13 and put some words in the Docs about how to do that :) 
+Or should i leave it as is ? Currently it doesnt hurt me to much then i could help with logs etc
+It's up to you. I am somewhat familiar with this issue and new clusters are not impacted, so this appears to be related to upgrading from 0.0.13 to 0.0.14
+ill leave it then as is for you to request logs etc :) 
+
+Depending on if it might start hurt ill do a downgrade then and would write some small doc on how to do so :)
+We have the same issue as @Numblesix.
+We have a broken ArgoCD now....
+
+How can we rollback to 0.0.13?
+Hi @wouter2397 
+
+Didn't had time to dig into this but in theory you should be able to create a backup of all your crds created (for application projects etc) and just redeploy the Argo crd. As far as I understood this issue only happens at an update :) 
+Issue seems to be that with operator v0.0.14, default ArgoCD version used is v1.7.7. With v1.7.x, GPG is enabled by default and is causing issues due to permissions (at least on OpenShift) https://github.com/argoproj/argo-cd/issues/4127
+Maybe operator is not configuring those parameters when deploying ArgoCD?
+I would say you do not have to downgrade operator, just specify version in ArgoCD custom resource ( `spec.version`) - in operator v0.0.13 default value was set to v1.6.1 I believe.
+Hi @BostjanBozic 
+
+You're suggestion works!
+Thank you for your quick help
+@jmckind Can you update us within this issue when the problem should be solved and we can remove the spec.version within the ArgoCD custom resource?
+Thanks for the comment @BostjanBozic, yes that would work.
+
+There are two issues here, the first GPG issue can be worked around by deleting the Deployment for the repo-server. The operator will recreate it and that issue will be resolved. This is due to a new Volume being needed for the GPG functionality and the old Deployment obviously didn't have this.
+
+The second issue is related to how the operator handles the ResourceCustomizations and an [upstream issue](https://github.com/argoproj/argo-cd/issues/4555) that prevents translating an empty value properly. The work around for this is to remove the `resource.customizations` key from the `argocd-cm` ConfigMap. Once the pod restarts, the issue should be resolved.
+@wouter2397 I am sorry that we let this get through and will provide an update when we have a proper fix in the operator.
+Thanks for the workaround to get my lab back up and running again.  Great operator appreciate all your efforts!
+
+@jmckind Can confirm both workarounds from [above](https://github.com/argoproj-labs/argocd-operator/issues/186#issuecomment-708491787) work :) ! 
+It works for me as well
+Works!!!
+it works also for us, thank you so much. (same problem on many ArgoCD instance on OCP 4.5.x)
+
+bye
+Alessandro
+Deleting resource.customizations from config map argocd-cm and deleting the deployment for the repo server worked for us as well. We upgraded from 0.0.12 to 0.0.14.
+
+Thx :-)
+There have been further improvements with #286, which fully enables GnuPG feature in Argo CD Operator.
+
+I will close this issue, since this has been released with v0.0.15
+Feel free to reopen if the issues have not been resolved. :)

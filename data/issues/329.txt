@@ -1,0 +1,14 @@
+Setting loglevel for components
+**Is your feature request related to a problem? Please describe.**
+When using ArgoCD operator the loglevel of all components is set to the default value of 'INFO'. Depending on the use case this will produce a lot of unrelated log messages. As far as I see there is no option to adjust the loglevel of the ArgoCD components.
+
+**Describe the solution you'd like**
+Using the ArgoCD CR we could set the loglevel for the different components.
+
+**Describe alternatives you've considered**
+Setting the --loglevel in the Deployment will not work as these resources are operator managed.
+
+**Additional context**
+The loglevel could be set for all components, e.g. https://argoproj.github.io/argo-cd/operator-manual/server-commands/argocd-server/.
+
+I agree on this. 

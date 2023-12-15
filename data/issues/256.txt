@@ -1,0 +1,79 @@
+New version of the operator
+Hi
+
+Is there any new version of the operator scheduled to be released soon? 
+
+Latest opertor is v0.0.14 which was released in Oct 2020. 
+Hey @bortek , we did some significant refactoring on RBAC management in the past few months and hence wanted to ensure we stabilize it. 
+
+We'll do a release in the last week of March.
+thanks for info. Looking forward to it!
+would the new operator work with argocd version 2.0-?
+https://github.com/argoproj/argo-cd/tree/v2.0.0-rc1
+Yes, Colin.
+
+On Thu, Apr 1, 2021, 23:33 Colin Chai ***@***.***> wrote:
+
+> would the new operator work with argocd version 2.0-?
+>
+> —
+> You are receiving this because you commented.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/argoproj-labs/argocd-operator/issues/256#issuecomment-812298529>,
+> or unsubscribe
+> <https://github.com/notifications/unsubscribe-auth/AAEFEAD4L5VT2SHLFC5VVJLTGU3I5ANCNFSM4YFFBMGA>
+> .
+>
+
+Thanks @sbose78 Shoubhi, do you have the date when the new operator will be released?
+Thank you for releasing v0.0.15. Is there anyway we can update OpenShift argocd-operator to v0.0.15 on the OperatorHub?
+@jomkz 
+Sorry, I still don't have a date. A regular release cadence is being worked out. 
+
+Curious question to all in this thread:
+On which distribution of Kubernetes are you using this operator ?
+> Sorry, I still don't have a date. A regular release cadence is being worked out. 
+> 
+> Curious question to all in this thread:
+> On which distribution of Kubernetes are you using this operator ?
+
+Openshift 4 for me as well
+Thanks @Obirah , any reason you aren't using the OpenShift GitOps operator ?
+> Thanks @Obirah , any reason you aren't using the OpenShift GitOps operator ?
+
+To be precise, Openshift ist not the only Kubernetes distribution we use. We have implemented our own GitOps framework that combines ArgoCD with the AWS CDK which we also use for EKS. Hence, we want to rollout ArgoCD in the same style on all distributions and decided to use the "vanilla" ArgoCD operator in order to keep it clean and simple.
+Thanks, the background helps a lot. Do you happen to use the Argocd
+Operator on EKS ? Or do you use EKS as a target deployment cluster?
+
+On Wed, Apr 28, 2021, 20:52 Thomas Krause ***@***.***> wrote:
+
+> Thanks @Obirah <https://github.com/Obirah> , any reason you aren't using
+> the OpenShift GitOps operator ?
+>
+> To be precise, Openshift ist not the only Kubernetes distribution we use.
+> We have implemented our own GitOps framework that combines ArgoCD with the
+> AWS CDK which we also use for EKS. Hence, we want to rollout ArgoCD in the
+> same style on all distributions and decided to use the "vanilla" ArgoCD
+> operator in order to keep it clean and simple.
+>
+> —
+> You are receiving this because you were mentioned.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/argoproj-labs/argocd-operator/issues/256#issuecomment-828874289>,
+> or unsubscribe
+> <https://github.com/notifications/unsubscribe-auth/AAEFEAANYWYBAIBMQKLDVALTLCUUJANCNFSM4YFFBMGA>
+> .
+>
+
+OpenShift 4 for me too. We have not had the time to migrate to OpenShift GitOps Operator. 
+> Thanks, the background helps a lot. Do you happen to use the Argocd Operator on EKS ? Or do you use EKS as a target deployment cluster?
+> […](#)
+> On Wed, Apr 28, 2021, 20:52 Thomas Krause ***@***.***> wrote: Thanks @Obirah <https://github.com/Obirah> , any reason you aren't using the OpenShift GitOps operator ? To be precise, Openshift ist not the only Kubernetes distribution we use. We have implemented our own GitOps framework that combines ArgoCD with the AWS CDK which we also use for EKS. Hence, we want to rollout ArgoCD in the same style on all distributions and decided to use the "vanilla" ArgoCD operator in order to keep it clean and simple. — You are receiving this because you were mentioned. Reply to this email directly, view it on GitHub <[#256 (comment)](https://github.com/argoproj-labs/argocd-operator/issues/256#issuecomment-828874289)>, or unsubscribe <https://github.com/notifications/unsubscribe-auth/AAEFEAANYWYBAIBMQKLDVALTLCUUJANCNFSM4YFFBMGA> .
+
+We're running the ArgoCD operator on both EKS and Openshift. We don't have any scenarios where an ArgoCD on one cluster deploys to multiple target clusters.
+Here is an update regarding the release of the operator :)
+https://github.com/argoproj-labs/argocd-operator/discussions/284#discussioncomment-696648
+
+Looking so forward for it! Argo 2.x FTW!
+
+A few new releases have been cut since this issue was opened, so this can probably be closed

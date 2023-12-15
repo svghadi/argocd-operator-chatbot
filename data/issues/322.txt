@@ -1,0 +1,52 @@
+Version 0.0.15 update now getting Dex failure
+**Describe the bug**
+Operator was auto updated to 0.0.015 and now the DEX server will not start
+
+error:
+In DEX container log:
+Error: unknown command "rundex" for "argocd-util"
+Run 'argocd-util --help' for usage.
+unknown command "rundex" for "argocd-util"
+
+**To Reproduce**
+upgrade to 0.0.15 in Openshift 4.7, DEX server does not start
+
+**Expected behavior**
+Dex server should start
+
+
+**Additional context**
+Had no issues with this in 0.0.14 using Openshift 4.7
+
+
+
+Were are currently seeing this as well.
+Problem here too. How can I downgrade operator?
+See: https://github.com/argoproj/argo-cd/issues/5306
+and: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/upgrading/1.8-2.0.md#dex-tool-migrated-from-argocd-util-to-argocd-dex 
+This is fixed with #270 in code, I guess... Did not make it into the package. @jomkz
+I have this work around until next fix:  https://github.com/argoproj/argo-cd/issues/5306
+Same behaviour on our OpenShift 4.7 and the work around described above fixed it for now, https://github.com/argoproj/argo-cd/issues/5306. Thats is change the lines in "-command"'s like this:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-dex-server
+spec:
+  template:
+    spec:
+      containers:
+        - command:
+            - /shared/argocd-dex
+            - rundex
+          name: dex
+      initContainers:
+        - command:
+            - cp
+            - -n
+            - /usr/local/bin/argocd-dex
+            - /shared
+          name: copyutil
+Hi @u849296 , Thanks for raising the issue with us :)
+
+We got this issue fixed as part of #270 but unfortunately it seems to missed during packaging. We are looking into the options of releasing a new version of the operator or documenting the work arounds. I will keep the issue updated with any sort of progress made. 

@@ -1,0 +1,23 @@
+Allow exposing application labels as Prometheus metrics
+**Is your feature request related to a problem? Please describe.**
+ArgoCD conroller allow exposing of application labels in Prometheus metric argocd_app_labels (https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/metrics.md). This requires extra parameters to be provided to argocd-application-controller. When using the operator the StatefulSet for the controller is managed by the operator, hence it's not possible to add the aforementioned parameters. 
+
+**Describe the solution you'd like**:
+Allow additional arguments for controller executable, for example
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: controller
+spec:
+  additionalArguments:
+  - --metrics-application-labels
+  - team-name
+  - --metrics-application-labels
+  - business-unit
+```
+
+

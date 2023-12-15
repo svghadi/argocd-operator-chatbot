@@ -1,0 +1,3 @@
+Several Dashboard Metrics Not Working
+There are several items on the Argo CD dashboard in Grafana that are not working. Some items are using deprecated metrics and need to be updated.
+Merged into master and will go out in v0.0.9

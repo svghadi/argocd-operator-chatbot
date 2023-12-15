@@ -1,0 +1,25 @@
+ArgoCDExport with existing PVC is not using the correct name field
+**Describe the bug**
+I tried to connect ArgoCDExport to an existing PVC which is allocated using CSI driver (using the `dataSource` fields). When going through the source code of the operator I found out that the claim name to be used is the ArgoCDExport name and not the name field under `dataSource`
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create a PVC.
+2. Create a ArgoCDExport with the corresponding name and kind under `dataSource` and set the `backend` field to local
+3. The created CronJob template is mounting EmptyDir instead of the existing PVC.
+
+**Expected behavior**
+being able to create existing PVC and ArgoCDExport with different names while specifing the correct PVC name.
+Hi @momoadc , Thanks a lot for raising issue with us :)
+
+You mentioned that you have already looked into the code which is doing wrong, do you want to contribute this to us ? Thanks :) 
+Offcourse.
+[https://github.com/argoproj-labs/argocd-operator/blob/3aa839b023883b564ac5bfd6012f16f9ce19797b/pkg/controller/argocdexport/job.go#L130](https://github.com/argoproj-labs/argocd-operator/blob/3aa839b023883b564ac5bfd6012f16f9ce19797b/pkg/controller/argocdexport/job.go#L130)
+> Offcourse.
+> https://github.com/argoproj-labs/argocd-operator/blob/3aa839b023883b564ac5bfd6012f16f9ce19797b/pkg/controller/argocdexport/job.go#L130
+
+Do you want to raise a PR with the changes ?
+From what i have seen the field `dataSource` is not integrated with ArgoCDExport yet (it is not used at all). the fix requires more then changing the line. 
+> From what i have seen the field `dataSource` is not integrated with ArgoCDExport yet (it is not used at all). the fix requires more then changing the line.
+
+got it :) .. Thanks for the response. 

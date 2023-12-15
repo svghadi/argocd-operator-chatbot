@@ -1,0 +1,11 @@
+ArgoCD CR Should List Status for All Argo CD Components 
+Currently, the operator only populates a Status value for the Argo CD server component. In addition, the value for the Status `Phase` is only computed currently based on the value of the server component Status currently.
+
+The operator should list the status for each of the following Argo CD components and use each of these status values in the final determination for the Status `Phase` value.
+
+- Application Controller
+- Dex
+- Redis
+- Repo Server
+- Server
+This has been merged into master as part of #104 and will go out in the next release.

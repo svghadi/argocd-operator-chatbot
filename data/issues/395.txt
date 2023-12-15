@@ -1,0 +1,98 @@
+Ability add env to containers
+**Is your feature request related to a problem? Please describe.**
+Hi, we are using our kustomize, which needs to read environment variables in the argocd-repo-server container. Can you add the ability to define variables like we did in a non-operator setup?
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+spec:
+  replicas: 5
+  template:
+    spec:
+      containers:
+      - name: argocd-repo-server
+        env:
+          - name: CLUSTER
+            value: prod
+```
+
+**Describe the solution you'd like**
+I think it should look something like this.
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: repo
+spec:
+  repo:
+    env: {}
+```
+The only problem with env is when it is changed or modified in the CR, The replication controller creates a new pod/container as env vars cannot be updated for a container. Currently, the operator creates all the env vars supported by the Argo CD. 
+
+Is there any reason why you choose to handle this using env vars over labels or annotations ? Thanks !!
+Hey! Thanks for the quick response!
+
+Yes, I understand this nuance. But in env we pass a variable defining the name of the cluster. This is only used once when starting the container, we don't need to change this.
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: repo
+spec:
+  repo:
+    env: 
+    - name: CLUSTER
+       value: cluster1
+```
+
+This is so that our little custom tool for kustomize can work the way we want.
+We split the clusters at the level of one repository. Thus, we can describe applications where we need them.
+Here is the little custom tool for kustomize:
+
+```
+#!/bin/bash
+set -e
+
+kustomize="/custom-tools/kustomize-3.8.9"
+
+if [[ $# == 0 || $1 != "build" ]]; then
+  exec $kustomize "$@"
+fi
+
+directory="$2"
+
+if [[ -e "$directory/$CLUSTER/kustomization.yaml" ]]; then
+  exec $kustomize build "$directory/$CLUSTER"
+fi
+
+if [[ -e "$directory/base/kustomization.yaml" ]]; then
+  exec $kustomize build "$directory/base"
+fi
+
+exec $kustomize "$@"
+```
+
+Though I realized that we also need to build our own container for the repo server. Because we used to add this via initContainers.
+
+```
+      initContainers:
+      - name: copy-custom-kustomize
+        image: my-registry.com/kustomize-tools:latest
+        command: [sh, -c]
+        args:
+        - cp /tools/* /custom-tools/
+        volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools
+```
+
+
+@radinv thanks for the explanation :)

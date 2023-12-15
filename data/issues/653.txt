@@ -1,0 +1,17 @@
+Unify SSO under `.spec.sso` in a backward compatible way 
+As an Argo CD admin/user I would like to see all the SSO provider under `.spec.sso` field in the Argo CD CR. Moving to this "provider" parameter will allow at most one SSO provider to be enabled at any time. We can then enforce Dex pods should only be created when `.spec.sso.provider: dex` is enabled
+
+Background:
+1. Currently Keycloak SSO provider can be configured using the `.spec.sso.provider` option whereas Dex can be configured using the `.spec.dex` field in the Argo CD CR. The goal is to have a unified location for all the SSO providers.
+2. Currently Dex pods are created by default for any Argo CD instance created by the gitops-operator unless the DISABLE_DEX env var is set to `true` in the CSV/Subscription resource. This behavior should be changed. Dex pods should only be created when `.spec.sso.provider: dex` is configured in the Argo CD CR.
+
+We want to migrate the dex configurations from `.spec.dex` to `.spec.sso.dex` within the Argo CD CR. However, removing `.spec.dex` would be a breaking change, and as such, should not be done immediately. We should instead add the option of configuring `.spec.sso.dex` into the Argo CD CR alongside `.spec.dex` for backward compatibility. The operator should be equipped to handle both configurations (until Argo CD operator v0.6.0 when `.spec.dex` will be deprecated and support will be removed from the operator`) Similarly, we should also continue supporting DISABLE_DEX during this time (as the experience would be inconsistent if we didn't) and remove support for it along with `.spec.dex`
+
+Acceptance Criteria:
+1. `.spec.dex` is deprecated and a notice is added to release notes that it will be removed in v0.6.0
+
+2. `DISABLE_DEX` is deprecated and a notice is added to release notes that it will be removed in v0.6.0
+3. A k8s event is created when `.spec.dex` or DISABLE_DEX is used by customer
+4. `.spec.sso` is added as the right way of specifying sso provider and added to the release notes
+5.  The operator logic is updated to handle both old and new configuration for SSO simultaneously, and all edge cases are handled
+/assign

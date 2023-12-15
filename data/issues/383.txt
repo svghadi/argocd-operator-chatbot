@@ -1,0 +1,76 @@
+resource customization for custom health check using operator not working
+**Describe the bug**
+ArgoCD instance using the operator is already rolled out successfully.  Attempting to edit the ArgoCD resource to add a custom health check to support OpenShift DeploymentConfigs.
+
+The operator accepts the ReousceCustomization attribute but does not update the requisite argocd-cm configmap for the Argocd resource.
+
+If I attempt to manually edit the argocd-cm resource to add resource.customization in the required format, the operator is removing it after reconciliation.
+
+So, not only is the operator not applying my change to the resource, but also removing the manual change so I am completely unable to apply this custom health check.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+Following the operator docs (https://argo-cd.readthedocs.io/en/stable/operator-manual/health/) I added my health check script to the ArgoCD resource:
+```
+ResourceCustomizations:
+    apps.openshift.io/DeploymentConfig:
+      health.lua: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Available" and condition.status == "False" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Available" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+        hs.status = "Progressing"
+        hs.message = "Waiting for rollout"
+       return hs
+```
+
+The argocd-cm resource is never updated after applying this.
+
+I then went to the argocd-cm configmap and manually attempted to put this in place (https://argo-cd.readthedocs.io/en/stable/operator-manual/health/#custom-health-checks):
+
+```
+resource.customizations: |
+    apps.openshift.io/DeploymentConfig:
+      health.lua: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Available" and condition.status == "False" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Available" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+        hs.status = "Progressing"
+        hs.message = "Waiting for rollout"
+        return hs
+```
+
+After the operator reconciles, this edit is removed from the argocd-cm configmap
+
+**Expected behavior**
+Ether the operator applies the ResourceCustomization or let's me manually edit the argocd-cm configmap
+
+

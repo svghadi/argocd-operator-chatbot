@@ -1,0 +1,4 @@
+Missing 0.0.10 package in argocd-operator/deploy/olm-catalog/argocd-operator/
+I'm running my own catalog and still using the older folder based bundle format. I went to argocd-operator/deploy/olm-catalog/argocd-operator/ to grab that and found that version 0.0.10 isn't available in there. Could we get that generated? 
+Hey @flickerfly! I am working on that right now. :)
+Like I mentioned in the [PR](https://github.com/argoproj-labs/argocd-operator/pull/113), I have rolled forward to v0.0.11 and it has been released along with the OLM artifacts. I will be adding the PRs to get v0.0.11 included in the Operator Hubs as well.

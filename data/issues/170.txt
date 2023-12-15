@@ -1,0 +1,22 @@
+Consider listing operator in Artifact Hub
+Hi! 👋🏻
+
+Have you considered listing the **argocd** operator directly in [Artifact Hub](https://artifacthub.io)? 
+
+At the moment it is already [listed there](https://artifacthub.io/packages/olm/community-operators/argocd-operator), because the Artifact Hub team has added the [community-operators](https://github.com/operator-framework/community-operators/tree/master/upstream-community-operators) repository. However, listing it yourself directly has some benefits:
+
+- You add your repository *once*, and new versions (or even new operators) committed to your git repository will be indexed *automatically* and listed in Artifact Hub, with no extra PRs needed.
+- You can display the [Verified Publisher](https://github.com/artifacthub/hub/blob/master/docs/repositories.md#verified-publisher) label in your operators, [increasing their visibility](https://artifacthub.io/packages/search?page=1&verified_publisher=true) and potentially the users' trust in your content.
+- Increased visibility of your organization in urls and search results. Users will be able to see your organization's description, a link to the home page and search for other content published by you.
+- If something goes wrong indexing your repository, you will be notified and you can even inspect the logs to check what went wrong.
+
+If you decide to go ahead, you just need to sign in and add your repository from the control panel. You can add it using a single user or create an organization for it, whatever suits your needs best.
+
+You can find some notes about the expected repository url format and repository structure in the [repositories guide](https://github.com/artifacthub/hub/blob/master/docs/repositories.md#olm-operators-repositories). There is also available an example of an [operator repository](https://github.com/ctron/ditto-operator/tree/master/olm) already listed in Artifact Hub [in the documentation](https://github.com/artifacthub/hub/blob/master/docs/repositories.md#example-repository-ditto-operator-repository). Operators are expected to be packaged using the [format defined in the Operator Framework documentation](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md#packaging-format) to facilitate the process.
+
+Please let me know if you have any questions or if you encounter any issue during the process 🙂
+Hi @tegioz, thanks for the request! We should hopefully be moving the github project over to the official upstream org soon and once that is done, I think that the operator can be listed as you explained.
+Awesome, thanks! 👍 
+Looks like this is available on ArtifactHub already: https://artifacthub.io/packages/olm/community-operators/argocd-operator
+
+So this can probably be closed?

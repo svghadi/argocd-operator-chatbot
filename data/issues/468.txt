@@ -1,0 +1,48 @@
+Add support for ArgoCD server `--rootpath` parameter
+**Is your feature request related to a problem? Please describe.**
+The ui being a single page app, I can't place the service behind an url with a different rootpath other than `/`.
+
+**Describe the solution you'd like**
+The server block should allow additional command parameters  
+and merge them with the default when creating the Deployment resource.
+
+**Describe alternatives you've considered**
+Having a specific entry `rootpath` would also work, but limits flexibility.
+
+**Additional context**
+
+Hi @13013SwagR , Can you please provide more details regarding your request and use-case ? Thanks !!
+Sure,
+**Context**
+I am given an URL to access my instance as it runs in a segregated sub-net
+e.g. `internal.domain.net/proxied_path/`  
+
+**Actual behavior**
+I need to set the `rootpath` to `proxied_path` because when ArgoCD loads, 
+it updates the URL to `internal.domain.net/Application`
+_This is a common problem with single page apps_  
+
+**Desired behavior**
+I need ArgoCD to be aware of the `rootpath` so its loads the URL like `internal.domain.net/proxied_path/Application`
+Are u using route or an ingress. 
+
+I think your problem should be solved by adding the path to your server spec in the Argo CD CR. Something like this.
+```
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: route
+spec:
+  server:
+    route:
+      enabled: true
+      path: <something>/applications
+```
+
+https://github.com/argoproj-labs/argocd-operator/blob/b674bea5d139859ffae5d6b2add03db1975369d2/bundle/manifests/argoproj.io_argocds.yaml#L4106
+I am using a route
+I tried your solution, but without success
+The path is present in the ArgoCD CR, but not in the route or the deployment.
+if it is not working then its a bug. Let me give it a try and see what is going on :)
+

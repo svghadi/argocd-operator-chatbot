@@ -1,0 +1,20 @@
+add documentation on how to build/run docs locally
+**Is your feature request related to a problem? Please describe.**
+I was trying to test out a docs PR and couldn't find any documentation how to do so. Luckily one of my teammates knew and sent me over instructions, but they were only kept in our company slack and AFAIK not documented anywhere else.
+
+**Describe the solution you'd like**
+If we could add a README with instruction in the `docs/` folder here with instructions how to do that I think it would be helpful to anyone else trying it. Or in the documentation itself maybe under `Development > Setup`. 
+
+**Additional context**
+Current steps for building and running documentation locally here:
+
+1. Create a Python Virtual Environment(NOT mandatory)
+       `python3 -m venv doc`
+ 2.   Get into virtual environment `source doc/bin/activate`
+ 3.   `pip3 install mkdocs`
+ 4.   `pip install mkdocs-material`
+ 5.   `mkdocs serve`
+
+If someone could provide input on where would be the best place for this documentation I can provide a PR. Thanks!
+
+I guess [this](https://argocd-operator.readthedocs.io/en/latest/contribute/development) could be a good place to add it

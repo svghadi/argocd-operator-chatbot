@@ -1,0 +1,77 @@
+Add the ability to define content to be inserted into the argocd-cm configmap
+A lot of additional configuration is handled within the `argocd-cm` configmap. Is there currently a way to define this as part of the request to spin up an ArgoCD instance? I don't see anything that pops out after a quick scan of the docs -- but is this currently possible with this operator? If not, is this something that this operator would want to do in the future? Happy to help contribute some of this if it would be accepted.
+Yes, I would like to provide the additional configuration through properties on the ArgoCD Custom Resource. What sort of configuration is typically added? I would like to get an idea for what we should add as properties for handling the additional configuration. I assume things like the dex configuration, etc. 
+
+If we look at part of the default example, it helps to illustrate what I have been thinking as far as organizing the various bits of configuration.
+
+```
+...
+spec:
+  image: argoproj/argocd
+  version: v1.4.1
+  controller:
+    processors:
+      operation: 10
+      status: 20
+  dex:
+    image: quay.io/dexidp/dex
+    version: v2.21.0
+    oauth:
+      enabled: false
+  grafana:
+    enabled: false
+    host: example-argocd-grafana
+    image: grafana/grafana
+    size: 1
+    version: 6.5.1
+  import: {}
+  ingress:
+    annotations: {}
+    enabled: false
+    path: /
+  prometheus:
+    enabled: false
+    host: example-argocd-prometheus
+    size: 1
+  redis:
+    image: redis
+    version: 5.0.3
+  server:
+    grpc:
+      host: example-argocd-grpc
+    host: example-argocd
+    insecure: false
+    service:
+      type: ClusterIP
+...
+```
+
+I feel that the implementation of some of that may be naive in some areas and that is where I am interested in what sort of additional properties make sense.
+
+I hope that helps to illustrate my thought process a bit in how I started everything. I am more than willing to accept any PRs or ideas you have to make the operator better and most importantly, useful!
+
+I am working on some ideas for this in the [cm_options](https://github.com/argoproj-labs/argocd-operator/tree/cm_options) branch.
+I have a [PR](https://github.com/argoproj-labs/argocd-operator/pull/18) in that adds configuration properties for the underlying `argocd-cm` ConfigMap. 
+I went ahead and merged the PR with the configuration options. I added more information in the [usage](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/usage.md) doc about the new properties.
+
+I am curious if there is something missing.
+Thanks for making this change. I actually wanted to test because I would like to update image paths to openshift registry and also want to add configs for GitHub sso. I am wondering how can we update Rbac config map with permissions ? I am playing with this operator in openshift and I am wondering where should I see all these properties.
+@JTG2020 Thank you for the feedback! Have a look at the `RBAC.Policy` property on the ArgoCD resource. It should allow you to pass through the same CSV that goes into the `policy.csv` field on the `argocd-rbac-cm` ConfigMap.
+Also, I updated the docs and hopefully it's better. https://argocd-operator.readthedocs.io/en/latest/
+@jmckind Thanks for getting to this so quickly. I'll hack around on this tonight and let you know if I bump into any issues. 
+I tried to do the manual install in openshift and looks like example/argocd-default.yaml need to be fixed. See below error -
+}, "usersAnonymousEnabled":true, "version":"v1.4.1"}}: validation failure list:
+spec.import.name in body is required
+spec.tls.certs in body must be of type object: "array"
+Thanks @JTG2020, I will look at this.
+I was able to take advantage of the image fields to get it to work with a disconnected install. 
+Now I'm working on using the "repositories" field in the ArgoCD CR, and it doesn't seem to be getting passed into the argocd-cm configmap. Any thoughts? I can't find any clear logs on the operator denying my configuration, and the argocd-cm, is showing up with no "data" section
+Hmm, I will double check. I may have fixed that already in master
+
+@gnekic I confirmed that the repositories property should be passed down properly in master and this will be going out in the v0.0.5 release this week.
+@JTG2020, I think that the `argocd-default.yaml` example should probably go away and instead be added to the actual documentation.
+
+This file existed before I had proper documentation for the operator and my intent with that file was to show what the default values are internally when not specified in a manifest. However, attempting to actually use that file will result in the errors that you encountered due to the validation rules for the various properties.
+
+I will be removing that file and moving all of that to the official documentation instead.
+Released as part of v0.0.5.

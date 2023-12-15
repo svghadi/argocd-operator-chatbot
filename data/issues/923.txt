@@ -1,0 +1,12 @@
+Reuse argocd repo server image with config management plugins
+**Is your feature request related to a problem? Please describe.**
+I'm porting a config management plugin from the [old ConfigMap](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#config-management-plugins) method. This used the existing repo server image as it had all the necessary tools - helm etc. However with the [new method](https://argocd-operator.readthedocs.io/en/latest/usage/config_management_2.0/) of creating config management plugins, I'll need to create or find an image with the necessary tools, and keep it updated.
+
+**Describe the solution you'd like**
+I'd like my plugin to be able to use the existing repo server image associated with the version of ArgoCD it's being deployed into. For example if `spec.repo.sidecarContainers[].image` is null, the repo server image is used. When the operator / ArgoCD is updated, the image will be updated.
+
+**Describe alternatives you've considered**
+* Hardcode the image to the current argocd repo server image - but won't get upgraded when ArgoCD is, and image address depends on if deployed in Openshift or in vanilla Kubernetes
+* Build a new image from scratch -  but then have to take responsibility of keeping it updated
+
+

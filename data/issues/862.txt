@@ -1,0 +1,39 @@
+Operator is crashlooping on OKD 4.6.0
+**Describe the bug**
+Installed the argocd-operator using the console on OKD 4.6.0. The version installed is v0.4.0. The operator seems to be crashlooping with error:
+
+```
+1.6769734740611982e+09  ERROR   controller-runtime.source       if kind is a CRD, it should be installed before calling Start   {"kind": "CronJob.batch", "error": "no matches for kind \"CronJob\" in version \"batch/v1\""}
+sigs.k8s.io/controller-runtime/pkg/source.(*Kind).Start.func1.1
+        /go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/source/source.go:137
+k8s.io/apimachinery/pkg/util/wait.runConditionWithCrashProtectionWithContext
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:233
+k8s.io/apimachinery/pkg/util/wait.WaitForWithContext
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:660
+k8s.io/apimachinery/pkg/util/wait.poll
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:594
+k8s.io/apimachinery/pkg/util/wait.PollImmediateUntilWithContext
+        /go/pkg/mod/k8s.io/apimachinery@v0.23.1/pkg/util/wait/wait.go:545
+sigs.k8s.io/controller-runtime/pkg/source.(*Kind).Start.func1
+        /go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/source/source.go:131
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to OKD console
+2. Click on Operator -> Marketplace
+3. Search for argocd
+4. Install operator
+
+**Expected behavior**
+Operator is healthy
+
+**Additional context**
+On the current cluster, latest version of CronJob is batch/v1beta1, but operator seems to be using v1. How do I fix this?
+
+If I'm correct, OKD 4.6.0 matches Kubernetes 1.19. Kubernetes supports the three latest minors, [which at the time of writing is 1.26, 1.25, 1.24](https://kubernetes.io/releases/). The api batch/v1beta1 was [deprecated in 1.25](https://kubernetes.io/docs/reference/using-api/deprecation-guide/#v1-25) and batch/v1 was available from v1.21 (which seems to be OKD 4.8.0).
+
+So the simplest way forward for you would be to upgrade your OKD to a recent version, which will also fix a number of security issues for you. The current [OKD version is 4.12.0](https://github.com/okd-project/okd/releases).
+
+There are probably other ways forward as well, for example by forcing an older version of the operator from the operator hub and disabling automatic update, but in my opinion you should stay on top of the OKD/Openshift versions.
+seems this can be closed?

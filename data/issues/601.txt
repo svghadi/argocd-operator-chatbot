@@ -1,0 +1,4 @@
+Docs incorrectly use .url instead of .host
+**Describe the bug**
+This bug was created by me, I'll make a PR shortly to update it. 
+In https://github.com/argoproj-labs/argocd-operator/blob/master/docs/reference/api.html.md#argocdstatus, it states that "URL is the url for the hostname to use for Ingress/Route resources" but it was renamed to be `Host` instead of `URL`. Docs need to be updated to reflect this. 

@@ -1,0 +1,42 @@
+Ability to enable sharding for argocd-application-controller
+**Is your feature request related to a problem? Please describe.**
+Hello team, can you add option to enable sharding and specify number of shards for argocd application controller (https://argo-cd.readthedocs.io/en/stable/operator-manual/high_availability/#argocd-application-controller) in controller options (https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#controller-options) of ArgoCD object?
+
+**Describe the solution you'd like**
+
+When sharding is set:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: controller
+spec:
+  controller:
+    processors:
+      operation: 10
+      status: 20
+    resources: {}
+    sharding:
+      enabled: true
+      replicas: 6
+```
+the StatefulSet `argocd-application-controller` will have 6 replicas and environment variable `ARGOCD_CONTROLLER_REPLICAS` in its spec:
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: argocd-application-controller
+spec:
+  replicas: 6
+  template:
+    spec:
+      containers:
+      - name: argocd-application-controller
+        env:
+        - name: ARGOCD_CONTROLLER_REPLICAS
+          value: "6"
+```

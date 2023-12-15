@@ -1,0 +1,7 @@
+RBAC for web based terminal 
+**Is your feature request related to a problem? Please describe.**
+ArgoCD 2.4 supports a [web based terminal](https://argo-cd.readthedocs.io/en/stable/operator-manual/web_based_terminal/), but it requires manual tweaks to the argocd-server Role and a setting enabled in argocd-cm ConfigMap.
+
+**Describe the solution you'd like**
+An option in the ArgoCD CRD to enable the web based terminal, which automatically sets up the above 
+i want to work on this @iam-veeramalla can you please assign this to me ?

@@ -1,0 +1,21 @@
+operator fails to install keycloak when resourcequota scope is terminating or no scope is set.
+**Describe the bug**
+when creating ArgoCD instances in user workload projects and defining `.spec.sso.provider: keycloak` the operator is creating a `DeploymentConfig` which is leading to a stuck deploy Pod due to missing resources in the `DepolymentConfig` and Quotas enforcing requests and limits set.
+Please make sure, that the `DeploymentConfig` has resources set in the strategy or please migrate to a `StatefulSet` like the RH-SSO is creating the keycloak to make it possible to run keycloak in environments where quotas are enforces also for NotTerminating Pods.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create a ns with `resourcequota`.
+2. Do not set any scope to the `resourcequota`.
+3. Install or run the operator locally using `make run`.
+4. Install keycloak by updating the Argo CD spec -> `.sso.provider: keycloak`.
+5. You can see that keycloak deployment fails as the `keycloak-deploy` pod does not have any resource requests/limits set.
+
+**Expected behavior**
+operator should install and configure keycloak for any `resourcequota` scope.
+
+**Screenshots**
+NA
+
+**Additional context**
+NA

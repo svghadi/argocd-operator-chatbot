@@ -1,0 +1,56 @@
+Argocd failed to update (openshift - argocd 0.0.11)
+Hello
+
+I'm using Argocd on openshift 4.4 using the argocd-operator. Unfortunatelly after the update (0.0.9 -> 0.0.11) the following components were deleted : service accounts, roles, rolebinding (preventing pods from starting).
+
+In order to solve the issue I had to uninstall/reinstall the operator and execute most the steps described here https://www.openshift.com/blog/openshift-authentication-integration-with-argocd .
+
+I think at least the operator shouldn't delete all thoses objects. (I'm unsure if it's more an argocd-operator issue or openshift-centric problem).
+
+Are you aware of the situation / is there plan to fix it ?
+
+Thanks !
+
+Hello
+same problem here. There was a new installplan for 0.0.11 this morning, and when approving it, the operator lifecycle manager inside openshift deletes all serviceaccounts "argocd-*" and all rolebindings "argocd-*" in the namespace. The pods for argocd operator v0.0.11 can not start because of this.
+Thanks!
+I am still investigating this but my initial thoughts are that it is related to the [breaking change](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.0.10) in v0.0.10, which didn't make it to the Operator Hub. Seeing this in an upgrade from v0.0.9 -> v0.0.11 would make sense. Do you have Ingress or Routes enabled for your Argo CD clusters?
+Yes we do. But the ArgoCD Cluster is not affected. Just the operator upgrade fails. 
+I have same problem on different ocp clusters ( 4.2, 4.4 and 4.5.0-rc6).
+
+```bash
+
+~/setup-argocd  (master) $ oc get installplan -n argocd
+NAME            CSV                       APPROVAL    APPROVED
+install-np44f   argocd-operator.v0.0.11   Automatic   true
+install-q9m5c   argocd-operator.v0.0.9    Automatic   true
+
+ ~/setup-argocd  (master) $ oc get sa -n argocd
+NAME       SECRETS   AGE
+builder    2         9d
+default    2         9d
+deployer   2         9d
+
+```
+In my clusters also argocd cluster is ko.
+
+EDIT:
+i recovered the installation with
+ - the reinstallation of operator (fix missing serviceaccounts) 
+ - correct argocd istance with new route syntax 
+
+
+
+bye
+Alessandro
+
+
+For some reason OLM is removing all of the ServiceAccount, RoleBinding, etc. resources when the upgrade fails. 
+@jmckind  When this new operator release (0.0.12) will be pullet on the "community-operators" ? 
+
+Regards
+The PRs for both Operator Hubs have been submitted and v0.0.12 should be available after these get merged. Thanks!
+
+https://github.com/operator-framework/community-operators/pull/2007
+https://github.com/operator-framework/community-operators/pull/2008
+

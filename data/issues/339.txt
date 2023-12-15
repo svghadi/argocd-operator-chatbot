@@ -1,0 +1,22 @@
+operator when run locally fails to create Argo CD to manage cluster scoped resources for OpenShift cluster
+**Describe the bug**
+This bug is very specific to openshift.
+
+Operator when run locally fails to create Argo CD to manage cluster scoped resources. Below error can be seen in the error logs continuously.
+
+```
+{"level":"error","ts":1623844239.269036,"logger":"controller-runtime.controller","msg":"Reconciler error","controller":"argocd-controller","request":"openshift-gitops/openshift-gitops","error":"unable to load in-cluster configuration, KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined","stacktrace":"github.com/go-logr/zapr.(*zapLogger).Error\n\t/Users/aveerama/go/src/github.com/iam-veeramalla/gitops-operator/vendor/github.com/go-logr/zapr/zapr.go:128\nsigs.k8s.io/controller-runtime/pkg/internal/controller.
+```
+
+**Expected behavior**
+operator should not thrown any error and create workloads to manage cluster config resources.
+
+**Screenshots**
+```
+{"level":"error","ts":1623844239.269036,"logger":"controller-runtime.controller","msg":"Reconciler error","controller":"argocd-controller","request":"openshift-gitops/openshift-gitops","error":"unable to load in-cluster configuration, KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined","stacktrace":"github.com/go-logr/zapr.(*zapLogger).Error\n\t/Users/aveerama/go/src/github.com/iam-veeramalla/gitops-operator/vendor/github.com/go-logr/zapr/zapr.go:128\nsigs.k8s.io/controller-runtime/pkg/internal/controller.
+```
+
+**Additional context**
+Error seems to be introduced as part of :
+https://github.com/argoproj-labs/argocd-operator/blob/fcf1972d725e4b7422609de0582636710d75a16e/pkg/reconciler/openshift/openshift.go#L71
+

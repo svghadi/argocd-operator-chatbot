@@ -1,0 +1,32 @@
+Additonal steps when installing on OpenShift 4.X
+When installing the Operator on Operatorhub you cannot use the upstream OLM but should use the OpenShift provided one.
+
+Steps below worked for me to install argocd operator on operatorhub.io on an OCP 4 cluster using pre-installed olm 
+
+oc create ns argocd
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: operatorhubio-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: OperatorHub.io Operators
+  publisher: OperatorHub.io
+  sourceType: grpc
+  image: quay.io/operatorframework/upstream-community-operators:latest
+EOF
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: operatorhub-io-operators
+  namespace: argocd
+spec:
+  targetNamespaces:
+  - argocd
+EOF
+curl -sL https://operatorhub.io/install/argocd-operator.yaml | sed "s/namespace:.*/namespace: argocd/" | sed "s/sourceNamespace:.*/sourceNamespace: openshift-marketplace/" | oc create -f -
+
+I have [added a PR](https://github.com/operator-framework/community-operators/pull/1161) to add the operator to the OpenShift 4.x Operator Hub. This will allow installation via the normal mechanism in OpenShift.
+The PR has merged and the operator starting from v0.0.4 forward should be available through the embedded OpenShift Operatoor Hub. 

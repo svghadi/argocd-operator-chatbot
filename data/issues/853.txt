@@ -1,0 +1,105 @@
+Managed namespace in terminating state blocks app resource deployment to other managed namespaces
+**Describe the bug**
+When an Argo CD instance is created in namespace-scoped mode and manages multiple other namespaces - if any of those managed namespaces enters terminating state for extended amounts of time (due to a finalizer on a resource for eg) the argo-cd instance is blocked and unable to deploy app resources to any of the other managed namespaces 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1) Install namespace-scoped Argo CD:
+
+```kubectl create ns gitops-service-argocd```
+
+```kubectl apply -f https://raw.githubusercontent.com/redhat-appstudio/managed-gitops/main/manifests/base/gitops-service-argocd/base/argo-cd.yaml```
+ 
+2) Create a Namespace managed by Argo CD.
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jane
+  labels:
+    argocd.argoproj.io/managed-by: gitops-service-argocd
+```
+3) Create 'ConfigMap' with a finalizer, in Namespace.
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config-map-2
+  namespace: jane
+  
+  finalizers:
+  - some.random/finalizer
+ 
+data: {}
+```
+4) Delete the 'Namespace', putting it into 'Terminating' state. The Namespace will never finish deleting, due to the finalizer on the 'ConfigMap'.
+
+```kubectl delete namespace jane```
+
+5) create a new managed 'Namespace'
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: john
+  labels:
+    argocd.argoproj.io/managed-by: gitops-service-argocd
+```
+6) 'kubectl apply' the following Argo CD Application
+```
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+  namespace: gitops-service-argocd
+spec:
+  destination:
+    namespace: john
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: kustomize-guestbook
+    repoURL: https://github.com/argoproj/argocd-example-apps
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+7) You will see that the Argo CD Application fails to deploy, and has the following status:
+
+```
+status:
+    conditions:
+    - lastTransitionTime: "2023-02-02T17:58:41Z"
+      message: 'failed to sync cluster https://172.30.0.1:443: failed to load initial
+        state of resource Service: services is forbidden: User "system:serviceaccount:gitops-service-argocd:gitops-service-argocd-argocd-application-controller"
+        cannot list resource "services" in API group "" in the namespace "jane"'
+      type: ComparisonError
+    - lastTransitionTime: "2023-02-02T17:58:41Z"
+      message: 'failed to sync cluster https://172.30.0.1:443: failed to load initial
+        state of resource Service: services is forbidden: User "system:serviceaccount:gitops-service-argocd:gitops-service-argocd-argocd-application-controller"
+        cannot list resource "services" in API group "" in the namespace "jane"'
+      type: ComparisonError
+    health:
+      status: Healthy
+    reconciledAt: "2023-02-02T17:58:41Z"
+    sync:
+      comparedTo:
+        destination:
+          namespace: john
+          server: https://kubernetes.default.svc
+        source:
+          path: kustomize-guestbook
+          repoURL: https://github.com/argoproj/argocd-example-apps
+          targetRevision: master
+      status: Unknown
+```
+
+Also in the Argo CD UI you may notice none of the application resources are deployed in the "John" namespace
+
+**Expected behavior**
+Argo CD should not be blocked from deploying resources to non-terminating managed namespaces
+
+

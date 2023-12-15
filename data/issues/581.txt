@@ -1,0 +1,25 @@
+Missing LF in Redis HAProxy Config
+**Describe the bug**
+haproxy crashes due to config issue.
+
+**To Reproduce**
+1. set ha proxy to enabled with version 2.5.4
+1. the haproxy pod crash loops
+
+**Expected behavior**
+haproxy pod runs and do not crash
+
+**Logs**
+
+```
+[NOTICE]   (1) : haproxy version is 2.5.4-e55ab42
+[NOTICE]   (1) : path to executable is /usr/local/sbin/haproxy
+[ALERT]    (1) : config : parsing [/usr/local/etc/haproxy/haproxy.cfg:77]: Missing LF on last line, file might have been truncated at position 72.
+[ALERT]    (1) : config : Error(s) found in configuration file : /usr/local/etc/haproxy/haproxy.cfg
+[ALERT]    (1) : config : Fatal errors found in configuration.
+```
+
+**Additional context**
+Add any other context about the problem here.
+
+This was fixed as part of https://github.com/argoproj-labs/argocd-operator/pull/517

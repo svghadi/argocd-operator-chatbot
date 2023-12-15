@@ -1,0 +1,47 @@
+argocd-dex-server Deployment's init container does not use image variable
+When specifying an image in the `ArgoCD` resource as documented [here](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#image), the init container `copyutil` of the `argocd-dex-server` deployment does not use the specified image (contrary to all the other deployments).
+Hello, thanks for the report, can you confirm which version of the operator, and how you're configuring the image?
+Sorry, could've said that from the beginning. It's the ArgoCD operator 0.0.14 installed via OLM on OpenShift 4.6 and my configuration is looking like this:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: my-argo-cd
+spec:
+  dex:
+    openShiftOAuth: true
+  image: redacted.company.docker.mirror/argoproj/argocd
+  rbac:
+    policy: |
+      g, cluster-admin, role:admin
+  redis:
+    image: redacted.company.docker.mirror/redis
+  server:
+    autoscale:
+      enabled: true
+    ha:
+      enable: true
+    host: my-argocd.apps.my-ocp-cluster.my-company.com
+    ingress:
+      enabled: false
+    insecure: true
+    route:
+      enabled: true
+  usersAnonymousEnabled: false
+```
+
+I have already seen that the `dex` section of the CR has an `image` field for the dex image itself, but this obviously doesn't have anything to do with the init container.
+Hi, I've had a look, and the init-container is not using the Dex image.
+
+The container that is executed is doing the equivalent of:
+
+```$ cp /usr/local/bin/argocd-util /shared``` so, it's using the image from the top-level image declaration
+
+https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#image-example and **not** the dex image.
+Hi, yes I know. What I wanted to say is: in my case every component of ArgoCD (server, application-controller, and so on) is correctly using the image `redacted.company.docker.mirror/argoproj/argocd` I declared in the top-level declaration but the init container of dex is still using `argoproj/argocd` (so using the cluster's default registry) instead of `redacted.company.docker.mirror/argoproj/argocd`.
+Hi @Obirah Sorry, I've had a look, and there was a bug in v0.0.14 which I'm just about to open a PR for, while it is using the ArgoCD `spec.image`, it doesn't update the init-container's image if you change after it was initially created.
+
+You can try deleting the dex Deployment object, and it should be recreated with the correct init-container image from `spec.image`.
+
+Awesome, deleting the Deployment worked as predicted. I'll leave this issue open though so that other people can find it in the meantime and you can link the PR.

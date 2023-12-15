@@ -1,0 +1,198 @@
+Cannot sync applications - clusterrole insufficient permissions
+**Describe the bug**
+Syncing applications don't work because of insufficient permissions.
+The argocd operator and the argocd resource have been created inside of the argocd namespace.
+
+The argocd operator provides the following cluster roles:
+
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: argocd-argocd-argocd-application-controller
+  ...
+rules:
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - '*'
+    resources:
+      - '*'
+  - verbs:
+      - get
+      - list
+    nonResourceURLs:
+      - '*'
+```
+
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: argocd-argocd-argocd-server
+  ...
+rules:
+  - verbs:
+      - get
+    apiGroups:
+      - '*'
+    resources:
+      - '*'
+  - verbs:
+      - list
+    apiGroups:
+      - ''
+    resources:
+      - events
+  - verbs:
+      - get
+    apiGroups:
+      - ''
+    resources:
+      - pods
+      - pods/log
+```
+The argocd-argocd-argocd-application-controller clusterrole can only use the verbs (get, list, watch) on all resources. Therefore, it isn't able to create resources for the argocd applications during the synchronization.
+
+The clusterroles created by the argocd operator differs from the clusterroles defined in the [install.yaml](https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml) of argocd.
+
+argocd install.yaml clusterroles
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: application-controller
+    app.kubernetes.io/name: argocd-application-controller
+    app.kubernetes.io/part-of: argocd
+  name: argocd-application-controller
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - '*'
+  verbs:
+  - '*'
+```
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+  name: argocd-server
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - delete
+  - get
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/log
+  verbs:
+  - get
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. install the argocd-operator in the argocd namespace
+2. create the argocd resource inside of the argocd namespace
+3. create an application with the help of the argocd UI that is deployed to another namespace
+4. try to sync the application
+
+**Expected behavior**
+argocd should be able to create resources in other namespaces
+
+Hey @seed-248, thanks for reporting this!
+The current implementation allows users to deploy ArgoCD instances with minimum permissions. This only allows the ArgoCD instance to manage resources in its own namespace. 
+If a user wishes to provide the ArgoCD instance permissions to manage resources in all namespaces then it needs to set an ENV variable in the argocd-operator deployment, i.e `ARGOCD_CLUSTER_CONFIG_NAMESPACES` and the value being the list of namespaces where argocd instance is installed. 
+example - if ArgoCD instance is installed in namespace `argocd`, then - 
+```
+  env:
+  -  name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+     value: argocd
+```
+ 
+This would provide the argocd instance deployed in namespace `argocd` the permissions to manage resources in all namespaces. 
+Hey @shubhamagarwal19,
+thank you for pointing out the possibility to influence the permissions via the `ARGOCD_CLUSTER_CONFIG_NAMESPACES` environment variable.
+
+I tried to get it run by setting the env variable in the OLM subscription, but wasn't successful so far:
+
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  channel: alpha
+  name: argocd-operator
+  source: operatorhubio-catalog
+  sourceNamespace: olm
+  config:
+    env:
+    - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+      value: argocd
+```
+
+The environment variable is available inside the argocd-operator pod.
+
+```
+[argocd-operator@argocd-operator-84fd6bd794-jlrk7 /]$ echo $ARGOCD_CLUSTER_CONFIG_NAMESPACES
+argocd
+```
+
+However, the cluster role for the argocd-application-controller still looks the same:
+
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: argocd-argocd-argocd-application-controller
+  ...
+rules:
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - '*'
+    resources:
+      - '*'
+  - verbs:
+      - get
+      - list
+    nonResourceURLs:
+      - '*'
+```
+
+@seed-248, ahhh my bad!! The issue has been fixed but didn't make the cut for `v0.0.15` release. 
+We are planning to release a new version for `argocd-operator` soon, so hopefully, that would resolve this! 
+@shubhamagarwal19 , is there a temporary workaround at the moment to allow for this use case, even if it requires a manual intervention?
+
+Edit: never mind, i was able to solve the problem temporarily by assigning an extra clusterrolebinding with the required permissions
+Hi @seed-248 , you can now make use of the `ARGOCD_CLUSTER_CONFIG_NAMESPACES` env var. Please upgrade to the latest version.
+The official documentation lacks information about the `ARGOCD_CLUSTER_CONFIG_NAMESPACES` parameter - could it be added to documetation? Is this parameter officially supported and will not be deleted in the future without notice?

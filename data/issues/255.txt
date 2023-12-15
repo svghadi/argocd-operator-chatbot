@@ -1,0 +1,24 @@
+Error on startup with manual install steps: Failed to list v1.Role due to missing RBAC rules
+The argocd-operator seems to be broken when doing a manual install, as per the manual install steps in the docs. On building master I'm seeing this in the pod logs, and operator doesn't respond to CRs:
+
+`
+E0224 11:51:12.976581       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.Role: roles.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "roles" in API group "rbac.authorization.k8s.io" in the namespace "argocd"
+`
+
+I `git bisect`ed and it appears to be caused by this commit: https://github.com/argoproj-labs/argocd-operator/commit/3d1c5897c53961fbee8a28f7a9cbbd7d591aad0a
+
+To reproduce, do the following using your own `IMAGE_HOST_ORG`:
+```
+ARGOCD_OPERATOR_IMAGE_HOST_ORG=quay.io/jgwest-redhat hack/build.sh
+ARGOCD_OPERATOR_IMAGE_HOST_ORG=quay.io/jgwest-redhat hack/push.sh
+ARGOCD_OPERATOR_IMAGE_HOST_ORG=quay.io/jgwest-redhat hack/tag.sh
+kubectl create -f deploy/service_account.yaml
+kubectl create -f deploy/role.yaml
+kubectl create -f deploy/role_binding.yaml
+kubectl create -f deploy/argo-cd
+kubectl create -f deploy/crds
+
+# Edit deploy/operator.yaml to point to quay.io/jgwest-redhat/argocd-operator:latest from previous tag step
+kubectl create -f deploy/operator.yaml
+```
+

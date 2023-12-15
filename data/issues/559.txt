@@ -1,0 +1,68 @@
+Allow more complete configuration of Dex
+**Is your feature request related to a problem? Please describe.**
+When configuring Dex it seems that there's only a limited amount of configuration available in the operator. E.g., if I want to utilize Google Workspace and at the same time groups I need to do some additional setups of a secret and linking that to the `argocd-dex-server`. A task that logically - at least if you ask me - should be done by the operator
+
+**Describe the solution you'd like**
+I'd like a way to configure the `argocd-dex-server` with additional settings, such as those described here: https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/google/#configure-dex
+
+One way of configuring it could be:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+  dex:
+    config: |
+      connectors:
+        - id: google
+          name: ..
+
+  dex-server:
+    oicd:
+        googleAuth: |
+            { /* ... my json here ... */ }
+```
+@rfftrifork I just came across this limitation, as a work around I deployed a simple Kyverno mutating policy:
+
+```
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: argocd-dex-google-credentials
+  namespace: argocd
+  annotations:
+    policies.kyverno.io/title: Mutate ArgoCD dex deployment
+    policies.kyverno.io/subject: Deployment
+    policies.kyverno.io/description: >-
+      Adds a volume mount to the dex deployment to mount the google credentials json.
+      This json is used for dex to authenticate and query Google workspace directory 
+      for a user's groups. You may then use these groups in ArgoCD RBAC.
+spec:
+  validationFailureAction: enforce
+  rules:
+    - name: set-argocd-dex-google-credentials
+      match:
+        resources:
+          kinds:
+            - apps/v1/Deployment
+          names:
+            - argocd-dex-server
+      mutate:
+        patchStrategicMerge:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: dex
+                    volumeMounts:
+                      - name: google-groups-credentials
+                        mountPath: /etc/google/groups-credentials
+                        readOnly: true
+                volumes:
+                  - name: google-groups-credentials
+                    secret:
+                      defaultMode: 420
+                      secretName: argocd-google-groups-credentials
+```

@@ -1,0 +1,349 @@
+Add an option to give the argocd-application-controller cluster-admin (or similar) rights.
+It would be nice to have the ability to grant Argo CD "cluster-admin" capabilities (or something similar) to allow for more cluster configuration to be controlled by Argo CD.
+
+For example, with Argo CD 0.0.3 I had altered the argocd-application-controller role to allow Argo CD to:
+* Create namespaces
+* CRUD on secrets, even in `openshift-` namespaces.
+* Update scc's.
+
+This was nice because I could have almost my entire cluster configuration backed up in git, and modified through pull request.
+
+The ability to control the service accounts that get the `anyuid` scc was nice as well.  The version of Bitnami Sealed Secrets that I'm using on the cluster requires a service account with `anyuid`.  I was able to have this scc yaml file in git managed by Argo CD, so if I created a new cluster, I didn't have to remember to add that scc to the service account.
+
+Also, it was nice to have Argo CD manage my OAuth config.  When I have a new cluster, creating the "cluster config" project and application was enough to have Htpasswd and Github auth applied to my cluster.
+
+I also like the idea of restricting resources/verbs on a per-project basis.
+
+I'm not very familiar with the workings of the operator, but my naive suggestion would be an additional flag on the argocd CRD to grant cluster-admin by default.
+
+Thanks.
+Also there's a discrenpecy, maybe intentional, with the default install of ArgoCD via kubectl
+
+```sh
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+and the operator in the argocd-application-controller service account.
+
+In the operator we have, to the best of my knowledge, 1 role and rolebindgs, and 2 clusterroles and clusterrolebinding. Which are very restrictive. Was this on purpose?
+
+**Operator Generated Roles**
+```sh
+
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    - services
+    - services/finalizers
+    - endpoints
+    - events
+    - configmaps
+    - secrets
+    verbs:
+    - '*'
+  - apiGroups:
+    - apps
+    resources:
+    - daemonsets
+    - deployments
+    - replicasets
+    verbs:
+    - '*'
+  - apiGroups:
+    - batch
+    resources:
+    - CronJob
+    - Job
+    verbs:
+    - '*'
+  - apiGroups:
+    - argoproj.io
+    resources:
+    - applications
+    - appprojects
+    verbs:
+    - '*'
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - list
+  - apiGroups:
+    - route.openshift.io
+    resources:
+    - routes
+    verbs:
+    - '*'
+
+
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    - services
+    - services/finalizers
+    - endpoints
+    - events
+    - configmaps
+    - secrets
+    verbs:
+    - '*'
+  - apiGroups:
+    - apps
+    resources:
+    - daemonsets
+    - deployments
+    - replicasets
+    verbs:
+    - '*'
+  - apiGroups:
+    - batch
+    resources:
+    - CronJob
+    - Job
+    verbs:
+    - '*'
+  - apiGroups:
+    - argoproj.io
+    resources:
+    - applications
+    - appprojects
+    verbs:
+    - '*'
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - list
+  - apiGroups:
+    - route.openshift.io
+    resources:
+    - routes
+    verbs:
+    - '*'
+```
+
+**Manual Install Roles***
+```sh
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    - configmaps
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - argoproj.io
+    resources:
+    - applications
+    - appprojects
+    verbs:
+    - create
+    - get
+    - list
+    - watch
+    - update
+    - patch
+    - delete
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - list
+
+```
+
+**Operator Generate Cluster Role**
+
+```sh
+rules:
+  - apiGroups:
+    - '*'
+    resources:
+    - '*'
+    verbs:
+    - get
+    - list
+    - watch
+  - nonResourceURLs:
+    - '*'
+    verbs:
+    - get
+    - list
+
+
+rules:
+  - apiGroups:
+    - '*'
+    resources:
+    - '*'
+    verbs:
+    - get
+    - list
+    - watch
+  - nonResourceURLs:
+    - '*'
+    verbs:
+    - get
+    - list
+
+```
+
+**Manual Install ClusterRoles**
+
+Wide Open 
+
+```sh
+rules:
+  - apiGroups:
+    - '*'
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  - nonResourceURLs:
+    - '*'
+    verbs:
+    - '*'
+
+```
+Yes, this was intentional at the time, as wide open cluster write permissions are not really something we want to allow by default on OpenShift. The decision was made to only provide read-only cluster permissions as documented in the Argo CD documentation initially.
+
+https://argoproj.github.io/argo-cd/operator-manual/security/#cluster-rbac
+
+That said, I understand that deploying Argo with cluster-admin is a valid use-case and want to support this in the operator if possible.
+Question, are you all installing via [OLM](https://github.com/operator-framework/operator-lifecycle-manager/) or manually? If manual, I can include a version of the deploy manifests that are not as restrictive.
+I'm using OLM by applying these manifests (OpenShift 4.3):
+https://github.com/pittar-gitops/00-gitops-setup/tree/master/manifests
+
+As a hack, after the Argo CD instance is installed, I'm just giving main Argo CD controller cluster admin:
+`oc adm policy add-cluster-role-to-user cluster-admin -z argocd-application-controller -n argocd
+`
+For OLM, it may just need to be a documentation item for those needing that capability. I want to ensure that the operator is not rejected from the embedded Operator Hub on OpenShift due to the cluster write permissions.
+
+An option on the ArgoCD CRD would not help because OLM creates the roles/bindings/service accounts, etc. on behalf of the operator based on the ClusterServiceVersion manifest before the operator itself is installed.
+
+I think a separate set of deployment manifests that allow cluster write for manual installs would still be helpful.
+Yeah, I get where you're coming from.  I don't think anyone wants Argo CD to become the new "Tiller".
+
+I'm not sure how this would look, but if there was some documentation to for folks that want to use the OLM method of deploying/managing Argo CD, but also want it to handle more advanced configuration details (security context controls, namespaces, OAuth, etc...), that would likely satisfy those users.
+I added a blurb in the OpenShift install section of the docs with the command to give cluster-admin to the ServiceAccount for the Application Controller. I feel like this could be explained a bit better and I am open to suggestions on that and would like feedback on how we can improve on it, if needed.
+
+https://argocd-operator.readthedocs.io/en/latest/install/openshift/#rbac
+
+ I will be adding a version of role manifest for enabling cluster-wide write permissions shortly for manual installations of the operator.
+Hey @jmckind .  I've found that the best solution (for me, at least) is to create a new custom ClusterRole and ClusterRoleBinding to deal with the additional resources I want to manage.  This way I don't have to give the app controller cluster-admin.  For example:
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-custom-cluster-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - resourcequotas
+  - limitranges
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-application-controller-custom-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argocd-custom-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: argocd-application-controller
+  namespace: argocd
+```
+Would it make sense to create instructions for olm and non olm installs? I don’t use open shift and it made more sense for me not to with gke  I can help with this for whatever is agreed upon. We could open another ticket. Thoughts ?
+
+
+Sent from Yahoo Mail for iPhone
+
+
+On Monday, March 9, 2020, 8:27 AM, Andrew Pitt <notifications@github.com> wrote:
+
+
+Hey @jmckind . I've found that the best solution (for me, at least) is to create a new custom ClusterRole and ClusterRoleBinding to deal with the additional resources I want to manage. This way I don't have to give the app controller cluster-admin. For example:
+
+`
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+name: argocd-custom-cluster-role
+rules:
+   
+   - apiGroups:      
+      - ""      
+resources:
+      - namespaces
+      - resourcequotas
+      - limitranges      
+verbs:
+      - '*'
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+name: argocd-application-controller-custom-role-binding
+roleRef:
+apiGroup: rbac.authorization.k8s.io
+kind: ClusterRole
+name: argocd-custom-cluster-role
+subjects:
+   
+   - kind: ServiceAccount   
+name: argocd-application-controller   
+namespace: argocd   
+`
+
+—
+You are receiving this because you commented.
+Reply to this email directly, view it on GitHub, or unsubscribe.
+
+
+
+
+@pmcjury Is there something beyond the [Manual](https://argocd-operator.readthedocs.io/en/latest/install/manual/) vs [OLM](https://argocd-operator.readthedocs.io/en/latest/install/olm/) install docs that would be helpful? Perhaps it just needs to be organized a bit better?
+Yeah I guess not. I just kustomized it to make it easier to add the rbac and configs I wanted. Maybe make the permissions ( which is always a pain ) a bit better. 
+I also use an existing prometheus operator and Grafana so self installed the metrics and dashboard. It took me while and had to search through code that the Grafana dash and prom sm weren’t added unless the crds were present. It make sense but was unclear 
+I also made a tutorial for everyone I work with for adding tools or bespoke versions of the ArgoCd sever with the tools built in. Probably out of scope for this. It just points out the fact of being able to add thing like env vars or init containers to the argocd server 
+
+Sent from Yahoo Mail for iPhone
+
+
+On Monday, March 9, 2020, 11:45 AM, John McKenzie <notifications@github.com> wrote:
+
+
+@pmcjury Is there something beyond the Manual vs OLM install docs that would be helpful? Perhaps it just needs to be organized a bit better?
+
+—
+You are receiving this because you were mentioned.
+Reply to this email directly, view it on GitHub, or unsubscribe.
+
+
+
+
+I think this issue can probably be closed.  Docs is enough to get people pointed in the right direction for setting up the proper RBAC.  I agree that out-of-the-box Argo CD shouldn't have `cluster-admin`.  That should be something that an admin makes a conscious decision to give to Argo.
+Released as part of v0.0.5.

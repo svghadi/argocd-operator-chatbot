@@ -1,0 +1,35 @@
+Add support for Workload Identity authentication in GCP
+Hello ArgoCD team, I have been recently using ArgoCD and I think it's awesome, now I am deploying the operator in PoC clusters and soon I hope in prod ones.
+
+I wanted to raise the idea of adding support for [GCP's Workload Identity](https://cloud.google.com/blog/products/containers-kubernetes/introducing-workload-identity-better-authentication-for-your-gke-applications) to the `ArgoCDExporter` component, since I believe it simplifies the authentication process of applications running in GKE. I noticed that `ArgoCDExporter` already supports authentication through a [service account key provided as a secret](https://argocd-operator.readthedocs.io/en/latest/usage/export/#gcp-secrets), which is awesome, and I think, a great fit to also enable Workload Identity.
+
+**TL;DR; for Workload Identity**: It allows to access GCP APIs by linking a K8s Service Account (SA) with a GCP one, in that way, K8s now knows how o authenticate with GCP APIs, keys are automatically rotated and no more secrets need to be provided to the workloads with SA Keys.
+
+I am willing to add the support myself, but I am quite new to Operators. I can give it a try though.
+
+On a side note, I also noticed that the contributing guidelines linked in the issue are pointing to the wrong URL, it should be:
+
+* https://github.com/argoproj-labs/argocd-operator/blob/master/docs/contribute/development.md
+
+And it points to:
+
+* https://github.com/argoproj-labs/argocd-operator/blob/master/CONTRIBUTING.md
+
+As for my use case, I can use the current secret implementation, but it'd be awesome to be able to use a `serviceAccount` in addition to the `secretName` available (since there may be use cases where Workload Identity does not satisfy the requirements due to [limitations](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#limitations)).
+
+As for the [GCP IAM configuration section](https://argocd-operator.readthedocs.io/en/latest/usage/export/#gcp-iam-configuration), I already have a working Terraform template that sets up a bucket, as well as a service account and permissions. Not sure if that could be useful on defining that section of the docs.
+
+Please let me know if you need further information, and how we could move forward with this.
+
+Thank you!
+
+Hello @LaloLoop, I just wanted to start by thanking you for trying out the operator.
+
+I will fix the links you mentioned and I need to add a bit more to the development docs as well.
+
+A PR would be great if you would like to submit one, or we can collaborate a bit on it, whichever you prefer. I think the enhancement that you propose is a good addition. I will admit that I am much more familiar with AWS over GCP so your experience there would be helpful in both documentation around that as well as the implementation in the operator.
+
+Finally, if you have any feedback over the export process in general, that would be helpful. For example, I am looking to move away from the util image for the export job and handle it a bit different. That util image is based on the argocd image and is quite large.
+Thank you for the quick reply, @jmckind . It'd be awesome if we can collaborate on it, I will begin by setting up my dev environment following the development guide and start looking into the code, I can make some time in the upcoming days to submit a PR. I will also check the docs to see if I can add the _GCP IAM configuration_ section.
+Later I can have a look into the exporter and discuss the ideas you've got for it.
+Greetings!

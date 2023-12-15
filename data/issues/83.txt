@@ -1,0 +1,6 @@
+Ability to utilize repository.credentials in initialRepositories
+Right now when you add a repository via `initialRepositories` we have to specify credentials or keys for each individual repository that we would like to use. As of ArgoCD v1.4.X, we have the ability to specify a key to be used at a root of a repo (i.e org/project) level with `repository.credentials`. Not sure what the design of this would look like at this point, but I think it would be beneficial to be able to support both. 
+
+Happy to help add functionality here, but wanted to get others input here first.
+@tylerauerbeck I am looking through the [Repository Credentials](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#repository-credentials) section of the Argo docs and I am trying to work though how to best support configuring this. I agree though that it would be nice to have the operator support this.
+Support for this has been added in #105 and will go out in the next release.

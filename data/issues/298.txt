@@ -1,0 +1,25 @@
+Upgrade operator sdk to v1.6.2
+### Is your task related to a problem? Please describe.
+<!-- A clear and concise description of what the problem is.-->
+
+Operator sdk being used is v0.19.x which is due for upgrade to v1.  Some key benefits include:
+* generate Makefile 
+* kustomize manage resources
+* generate rbac yaml from markers
+
+https://sdk.operatorframework.io/docs/building-operators/golang/migration/#what-is-new
+
+### Describe the solution you'd like
+<!-- A clear and concise description of what you want to happen. -->
+
+step by step migration guide here.
+https://sdk.operatorframework.io/docs/building-operators/golang/migration/
+
+
+### Describe alternatives you've considered
+<!--A clear and concise description of any alternative solutions or features you've considered. -->
+
+### Additional context
+<!-- Add any other context or screenshots about the task here. -->
+
+Fixed.

@@ -1,0 +1,54 @@
+Allow operator to watch all namespaces
+Currently the operator only watches the namespace that it is deployed in. As I have a number of teams that are interested in experimenting with ArgoCD, it would be nice to only have to deploy the operator once and then allow these seperate teams to deploy their own ArgoCD CR in their projects.
+This is actually something that I considered initially but I left out due to operators not being supported on OpenShift Dedicated (OSD) if they allow deployment to all namespaces through the `InstallModes` section in the ClusterServiceVersion (CSV) for the operator (See [v0.0.9](https://github.com/argoproj-labs/argocd-operator/blob/02c424615559b40c33447bf3e3b9ac86550cb4ab/deploy/olm-catalog/argocd-operator/0.0.9/argocd-operator.v0.0.9.clusterserviceversion.yaml#L756-L764) for an example). I need to follow up to see if this is still a requirement for OSD operators.
+
+That said, I am leaving this open as an enhancement because I think that we could get around that by using an OperatorGroup that includes all namespaces. This would allow for a single operator to be deployed that would watch all namespaces.  I will do further testing around this but would having a single operator watching all namepaces work for your case @tylerauerbeck? The OperatorGroup would have to be defined and deployed as part of your process that deploys the operator.
+@jmckind Yepp, I think that would work for me.
+In order to get one argocd operator manage multiple ArgoCD instances, this is what I did to get things working :
+
+1. Install operator the usual way in namespace `foo-argocd`
+2. Update the created clusterserviceversion object to support ["multiple namespace" install ](https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/olm-catalog/argocd-operator/0.0.13/argocd-operator.v0.0.13.clusterserviceversion.yaml#L776)
+3. Update the associated `OperatorGroup` : Append the namespace ( `bar-argocd` ) where you want your second Argocd instance to be created.
+4. The clusterserviceversion gets copied over to the`bar-argocd` namespace .
+5. Create the `ArgoCD` CR and see that it gets reconciled!
+
+Because the operator gets OLM to manage the argocd-specific roles, rolebindings and service accounts, the following needs to be done too: ( being fixed by https://github.com/argoproj-labs/argocd-operator/pull/161 ) 
+* Create [roles](https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/role.yaml#L82) , 
+* Create [service accounts](https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/service_account.yaml#L6) 
+* Create [rolebindings](https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/role_binding.yaml#L13 )
+
+I will make a proposal to ensure these objects are created/managed by the argocd operator's controller ( and not OLM ) per instance of ArgoCD.
+It seems that SingleNamespace mode is broken too, in my test, service accounts aren't created in the target namespace, causing deployments to hang forever, shall we change that ability to false for now.
+Edit: #161 seems to be in the right direction.
+Just taking a look back at this issue and it looks like this functionality is in place by default now.
+
+For example, if I deploy the operator with `make deploy IMG=quay.io/argoprojlabs/argocd-operator:v0.1.0`, then I get the operator running in `argocd-operator-system`.
+
+If I then deploy the following two ArgoCD CR's in two seperate namespaces:
+
+```bash
+kubectl create ns foo
+kubectl create ns bar
+```
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: foo-argocd
+  namespace: foo
+  labels:
+    example: basic
+spec: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: bar-argocd
+  namespace: bar
+  labels:
+    example: basic
+spec: {}
+```
+
+Then I will see the operator pick up these CR's and then start creating the instances as expected. Previously the operator would only pay attention to ArgoCD CR's that were created in the same namespace.

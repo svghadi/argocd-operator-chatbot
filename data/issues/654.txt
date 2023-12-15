@@ -1,0 +1,8 @@
+Add support for creating argocd-notifications workloads 
+In order for the operator to expose control over the notifications engine to the end user, we must provide a way to configure this via the Argo CD CR. The CRD spec and status must be updated to provide a `.spec.notifications` option that should control the deployment of the notifications controller pod. It should be set to false by default. The status must be updated to reflect the status of the notifications controller pod as well. 
+
+**Acceptance criteria:**
+
+1. Update the CR spec to support ways to controller deployment of notifications controller - Update status to reflect status of notifications controller pod
+2. notifications controller should be disabled by default 
+3. When notifications is enabled in the ArgoCD CR, the notification controller pod is deployment with specific service account/role/binding. The pod is deleted when notifications is disabled.

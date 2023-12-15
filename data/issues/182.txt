@@ -1,0 +1,2 @@
+Remove Need for Util Image
+Currently the operator makes use of a [custom image](https://quay.io/repository/jmckind/argocd-operator-util) that is based on the upstream argo-cd container image for the utilities needed to perform an export. The operator should be refactored to perform the export steps without the need for this image, as it quite large and makes the operator release process as well as offline installs more difficult.

@@ -1,0 +1,11 @@
+ApplicationSet controller Deployment reconcilliation update logic misses volume field
+**Describe the bug**
+The ApplicationSet controller Deployment reconciliation logic works well on Create, but on update it fails to include the Volumes, causing an error in the logs like:
+`
+Deployment.apps \"applicationset-controller\" is invalid: [spec.template.spec.containers[0].volumeMounts[0].name: Not found: \"ssh-known-hosts\", spec.template.spec.containers[0].volumeMounts[1].name: Not found: \"tls-certs\", spec.template.spec.containers[0].volumeMounts[2].name: Not found: \"gpg-keys\", spec.template.spec.containers[0].volumeMounts[3].name: Not found: \"gpg-keyring\", spec.template.spec.containers[0].volumeMounts[4].name: Not found: \"argocd-repo-server-tls\"]"
+`
+In this case, the podspec containers volumemounts is correctly updated in the Deployment, but the `volumes` field of the Deployment is not, causing the above error.
+
+This was reproduced in the upgrade scenario, where the old version of the ApplicationSet deployment would be missing these fields, causing the update logic to be invoked, and incorrectly doing a partial update of the Deployment (causing the above error).
+
+

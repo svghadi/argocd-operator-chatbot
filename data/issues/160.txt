@@ -1,0 +1,9 @@
+Avoid use of Routes in the ArgoCD API
+Generally speaking, wondering if any API field which is applicable only to a specific Kubernetes distribution ( in this case OpenShift ) should be a part of the strongly typed API ?
+
+Given that this is an upstream Kubernetes operator and the `Route` API  is a vendor-specific Ingress implementation, should we consider moving it out of the strongly typed API ?
+
+One of the ways to handle this without a lot of fuss is to support vendor specific intentions as annotations. There could be better ways to do so for sure. 
+
+I'll try going over similar scenarios in other projects and see if we can inherit a practice based on precedence :) 
+

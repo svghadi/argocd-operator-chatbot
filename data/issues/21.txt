@@ -1,0 +1,20 @@
+The Custom fields in the ArgoCD Edit form section changes focus to Prometheus section size field 
+Installed operator successfully in OpenShift V4. When I tried to create instance of ArgoCD and clicked on the Edit form to update some of the configurations e.g. when I try to change the application name, the cursor changes the focus to Prometheus section "size" field. Currently Edit Form is unusable. Can someone please take a look ?
+Thanks
+
+Thanks @JTG2020, will be making changes to clean up the issues with the Edit Form. Can you let me know the minor version of OpenShift that you are on? Example: 4.2 or 4.3
+Using openshift 4.2.12 
+
+Sent from my iPhone
+
+> On Feb 17, 2020, at 12:34 PM, John McKenzie <notifications@github.com> wrote:
+> 
+> ﻿
+> Thanks @JTG2020, will be making changes to clean up the issues with the Edit Form. Can you let me know the minor version of OpenShift that you are on? Example: 4.2 or 4.3
+> 
+> —
+> You are receiving this because you were mentioned.
+> Reply to this email directly, view it on GitHub, or unsubscribe.
+
+@JTG2020, I have made some modifications to the CSV to fix the Edit Form on OpenShift 4.x, as well as to add all of the currently available properties for the ArgoCD resource. This will be a part of the v0.0.5 release going out this week. 
+Released as part of v0.0.5.

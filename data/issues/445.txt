@@ -1,0 +1,42 @@
+Invalid Image location for ApplicationSets
+**Describe the bug**
+Operator is not able to create an ApplicationSet pod due to default invalid Image location in the defaults.go 
+
+```
+  Warning  Failed          76s (x6 over 3m11s)   kubelet            Error: ImagePullBackOff
+  Normal   BackOff         64s (x7 over 3m11s)   kubelet            Back-off pulling image "quay.io/argocdapplicationset/argocd-applicationset:v0.2.0"
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Run the operator locally using `make install && make run`
+2. Create an Argo CD CR with the below configuration.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  namespace: foo
+spec:
+  applicationSet:
+    resources:
+      limits:
+        cpu: "2"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+  server:
+    route:
+      enabled: true
+```
+3. Verify that the application set pod moves in to `ImagePullBackoff` state.
+
+**Expected behavior**
+ApplicationSets pod is in running state.
+
+
+@iam-veeramalla Ah. Looks like v0.2.0 was released, but never pushed to quay. Any idea who to chat with to get that done?
+> @iam-veeramalla Ah. Looks like v0.2.0 was released, but never pushed to quay. Any idea who to chat with to get that done?
+
+looks like the images are now pushed to the `argoproj` repository

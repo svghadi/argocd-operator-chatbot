@@ -1,0 +1,24 @@
+Keeps rewriting argocd-ssh-known-hosts-cm
+When I apply my own configmap with SSH known hosts it stays for several minutes and then gets re-written wit the default one. Is there any way to stop this? According to docs, I'm trying to do it the way it was supposed to...
+The operator now manages the `argocd-ssh-known-hosts-cm` ConfigMap. The `SSHKnownHosts` property on the ArgoCD CRD was made available in v0.0.5 to pass in custom hosts. See the latest docs for this, as they were updated recently.
+
+https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#ssh-known-hosts 
+
+Here is an example of setting the SSH known hosts.
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: ssh-known-hosts
+spec:
+  sshKnownHosts: |
+    bitbucket.org ssh-rsa AAAAB3NzaC...
+    github.com ssh-rsa AAAAB3NzaC...
+
+```
+
+Does this fix the issue that you are seeing? More importantly, with this work for your use-case?
+Oh, sorry! I was using old docs. Now everything is great! Thanks!

@@ -1,0 +1,3 @@
+Allow mounting of ServiceAccountToken / specifying of ServiceAccount in Repo Server
+Currently the repo server component has `automountServiceAccountToken` set to false. When attempting to use the `lookup` function with helm, this causes us some issues because it has no idea how to communicate with the cluster. It would be nice to be able to override this if this was desired and also to specify the serviceAccount that I would want to use here.
+Thanks for your continued contributions! I am going to merge this and will go out in the next release.

@@ -1,0 +1,104 @@
+ArgoCD Export to GCP backend fails - gcloud not in PATH
+**Describe the bug**
+When the export job to a gcp backend is created, the container crashes with the following error:
+```
+$ kubectl logs -n argocd-production argocd-export-gcp-m7qc8 -f
+exporting argo-cd
+creating argo-cd backup
+encrypting argo-cd backup
+pushing argo-cd backup to gcp
+/usr/local/bin/argocd-operator-util: line 87: gcloud: command not found
+```
+
+**To Reproduce**
+Set up an export to GCP:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCDExport
+metadata:
+  name: argocd-export-gcp
+  namespace: argocd-production
+  labels:
+    test: version-1
+spec:
+  argocd: argocd
+  storage:
+    backend: gcp
+    secretName: argocd-export-gcp-secret
+```
+
+The the export is created, the above error occurs.
+
+Checking the pod, I find the following image:
+`quay.io/argoprojlabs/argocd-operator-util@sha256:411388a09cbba0502639e0190a68d82ae2d7716863e35b2af7322384b2c6af48`
+
+Run that image, looking for gcloud command. Gcloud is installed, but not in the `PATH`
+
+```
+docker run --rm -ti --name tmp --entrypoint bash quay.io/argoprojlabs/argocd-operator-util@sha256:411388a09cbba0502639e0190a68d82ae2d7716863e35b2af7322384b2c6af48
+
+argocd@d9946953d046:~$ which gcloud
+argocd@d9946953d046:~$ cd /
+argocd@d9946953d046:/$ find -name gcloud
+find: './var/cache/apt/archives/partial': Permission denied
+find: './var/cache/ldconfig': Permission denied
+find: './proc/tty/driver': Permission denied
+./home/argocd/google-cloud-sdk/lib/googlecloudsdk/googledata/devsite/site-cloud/en/sdk/gcloud
+./home/argocd/google-cloud-sdk/platform/gsutil_py2/gslib/vendored/oauth2client/tests/data/gcloud
+./home/argocd/google-cloud-sdk/bin/gcloud
+./home/argocd/google-cloud-sdk/.install/.backup/lib/googlecloudsdk/googledata/devsite/site-cloud/en/sdk/gcloud
+./home/argocd/google-cloud-sdk/.install/.backup/bin/gcloud
+find: './etc/ssl/private': Permission denied
+find: './root': Permission denied
+
+argocd@d9946953d046:/$ echo $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+
+Need to include add `./home/argocd/google-cloud-sdk/bin/` to the `PATH`
+Unfortunately this problem is still present in the latest version of the operator (v0.7.0).
+
+Running the exporter still fails in the same way as before.
+
+This can be confirmed pulling the v0.7.0 of the image (quay.io/argoprojlabs/argocd-operator-util:v0.7.0) and executing `gcloud`.
+```
+$ docker run --platform=linux/amd64 --rm -ti --name tmp quay.io/argoprojlabs/argocd-operator-util:v0.7.0 bash -c "gcloud --version"
+bash: line 1: gcloud: command not found
+
+$ docker run --platform=linux/amd64 --rm -ti --name tmp quay.io/argoprojlabs/argocd-operator-util:v0.7.0 bash -c "/home/argocd/google-cloud-sdk/bin/gcloud --version"
+Google Cloud SDK 441.0.0
+bq 2.0.95
+bundled-python3-unix 3.9.16
+core 2023.07.28
+gcloud-crc32c 1.0.0
+gsutil 5.25
+```
+
+The location is consistent with the Dockerfile installing the gcloud SDK in `/home/argocd`:
+https://github.com/argoproj-labs/argocd-operator/blob/master/build/util/Dockerfile#L33
+
+Please let me know if you prefer that I open a new GH issue.
+An alternative to manually adding the location of the gcloud CLI binary to the PATH variable, would be to initialize gcloud SDK like so:
+```bash
+GOOGLE_CLOUD_SDK="$HOME/google-cloud-sdk"
+if [ -f "${GOOGLE_CLOUD_SDK}/path.bash.inc" ]; then 
+  source "${GOOGLE_CLOUD_SDK}/path.bash.inc"
+fi
+```
+which ultimately accomplishes the same as adding the path to the PATH env. variable.
+
+For reference `path.bash.inc`, distributed with the SDK, is:
+```bash
+script_link="$( command readlink "$BASH_SOURCE" )" || script_link="$BASH_SOURCE"
+apparent_sdk_dir="${script_link%/*}"
+if [ "$apparent_sdk_dir" == "$script_link" ]; then
+  apparent_sdk_dir=.
+fi
+sdk_dir="$( command cd -P "$apparent_sdk_dir" > /dev/null && command pwd -P )"
+bin_path="$sdk_dir/bin"
+if [[ ":${PATH}:" != *":${bin_path}:"* ]]; then
+  export PATH=$bin_path:$PATH
+fi
+```
+
+I confirmed that this file is present in the 0.7.0 version of the docker image.

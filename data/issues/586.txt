@@ -1,0 +1,28 @@
+Panic due to missing init container
+**Describe the bug**
+
+PR #562 introduced a bug where a panic occurs if a version of Argo CD is installed on the cluster by an older version of the operator that didn't have the CMP 2.0 support included.
+
+```
+panic: runtime error: index out of range [0] with length 0
+
+goroutine 505 [running]:
+github.com/argoproj-labs/argocd-operator/controllers/argocd.(*ReconcileArgoCD).reconcileRepoDeployment(0xc000ac2d20, 0xc0007b5800)
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/controllers/argocd/deployment.go:1060 +0x2773
+github.com/argoproj-labs/argocd-operator/controllers/argocd.(*ReconcileArgoCD).reconcileDeployments(0x27e1e80, 0xc0003e1640)
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/controllers/argocd/deployment.go:347 +0x6c
+github.com/argoproj-labs/argocd-operator/controllers/argocd.(*ReconcileArgoCD).reconcileResources(0xc000ac2d20, 0xc0007b5800)
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/controllers/argocd/util.go:755 +0x2a7
+github.com/argoproj-labs/argocd-operator/controllers/argocd.(*ReconcileArgoCD).Reconcile(0xc000ac2d20, {0x27c5cf8, 0xc0008883c0}, {{{0xc0005ff0b9, 0x24aa140}, {0xc000b06930, 0x30}}})
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/controllers/argocd/argocd_controller.go:122 +0x42e
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile(0xc00023c580, {0x27c5cf8, 0xc0008882d0}, {{{0xc0005ff0b9, 0x24aa140}, {0xc000b06930, 0x1014f54}}})
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114 +0x26f
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler(0xc00023c580, {0x27c5c50, 0xc0005cd6c0}, {0x23cffe0, 0xc000b40b00})
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311 +0x33e
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem(0xc00023c580, {0x27c5c50, 0xc0005cd6c0})
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266 +0x205
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2()
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227 +0x85
+created by sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2
+	/Users/aveerama/go/src/github.com/iam-veeramalla/argocd-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:223 +0x357```
+

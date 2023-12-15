@@ -1,0 +1,62 @@
+Unable to setup ArgoCDExport for Azure
+I'm trying to setup ArgoCDExport to make an export to Azure.
+I followed your docs to setup ArgoCDExport for Azure.
+
+I created a self-signed certificate and added it to the Azure SPN.
+
+The azure.service.cert is in the following format.
+```
+-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----
+```
+
+
+The export container shows the following logs. Do you have any idea what could cause this issue?
+``` bash
+exporting argo-cd
+creating argo-cd backup
+encrypting argo-cd backup
+pushing argo-cd backup to azure
+The command failed with an unexpected error. Here is the traceback:
+
+[('PEM routines', 'get_name', 'no start line')]
+Traceback (most recent call last):
+  File "/opt/az/lib/python3.6/site-packages/knack/cli.py", line 215, in invoke
+    cmd_result = self.invocation.execute(args)
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/commands/__init__.py", line 654, in execute
+    raise ex
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/commands/__init__.py", line 718, in _run_jobs_serially
+    results.append(self._run_job(expanded_arg, cmd_copy))
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/commands/__init__.py", line 711, in _run_job
+    six.reraise(*sys.exc_info())
+  File "/opt/az/lib/python3.6/site-packages/six.py", line 703, in reraise
+    raise value
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/commands/__init__.py", line 688, in _run_job
+    result = cmd_copy(params)
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/commands/__init__.py", line 325, in __call__
+    return self.handler(*args, **kwargs)
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/__init__.py", line 776, in default_command_handler
+    return op(**command_args)
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/command_modules/profile/custom.py", line 159, in login
+    use_cert_sn_issuer=use_cert_sn_issuer)
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/_profile.py", line 207, in find_subscriptions_on_login
+    sp_auth = ServicePrincipalAuth(password, use_cert_sn_issuer)
+  File "/opt/az/lib/python3.6/site-packages/azure/cli/core/_profile.py", line 1145, in __init__
+    cert = load_certificate(FILETYPE_PEM, self.cert_file_string)
+  File "/opt/az/lib/python3.6/site-packages/OpenSSL/crypto.py", line 1837, in load_certificate
+    _raise_current_error()
+  File "/opt/az/lib/python3.6/site-packages/OpenSSL/_util.py", line 54, in exception_from_error_queue
+    raise exception_type(errors)
+OpenSSL.crypto.Error: [('PEM routines', 'get_name', 'no start line')]
+
+To open an issue, please run: 'az feedback'
+```
+Hi @wouter2397 thank you for the report. I will have a look at this.
+Hello @jmckind,
+
+We found the issue regarding this problem.
+Within the azure.service.cert you need to specify both the private key and the certificate.
+After you do this the export works as expected.
+
+I would suggest to add this to the documentation so its clear for others

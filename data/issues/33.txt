@@ -1,0 +1,4 @@
+Add Support for Backups to an AWS Bucket
+The operator should support storing exports/backups in an AWS bucket.
+Working on this in the [export_aws](https://github.com/argoproj-labs/argocd-operator/tree/export_aws) branch.
+Released as part of v0.0.6.

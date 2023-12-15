@@ -1,0 +1,7 @@
+operator sets back the argocd cr modifications to default.
+argocd operator overrides any modifications made to argocd cr by the user. I observed this while adding the OIDC related changes to my existing argocd cr. This issue needs an urgent attention as modification of argocd custom resource is a quite common use-case.
+
+WorkAround:
+Scale the operator to 0 , make the required changes in the custom resource and Scale the operator back to 1 [This is not a recommended work around]
+
+This is a false alarm, My bad. Closing it 

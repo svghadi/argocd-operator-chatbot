@@ -1,0 +1,13 @@
+Add support for env and cluster wide proxy for notification controller workloads.
+**Is your feature request related to a problem? Please describe.**
+Argo CD operator adds cluster-wide proxy env vars to its workloads such as controller, server, repo server, dex, keycloak and redis. This is required to access or communicate with this workloads in a disconnect or proxy cluster setup.
+
+We need a similar support for notifications controller as well.
+
+
+**Describe alternatives you've considered**
+NA
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+

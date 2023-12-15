@@ -1,0 +1,9 @@
+Dex is not working unless a new release will be released
+Hi everyone 👋 !
+I am using the current operator release v0.0.14 configuring the authentication with an external dex.
+I saw that with this change https://github.com/argoproj-labs/argocd-operator/blob/a5171dbe936341924dcacfba7f1aba6a109ccf7e/pkg/controller/argocd/util.go#L193-L196 everything could potentially work, but this requires a new release in order to can use the code accordingly with the latest changes.
+Can anyone give some visibility on when will be available a new release?
+Thanks in advance to everybody!
+
+Yea, let's get the next release v0.0.15 out.   Hopefully, we can get it out in a coupe weeks.
+This issue seems obsolete. we are currently at release `v0.3.0`. @lzecca78 Can I close this issue ?

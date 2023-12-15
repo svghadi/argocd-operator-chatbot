@@ -1,0 +1,52 @@
+Add ability to customize Host of Route in ArgoCD CRD ( argocd.spec.server.route.host )
+**Is your feature request related to a problem? Please describe.**
+ArgoCD CRD generates dynamically the Host of the Route which is very long host  : `openshift-gitops-server-openshift-gitops.apps.company.lan`
+and not easy to memorize in a team environment.
+
+**Describe the solution you'd like**
+I would like to be able to customize that host: 
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  finalizers:
+  - argoproj.io/finalizer
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  # .....
+  server:
+     # ...
+    route:
+      enabled: true
+      host: gitops.apps.company.lan
+# ....
+```
+
+**Describe alternatives you've considered**
+For now, I considered to create a job , changing directly the resource of type `Route` , and package that job in our corporate helm chart.
+
+**Additional context**
+k8s 1.24 , openshift 4.11
+
+Any update Ya Guys ?
+Hi @abdennour , You can achieve this using the below example.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: route
+spec:
+  # ......
+  server:
+    host: argoroute.example.com
+    route:
+      enabled: true
+```
+
+Yeah, I agree that the position of `host` in the `.spec` looks out of place. One reason I can think off is that the `host` field is common for ingress and routes , so thats the reason why it is under `.spec` and not `.spec.route`. However, I feel it should have been under `.spec.route` and `.spec.ingress` both.
+Awesome! Thanks for the info.
+Tested & confirmed 

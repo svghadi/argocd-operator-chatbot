@@ -1,0 +1,25 @@
+RFE: Add support to configure --app-resync for application controller
+We use ArgoCD in a medium sized environment (currently four clusters with in total 96 application) which already induces a high load on the central git repo server, due to ArgoCD polling the repo server every 3 minutes. The number of applications and clusters will increase significantly in the near future, which will eventually lead to problems.
+Since it's possible to increase that inverall by modifying the --app-resync parameter, it would be beneficial to be able to configure this via the ArgoCD.controller parameter.
+
+For example like:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: controller
+spec:
+  controller:
+    processors:
+      operation: 10
+      status: 20
+    app-resync: 360
+    resources: {}
+```
+
+ArgoCD documentation for reference: https://argoproj.github.io/argo-cd/operator-manual/high_availability/#argocd-application-controller
+
+Somewhat related issue from ArgoCD GitHub: https://github.com/argoproj/argo-cd/issues/1399
+@ccdgrundhoefer Thanks for trying out the operator and for the suggestion. 

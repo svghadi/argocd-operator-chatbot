@@ -1,0 +1,43 @@
+argocd-operator-controller-manager-service pod selector not unique to argo
+**Describe the bug**
+The service argocd-operator-controller-manager-service has the pod selector control-plane=controller-manager
+In our OpenShift environment we have two additional operators (amq/otel) which have the same label on their operator pods.
+With that the service points to the amq, argocd and otel pod.  
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install all 3 operators (amq broker/argocd/otel) in the OLM suggested namespace (openshift-operators) from the operator hub.
+
+```
+oc get pods -n openshift-operators -l control-plane=controller-manager
+NAME                                                         READY   STATUS    RESTARTS   AGE
+amq-broker-controller-manager-674dcf8866-bp5qd               1/1     Running   0          77m
+argocd-operator-controller-manager-5887d66dc6-cghxz          1/1     Running   0          6d4h
+opentelemetry-operator-controller-manager-5b64497db6-hg9qj   2/2     Running   0          64m
+```
+
+**Expected behavior**
+Have a more selective pod selector, for example use something like:
+app.kubernetes.io/name=argocd-operator, control-plane=controller-manager
+
+**Additional information**
+ArgoCD Operator 0.8.0
+
+Hi, I have experienced exactly the same issue on OpenShift, using latest ArgoCD Operator v0.8.0. I think the issue started appearing after upgrade to this version.
+
+How it looks in ArgoCD (when trying to synchronize `kind: ArgoCD`):
+
+```
+error when retrieving current configuration of: Resource: "argoproj.io/v1alpha1, Resource=argocds", GroupVersionKind: "argoproj.io/v1alpha1, Kind=ArgoCD" Name: "xxxx", Namespace: "xxxx" from server for: "xyz": conversion webhook for argoproj.io/v1beta1, Kind=ArgoCD failed: Post "[https://argocd-operator-controller-manager-service.xxx.svc:443/convert?timeout=30s](https://argocd-operator-controller-manager-service.xxx.svc/convert?timeout=30s)": dial tcp xxx.xxx.y.zzz:9443: connect: connection refused
+```
+
+When I do the `oc get pods -n openshift-operators -l control-plane=controller-manager` I get very similar result, there are pods of other operators visible.
+
+`kind: Service` is having a label selector `control-plane=controller-manager` which is too generic.
+I'm not sure if I found the problematic place:
+https://github.com/argoproj-labs/argocd-operator/blob/v0.8.0/deploy/olm-catalog/argocd-operator/0.8.0/argocd-operator.v0.8.0.clusterserviceversion.yaml#L1726
+
+It seems that in v0.9.0 the issue is probably resolved:
+https://github.com/argoproj-labs/argocd-operator/blob/c238af601bb59097ae446f9727807e77b259f04b/deploy/olm-catalog/argocd-operator/0.9.0/argocd-operator.v0.9.0.clusterserviceversion.yaml#L1726
+
+So I guess that next upgrade to v0.9.0 will fix it and make manual workarounds not neccessary anymore.

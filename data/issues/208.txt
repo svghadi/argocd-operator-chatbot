@@ -1,0 +1,51 @@
+argocdexport fails on Openshift 4.5
+
+Describe the bug
+
+When running the argocd export the job fails to run with permission issues to the /backups folder on local storage PV in Openshift 4.5.
+
+Logs from argocdexport pod:
+exporting argo-cd
+creating argo-cd backup
+encrypting argo-cd backup
+Can't open /backups/argocd-backup.yaml for writing, Permission denied
+139760326087808:error:0200100D:system library:fopen:Permission denied:../crypto/bio/bss_file.c:69:fopen('/backups/argocd-backup.yaml','wb')
+139760326087808:error:2006D002:BIO routines:BIO_new_file:system lib:../crypto/bio/bss_file.c:78:
+
+Pod event log:
+example-argocdexport-1606933560-zjgcg
+NamespaceNSargocd
+2 minutes ago
+Generated from kubelet on fzeu2openshiftsbtst-r-hmw98-worker-eastus21-mt7jz
+8 times in the last 3 minutes
+Back-off restarting failed container
+
+To Reproduce
+
+Create any export using openshift 4.5 and local storage RWO
+
+Expected behavior
+
+Backups should be able to write to the PV and execute a normal backup
+
+Screenshots
+
+If applicable, add screenshots to help explain your problem.
+
+Version
+
+Installed with ArgoCD Operator 0.0.14
+
+Logs
+
+See Above
+I was trying with the same config and the have got the same error. 
+Any chance of looking into this?
+
+Thank you for raising this issue @u849296. I will look into this.
+I can see why it doesn't work. In openshift the export-pod runs with uid 999, but the backup volume is owned by root with permission 770.  Running the pod as root is usually not an option for production clusters.
+Hope this get fixed soon. Having to rely on manual scripts is just a workaround.
+Its hightime we take this as priority. Having an export option and it not working its really not recommended. 
+> Thank you for raising this issue @u849296. I will look into this.
+
+Hi @jomkz , Do u have any updates on this ? 

@@ -1,0 +1,16 @@
+Add ability to build manifests without deploying via makefile
+**Is your feature request related to a problem? Please describe.**
+It would be nice to have an option to generate raw manifests without deploying them with kubectl via `make`.
+
+**Describe the solution you'd like**
+This would be a very small code change, really just adding a small segment to the makefile like so:
+```
+build_manifests: manifests kustomize ## Build manifests with kustomize but do not deploy
+    cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+    $(KUSTOMIZE) build config/default
+```
+I would be happy to submit a PR for this.
+
+**Additional context**
+The reason for requesting this is we have our own workflow for updating/generating manifests from upstreams and it would be nice to have a built-in option to generate the raw manifests so we can modify them as necessary.
+

@@ -1,0 +1,81 @@
+Add support for setting OIDC redirect_uri in config
+## Description
+<!-- Add a brief and meaningful description. -->
+
+Add option to set the host name of the argocd server in the OIDC config.
+
+Currently this defaults to `argocd-server` which does not resolve correctly so SSO servers throw errors or redirect to a host that can not be resolved.
+
+## Expected Behavior
+<!-- Describe the expected behaviour. -->
+
+Have an option to set this host name in the OIDC config or have the operator use the `server > host` value set in the server config.
+
+## Actual Behavior
+<!-- Describe the current/actual behaviour. -->
+
+The `redirect_uri` hostname is set to `argocd-server`:
+
+```
+https://keycloak.example.com/auth/realms/myrealm/protocol/openid-connect/auth?client_id=argocd&redirect_uri=https%3A%2F%2Fargocd-server%2Fauth%2Fcallback&response_type=code&scope=openid+profile+email+groups&state=jETgjbecfO
+```
+
+## Environment
+
+* Operating system: Fedora 32.20200512.0 (IoT Edition)
+* k8s version: v1.17.2+k3s1
+<!-- Run the command `oc version` and add the result here. -->
+```
+Client Version: version.Info{Major:"1", Minor:"17", GitVersion:"v1.17.2", GitCommit:"59603c6e503c87169aea6106f57b9f242f64df89", GitTreeState:"clean", BuildDate:"2020-01-18T23:30:10Z", GoVersion:"go1.13.5", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"17", GitVersion:"v1.17.2+k3s1", GitCommit:"cdab19b09a84389ffbf57bebd33871c60b1d6b28", GitTreeState:"clean", BuildDate:"2020-01-27T18:09:26Z", GoVersion:"go1.13.6", Compiler:"gc", Platform:"linux/amd64"}
+```
+* Project Version/Tag: v0.0.8
+* SSO server: Keycloak 9.0.2
+
+## Steps to reproduce
+<!-- Describe all steps and pre-requirements which are required to be performed in order to reproduce this scenario. ( E.g 1. Action, 2. Action ... ) -->
+
+- Install the argocd operator using olm method
+- Install a SSO server (in my testing keycloak)
+- Setup a client for Argocd on the SSO server
+- Create an argocd instance based on the example cr with an `oidcConfig` in the spec
+- Select `LOGIN VIA KEYCLOAK` in the web interface
+- Redirected to the SSO server and get error `Invalid parameter: redirect_uri`
+
+If you set up the SSO to accept any Redirect URIs you get redirected to the `argocd-server` hostname.
+Thank you @garyedwards for the detailed write up. This is something than needs enhancement for sure. I will get started on implementing a solution.
+Hi @jmckind thanks for your great work on this operator.  It may be worth doing an audit of all of the areas that can inherit the host value.  For example I have noticed that the tls settings for ingress also use `argocd-server` rather the the server config host value.  It may be I am missing something let me know if I can help with testing etc.
+@garyedwards I have been thinking about this more and wouldn't #91 address this for you here? Overriding the Host on the IngressSpec would result in that being used in the redirect_uri because that would be the value in the host `url` from the `argocd-cm` ConfigMap that is managed by the operator. That should be how it is working, going to run through some tests of that setup.
+I have just had another look and it does not seem to come through into the argocd-cm configmap:
+
+```
+kubectl get configmaps -n argocd argocd-cm -o yaml
+apiVersion: v1
+data:
+...
+  url: https://argocd-server
+...
+```
+
+My config reads:
+
+``` yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  labels:
+    profile: my-gitops
+spec:
+  server:
+    grpc:
+      ingress: false
+      host: argo-grpc.mydomain
+    ingress: false
+    insecure: true
+    host: argo.mydomain
+```
+
+I have ingress off currently as add my own manually as the tls does not respect the host value.  I can have another go with ingress enabled.  Does your testing bring through the `server > host` value?
+I think this was actually caused by #95, which the fix was just merged into master and will go out in the next release. In addition, I am going to submit a new PR that just includes the enhancements for Ingress and does not combine it with the Route changes.
+The Ingress enhancements have been merged into master as part of #101 and will go out in the next release.

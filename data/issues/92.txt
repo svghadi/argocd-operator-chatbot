@@ -1,0 +1,19 @@
+How to upgrade Operator and then ArgoCD
+Hi guys!
+
+I am looking through the documentation but cannot find the answer. ArgoCD operator in my cluster is v 0.0.8 while there is a newer version 0.0.9. 
+
+At the same time ArgoCD version out there is 1.5.5 while the one that operator is running is 1.5.1.
+
+Operator says everything is up to date.
+
+How do I make the operator update ArgoCD to newer version?
+Hi @bortek, did you install the operator through OLM or manually using the manifests in the `deploy` directory?
+Well I have figured it out, turns out it was not installed as an operator but manually. :(  Thanks for responding. 
+I have the same problem (i installed the operator through OLM). May be possible that the 0.0.9 was not published on the community-operators? (I'm using openshift 4.4)
+
+Regards
+@robertodocampo The PR was merged at the end of last week for the v0.0.9 operator in the community operators (OpenShift Operator Hub), so it should show there soon. That is a separate repo where I have to submit the operator manifests.
+Thanks a lot @jmckind ! The operator was upgraded to the 0.0.9 version this morning. However the argocd was not upgraded. I need to do something more? I usually rely on the automatic operators to do this upgrades ("full cycle operators")
+
+Regards

@@ -1,0 +1,12 @@
+Initial TLS Known Hosts
+I see that adding additional known SSH hosts is well documented and populates the necessary CM, however, I don't see any documentation on populating known TLS hosts in the CR. Is this supported by the operator? We have an internal GitHub and are looking to add its CA to the known TLS config map using the operator. I assume as an alternative I could have argo manage the argocd-known-tls-certs-cm but I'm not sure if the operator would attempt to overwrite that.
+
+Known SSH Hosts:
+https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#initial-ssh-known-hosts
+
+
+Closing as I see the documentation now under TLS, it was a little unclear at first as it says it is for configuring Grafana.
+
+"TLS Options¶
+
+The following properties are available for configuring the Grafana component."

@@ -1,0 +1,101 @@
+`argocd-secret` is not updated with an `oidc.dex.clientSecret` token
+**Describe the bug**
+After upgrading to OpenShift GitOps Operator 1.8.1, and even after downgrading to 1.7.1 DEX / Login with Openshift gave an error and login was not possible.
+
+The reason is that the operator(?) had changed the `argocd-cm` configmap to reference the `oidc.dex.clientSecret` secret key in the `argocd-secret` Secret, but the key is not present.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Operator installed in the OpenShift operator dashboard
+2. Existing argocd instance not able to login
+
+**Expected behavior**
+Able to login
+
+**Screenshots**
+```
+argocd-dex-server-5fd5544b95-rqdr6 dex time="2023-03-24T14:04:57Z" level=warning msg="config referenced '$oidc.dex.clientSecret', but key does not exist in secret"                      argocd-dex-server-5fd5544b95-rqdr6 dex time="2023-03-24T14:04:57Z" level=info msg="dex config unmodified"
+```
+
+![image](https://user-images.githubusercontent.com/12235187/227585303-f1481d18-97f7-4862-b54d-8a6aa66fea40.png)
+
+**Additional context**
+Argocd instances are created in separate namespaces, pr team, and setup with `NamespaceConfig`
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: NamespaceConfig
+metadata:
+  name: argocd
+spec:
+  labelSelector:
+    matchLabels:
+      custom.label.com/argocd-enabled: "true"
+  templates:
+  - excludedPaths:
+    - .spec.rbac.policy
+    - .spec.replicas
+    - .metadata
+    - .status
+    objectTemplate: |
+      apiVersion: argoproj.io/v1alpha1
+      kind: ArgoCD
+      metadata:
+        name: argocd
+        namespace: {{ .Name }}
+        labels:
+          app.kubernetes.io/managed-by: namespace-configuration-operator
+      spec:
+        rbac:
+          defaultPolicy: ''
+          policy: |
+            # the env-admins have access to support teams
+            g, env-admins, role:admin
+            g, deployer, role:admin
+            # add your teams below here
+          scopes: '[groups]'
+        redis: {}
+        repo: {}
+        server:
+          route:
+            enabled: true
+            tls:
+              termination: reencrypt
+        sso:
+          dex:
+            openShiftOAuth: true
+        statusBadgeEnabled: true
+        initialRepositories: |
+          - type: helm
+            name: ourrepo
+            url: https://ourrepo.com/repository/helm/
+```
+
+**Workaround**
+
+We can work around the issue by adding the secret manually.
+
+```bash
+NAMESPACE=yournamespace-argocd
+
+oc -n $NAMESPACE get secret argocd-secret -o yaml  # See that `oidc.dex.clientSecret` is missing
+secret=$(oc -n $NAMESPACE get sa argocd-argocd-dex-server -o json | jq -r '.secrets' | grep token | sed 's/    "name": "//g' | sed 's/"//g')
+echo $secret
+expectedClientSecret=$(oc -n $NAMESPACE get secret $secret -o json | jq -r '.data.token')
+echo $expectedClientSecret
+oc -n $NAMESPACE patch secret argocd-secret --patch="{\"data\": { \"oidc.dex.clientSecret\": \"${expectedClientSecret}\" }}"
+```
+Most likely related to #872 and #873 
+
+A release would be most welcome.
+This was solved by adding `provider: dex` to `sso`
+
+```yaml
+spec:
+  sso:
+    provider: dex
+    dex:
+      openShiftOAuth: true
+```
+
+Refering to https://docs.openshift.com/container-platform/4.10/cicd/gitops/configuring-sso-on-argo-cd-using-dex.html#gitops-disable-dex-using-spec-sso_configuring-sso-for-argo-cd-using-dex

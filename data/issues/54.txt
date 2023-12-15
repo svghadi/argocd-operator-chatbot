@@ -1,0 +1,8 @@
+New Secret for Admin Password Feature creates infinite loop if cluster is named argocd
+Being that the operator stores the admin password secret in {clustername}-secret and then updates argocd-secret, it creates an infinite loop of constantly updating the secret.  There should be a check for that to prevent an infinite loop and possibly a way to customize the secret to use.
+I can't even set the passowrd anymore. It constantly gets updated and overwrites my manually set password.
+How can I set my own password with the operator? Without the operator I can set it by encrypting my Password and setting it to the argocd-secret. This always worked before.
+Somehow ArgoCD was hammering against our cluster API and crashed it :-) We deinstalled v0.6.
+According to the PR (https://github.com/argoproj-labs/argocd-operator/pull/34) you need to have a secret called {clustername}-secret which stores in the password in admin.password key.  The problem is if you named your cluster argocd, then the operator just gets caught in an infinite loop updating admin.password in argocd-secret, sees the change and then updates the password in argocd-secret and loops.
+Thanks for reporting this @creiche. Will get started on a fix for this issue.
+Released in v0.0.8

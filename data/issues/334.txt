@@ -1,0 +1,62 @@
+After upgrade argocd operator from v0.0.14 to .v0.0.15 credentials templates disappear.
+**Describe the bug**
+OpenShift v4.6
+After update from  v0.0.14 to .v0.0.15 credentials template is removed and is not possible to recreate. Operator allways removes them after a while. 
+
+argocd-cm v0.0.14
+......................................
+apiVersion: v1
+data:
+  dex.config: |
+    connectors:
+    - config:
+        clientID: system:serviceaccount:argocd:argocd-dex-server
+        clientSecret: xxxxxxx
+        insecureCA: true
+        issuer: https://kubernetes.default.svc
+        redirectURI: https://opolab-argocd-server-argocd.apps.opolab.xxxx.es/api/dex/callback
+  repository.credentials: |
+    - sshPrivateKeySecret:
+        key: sshPrivateKey
+        name: git-aplopop
+      url: git@git.xxx.es:opo/
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2021-06-11T13:05:28Z"
+  labels:
+    app.kubernetes.io/name: argocd-cm
+......................................
+
+argocd-cm v0.0.15
+......................................
+apiVersion: v1
+data:
+  dex.config: |
+    connectors:
+    - config:
+        clientID: system:serviceaccount:argocd:opolab-argocd-argocd-dex-server
+        clientSecret: xxxxxx
+        insecureCA: true
+        issuer: https://kubernetes.default.svc
+        redirectURI: https://opolab-argocd-server-argocd.apps.opolab.xxxx.es/api/dex/callback
+      id: openshift
+      name: OpenShift
+      type: openshift
+  ga.anonymizeusers: "false"
+  repository.credentials: ""
+  statusbadge.enabled: "false"
+  url: https://opolab-argocd-server-argocd.apps.opolab.xxxx.es
+  users.anonymous.enabled: "false"
+kind: ConfigMap
+......................................
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. On OpenShift Operators management agree to upgrade to v0.0.15 
+2. After the upgrade credentials template is removed and doesn't work any longer.
+
+**Expected behavior**
+We expect to keep the previous configuration regarding to credentials. We expect to be able to use template credentials as it used to be in previous versions.
+
+
+I have already solved this issue. In operator version 0.0.14 this configmap could be changed and operator doesn't modify this configuration. From v0.0.15 It seems that the operator delete all the cm configuration. In order to include a repository credentila you need to do this in Argocd CR instance. 

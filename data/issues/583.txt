@@ -1,0 +1,18 @@
+Add "helm.valuesFileSchemes" for argocd-cm for usage of helm-secrets
+**Is your feature request related to a problem? Please describe.**
+This Featurerequest is related to a problem, because of a change since ArgoCD 2.2.6, it is neccessary to configure helm.valuesFileSchemes in argocd-cm to be able to use helm-secrets with ArgoCD. See Issue: "https://github.com/argoproj/argo-cd/pull/8535"
+
+Additionally see Documentation of helm-secrets: "https://github.com/jkroepke/helm-secrets/wiki/ArgoCD-Integration#option-2-init-container"
+
+**Describe the solution you'd like**
+A first solution for this could be, so simply add a configuration option to the CRD to configure "helm.valuesFileSchemes". 
+
+**Describe alternatives you've considered**
+However, wouldn't it be much easier, to allow configuration of argocd-cm configmap directly? This would may be the alternative for a longer period in time.
+
+**Additional context**
+Don't think there are screenshot necessary. 
+Hi @romulus-ai , Sorry for getting back late on this one.
+
+We are discussing internally about allowing the users to update the configmap(argocd-cm). I will update this issue accordingly. 
+will be fixed as part of #641 

@@ -1,0 +1,40 @@
+Handle the case when both Keycloak and Dex are configured in the CR.
+**Describe the bug**
+Argo CD Operator currently supports two SSO providers `Dex` and `Keycloak`. `Keycloak` can be configured using the `.sso.provider: keycloak` and Dex can be configured using `.spec.dex`. This leads to a great chance of misconfiguration, A user can unknowingly or intentionally add both `Keycloak` and `Dex` to the CR.
+
+This scenario should be handled. 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Run the operator locally using `make install && make run`
+2. Create an Argo CD CR with Keycloak as SSO provider
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: route
+spec:
+  sso:
+    provider: keycloak
+    verifyTLS: false
+  server:
+    route:
+     enabled: tru
+```
+3.  Now add Dex as another SSO provider
+```
+.......
+dex:
+  openShiftOAuth: true
+```
+**Expected behavior**
+Only one SSO provider should be allowed.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Additional context**
+Add any other context about the problem here.
+

@@ -1,0 +1,28 @@
+Prometheus set up in CRD refers to the operator deployed in the same namespace
+**Is your feature request related to a problem? Please describe.**
+When you install prometheus operator using OLM, it is installed in a common namespace (operators, or openshift-operators). However, related with the code in https://github.com/argoproj-labs/argocd-operator/blob/master/pkg/controller/argocd/prometheus.go#L177, it refers to prometheus-k8s serviceaccount, which should be in the same namespace and not in the global one.
+
+**Describe the solution you'd like**
+A way to deploy prometheus which is not coupled to where the prometheus operator is deployed.
+
+**Describe alternatives you've considered**
+Copying the prometheus-k8s SA in the namespace, and adding it to the clusterrolebinding.
+
+**Additional context**
+None.
+
+Hi @rgordill , Can you please provide more information on what is the issue that you are running into and steps to reproduce  ? Thanks in Advance :)
+Hi @iam-veeramalla.
+
+Yes, to reproduce the issue do the following:
+
+- Deploy a prometheus operator in a namespace with cluster-wide scope
+- Deploy argocd operator in any namespace (ex. argocd).
+- Deploy an argocd-server with prometheus enabled=true
+
+It will not spin up the prometheus server to gather the metrics. You need to deploy the prometheus operator in the same namespace to get it working.
+
+You can easily deploy a prometheus operator cluster-wide if you deploy OLM (Operator Lifecycle Manager) and prometheus from there. (See https://operatorhub.io/operator/prometheus, and follow the install instructions, clicking in the "install" button).
+
+Thanks.
+

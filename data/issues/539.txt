@@ -1,0 +1,59 @@
+Fix openshift documentation please
+### Is your task related to a problem? Please describe.
+The file paths listed in the openshift documentation do not exist in the repository. Leaving me confused as to exact install process.
+https://github.com/argoproj-labs/argocd-operator/blob/master/docs/install/openshift.md
+
+oc create -f deploy/service_account.yaml
+oc create -f deploy/role.yaml
+oc create -f deploy/role_binding.yaml
+
+oc create -f deploy/argo-cd
+
+oc create -f deploy/crds
+
+oc create -f deploy/operator.yaml
+
+
+### Describe the solution you'd like
+Someone please update the openshift install manual to the correct process.
+
+### Describe alternatives you've considered
+I might try guessing at the right way to do this.
+
+### Additional context
+I am not an experienced user. I am trying to learn OpenShift and ArgoCD. But the incorrect documentation makes me afraid at what else is missing or outdated.
+
+Thanks for raising this @rcfja , we will take a look. Did you try the steps ? where did you get struck ? can you provide some more details ?
+Even the very first command on the documentation fails ..
+
+```
+> git clone https://github.com/argoproj-labs/argocd-operator.git
+
+> cd argocd-operator
+
+> oc create -f deploy/service_account.yaml
+error: the path "deploy/service_account.yaml" does not exist
+```
+
+I can't find a file with the name service_account.yaml
+> Even the very first command on the documentation fails ..
+> 
+> ```
+> > git clone https://github.com/argoproj-labs/argocd-operator.git
+> 
+> > cd argocd-operator
+> 
+> > oc create -f deploy/service_account.yaml
+> error: the path "deploy/service_account.yaml" does not exist
+> ```
+> 
+> I can't find a file with the name service_account.yaml
+
+Thanks for letting us know, we migrated to new version of operator-sdk. I thought we updated our documentation but seems like we need to do more work on this.
+I am not sure if this is worthy of a new issue, but after installing argocd-operator using Operator Hub and configuring dex with openshift login as described here: https://argocd-operator.readthedocs.io/en/latest/usage/dex/#dex-openshift-oauth-connector . The authentication seems to fail with the following message:
+`Failed to authenticate: openshift: user "<openshift_userid>" is not in any of the required groups.`
+
+I did create the groups and added the openshift_userid into the group (on openshift) as described here: https://argocd-operator.readthedocs.io/en/latest/usage/dex/#role-mappings
+
+Please let me know if this should be posted instead as a new issue?
+@adarshaj Please open a new issue :)

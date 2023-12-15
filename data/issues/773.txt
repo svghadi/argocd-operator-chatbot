@@ -1,0 +1,24 @@
+Manage ArgoCD Image Updater lifecycle in the ArgoCD Operator
+**Is your feature request related to a problem? Please describe.**
+When using the ArgoCD Operator, a lot of ArgoCD resources and their lifecycle can be managed by the Operator. Currently, the [ArgoCD Image Updater](https://argocd-image-updater.readthedocs.io/en/stable) resources need to be installed to the Kubernetes cluster manually. Mixing in a manual deployment process for some parts of the ArgoCD ecosystem gets hard to maintain and is unexpected from a user perspective. Changes in ArgoCD that require a re-configuration of the ArgoCD Image Updater resources will need to be resolved manually by the user, while the rest of the ArgoCD ecosystem is managed by the Operator.
+
+**Describe the solution you'd like**
+Implement the lifecycle management of ArgoCD Image Updater resources by the ArgoCD Operator, in a similar way that is being offered for the [ApplicationSet Controller](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#applicationset-controller-options).
+
+**Describe alternatives you've considered**
+/
+
+**Additional context**
+/
+
+Hi @juv , we have this in our backlog list. I think we should get this done in the next release.
+cc: @jaideepr97 
+@iam-veeramalla sounds great, looking forward to using this in our Openshift ArgoCD Operator 🚀 
+Is there a public roadmap and eta for the next release by any chance?
+> @iam-veeramalla sounds great, looking forward to using this in our Openshift ArgoCD Operator 🚀 Is there a public roadmap and eta for the next release by any chance?
+
+I don't have the exact release date yet, we are targeting something around 1st or 2nd week of November. 
+hi @juv 
+as an update to this - we are currently hoping to get Image Updater merged into core Argo CD itself 
+that would make this functionality available to argo-cd natively 
+https://github.com/argoproj/argo-cd/pull/11787

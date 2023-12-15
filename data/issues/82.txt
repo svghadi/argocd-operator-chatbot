@@ -1,0 +1,23 @@
+initialSSHKnownHosts overrides default SSHKnownHosts provided by ArgoCD
+I believe this is currently working as designed, but I'd like to see if anyone has similar thoughts. Right now upstream ArgoCD provides the initial SSHKnownHosts for github, bitbucket, gitlab, etc. when you install the system. The current functionality of this operator overrides/removes them if you provide your own `initialSSHKnownHosts` to the operator. What I would like to see is something along the lines of:
+
+- inject the default hosts as the upstream does
+- append my custom list to these default hosts so that I don't have to "carry' along the default ones myself
+- provide a key that does allow users to remove those default hosts in the case that they don't want them included
+
+I believe this would look something like:
+
+```
+initialSSHKnownHosts:
+  default-hosts: false
+  keys: |
+    bitbucket.org ssh-rsa AAAAB3NzaC...
+    github.com ssh-rsa AAAAB3NzaC...
+```
+
+In this case, the "load" is much lighter for folks who want to opt out versus those who want to also include the default hosts (i.e. a single key versus numerous known hosts entries.
+I like your suggestion for the default flag and this shouldn't be hard to implement.
+This has been merged into master and will go out in the next release.
+@jmckind Did this get merged in? Maybe I’m just overlooking but I didn’t see any changes around the SSHHosts. 
+Whoops my bad, I closed the wrong issue. Sorry about that.
+@jmckind No problem. I've actually got a PR about ready for this one, so you can go ahead and assign this to me if you'd like.

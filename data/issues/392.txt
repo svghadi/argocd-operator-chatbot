@@ -1,0 +1,15 @@
+Installing ArgoCD operator 0.0.14 from the OperatorHub.
+**Is your feature request related to a problem? Please describe.**
+I would like to install ArgoCD operator version 0.0.14 in stead of version 0.0.15. In the OperatorHub it is only possible to install the latest.
+
+**Describe the solution you'd like**
+A choice of which version you will install initially
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+I want to describe the LCM process within our operation organisation
+
+OLM does not support this. However, you can workaround with this. 
+https://github.com/operator-framework/operator-lifecycle-manager/issues/1177

@@ -1,0 +1,33 @@
+High memory consumption due to ConfigMap watches
+**Describe the bug**
+Before anything, note than I am not a ArgoCD user: I'm a developer of another OLM-based operator and, while investigating memory issues, out of curiosity I wanted to test a bunch of other operators to see who else was impacted by the same issue, and it seems ArgoCD operator is. I haven't done a deep investigation on argocd-operator in particular, if you think that this is a false-positive then I apologize for the inconvenience and you can close this issue.
+
+The problem: I ran a simple test: installing a bunch of operators, monitoring memory consumption, created a dummy namespace and many configmaps in that namespace. On some operators, the memory consumption remained stable; on others like this one, it increased linearly with the created configmaps.
+
+My assumption is that there is little chance that your operator actually needs to watch *every* configmaps (is it correct?). This is a quite common problem that has been documented here: https://sdk.operatorframework.io/docs/best-practices/designing-lean-operators/#overview :
+
+> "One of the pitfalls that many operators are failing into is that they watch resources with high cardinality like secrets possibly in all namespaces. This has a massive impact on the memory used by the controller on big clusters."
+
+From my experience, with some customers this can count in gigabytes of overhead. And I would add that it's not only about memory usage, it's also stressing Kube API with a lot of traffic.
+
+The article above suggests a remediation using cache configuration: if this would solve the problem for you, that's great! In case it doesn't, you might want to chime in here: https://github.com/kubernetes-sigs/controller-runtime/issues/2570 . I'm proposing to add to controller-runtime more possibilities regarding cache management, but for that I would like to probe a bit the different use cases among OLM users, in order to understand if the solution that I'm suggesting would help others or not. I guess the goal is to find a solution that suits for the most of us, rather than each implementing its own custom cache management. 
+
+**To Reproduce**
+
+- Install the operator
+- Watch memory used
+- `kubectl create namespace test`
+- `for i in {1..500}; do kubectl create cm test-cm-$i -n test --from-file=<INSERT BIG FILE HERE> ; done`
+
+**Expected behavior**
+
+The memory should remain quite stable, but it increases for every configmap created.
+
+**Screenshots**
+
+![Capture d’écran du 2023-10-27 09-03-34](https://github.com/argoproj-labs/argocd-operator/assets/2153442/a1dfff7c-0ff2-4f25-b32d-876e57faadc7)
+
+
+@jotak thanks for reporting it. Will evaluate it. 
+
+This issue will be tracked in https://issues.redhat.com/browse/GITOPS-3602

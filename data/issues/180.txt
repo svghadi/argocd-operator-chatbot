@@ -1,0 +1,26 @@
+Set logformat json on argocd components
+Hi,
+
+We have installed ArgoCD on OpenShift using the argocd operator and are shipping the logs from the ArgoCD-components to a external log management system, and would like the logs to be structured in json format.
+
+I found that ArgoCD 1.6+ added the option --logformat, and I have indeed tested it successfully by setting the option manually in the Deployment spec for argocd-server:
+
+     name: argocd-server
+      command:
+        - argocd-server
+        - '--staticassets'
+        - /shared/app
+        - '--dex-server'
+        - 'http://argocd-dex-server:5556'
+        - '--repo-server'
+        - 'argocd-repo-server:8081'
+        - '--redis'
+        - 'argocd-redis:6379'
+        - '--logformat'
+        - json
+
+Are there any way we can set logFormat on the ArgoCD CRD?
+Hi @jonaslar, thank you for the request. This is something that we can look at for sure. I will look into the various components but is this only an option on argocd-server? I would hope that it was also added to the application-controller and repo-server components.
+Hi, it is on the controller and repo-server as well. 
+
+Jonas

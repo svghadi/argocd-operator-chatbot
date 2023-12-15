@@ -1,0 +1,2 @@
+Set application.resourceTrackingMethod via ArgoCD CRD
+Enable the operator / ArgoCD CRD to set application.resourceTrackingMethod - see https://argo-cd.readthedocs.io/en/stable/user-guide/resource_tracking/#choosing-a-tracking-method

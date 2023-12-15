@@ -1,0 +1,10 @@
+Add support for `globalProjects` in `argocd-cm`
+It would be great if the new `globalProjects` feature were supported:
+https://argo-cd.readthedocs.io/en/stable/user-guide/projects/#configuring-global-projects-v18
+/assign
+Hi @hzliangbin , Thanks for accepting to work on the issue. 
+Hi @hzliangbin did you get chance to work on this one ?
+@iam-veeramalla  sorry...just got busy recently
+@hzliangbin np :) .. please let us know if you are  still interested in getting this done or you want me to add `help-wanted` label.
+@iam-veeramalla adding help-wanted label would be fine...
+This feature is implemented as part of #642 

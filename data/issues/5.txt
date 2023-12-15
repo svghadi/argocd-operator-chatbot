@@ -1,0 +1,6 @@
+Handle Backup and Restore for Disaster Recovery
+Per the Argo CD documentation on Disaster Recovery, the operator should support export and import of backups.
+
+https://argoproj.github.io/argo-cd/operator-manual/disaster_recovery/
+
+Initial support for backup/restore has been [merged](https://github.com/argoproj-labs/argocd-operator/commit/799d5787f5ec7052bd5b4a1bc6040994f4102a21) into master. Anything further with that functionality should be a new issue.

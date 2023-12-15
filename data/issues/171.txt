@@ -1,0 +1,6 @@
+Ability to customize the route url for the UI
+One of the things I dislike is the route ends up being janky. it comes out as "https://argocd-server-argocd.apps.ocp.domain.com" when I want it to be something simpler like "https://argocd.apps.ocp.domain.com" so I end up having to add in an adjuster. 
+
+DOMAIN=oc get ingress.config -o jsonpath='{.items[0].spec.domain}'
+oc patch route/argocd-server -n argocd -p "{\"spec\":{\"host\":\"argocd."$DOMAIN"\"}}"
+Hi @stephennimmo, thank you for the suggestion. This is something that we can look at when we start work on the Route handling as part of #160.

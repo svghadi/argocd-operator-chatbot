@@ -1,0 +1,10 @@
+Feature request: Add ability to include additional labels in generated resources
+**Is your feature request related to a problem? Please describe.**
+We currently have Gatekeeper constraints that filter resources by labels. However, the `argocd-operator` does not provide a way to add additional labels to the generated resources.
+
+**Describe the solution you'd like**
+We would like to add additional labels to the generated resources in a similar manner to what can be done with the Helm chart found here: https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml#L47
+
+**Describe alternatives you've considered**
+None
+

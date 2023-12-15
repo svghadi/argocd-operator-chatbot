@@ -1,0 +1,20 @@
+The new version of the operator v.0.1.0 installs ArgoCD in Namespaced mode. (OLM)
+Previously on 0.0.15, the installation wasn't namespaced I believe, it was restricted through the CRB to only manipulate resources within the namespace of argo but it wasn't a namespaced installation. The problem we have now is installing CRDs or any cluster level resources isn't working with 0.1.0. 
+
+Is there an option to disable namespaced installation?
+
+Example of what happens:
+![image](https://user-images.githubusercontent.com/5648506/141450104-37f60138-fd88-4d94-9a30-a33ad4818dce.png)
+
+Hey, there is actually a way to elevate certain instances to be operating in cluster-scoped mode. You need to edit the `Subscription` resource to add the environment variable `ARGOCD_CLUSTER_CONFIG_NAMESPACES` to include the namespace where you installed the `ArgoCD` operand to, e.g.
+
+```
+config:
+  env:
+  - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+    value: namespace1
+```
+This can also take a comma-separated list of multiple namespaces, when you have more than one Argo CD that should receive cluster level privileges.
+
+We have some docs debt here, please bear with us.
+@jannfis , this actually solves the problem, thank you so much :)

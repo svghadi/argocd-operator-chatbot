@@ -1,0 +1,33 @@
+RFE: Add the ability to define clusters at deployment
+It would be cool to be able to define clusters you want your ArgoCD installation to manage when you deploy an instance with the operator.
+
+Example:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  managedClusters:
+  - name: cluster1
+    api: api.cluster1.example.com:6443
+    sslVerify: false
+    token: <long token string>
+  - name: cluster2
+    api: api.cluster2.example.com:6443
+    token: <long token string>
+    sslVerify: true
+    caCert: |
+      -----BEGIN CERTIFICATE-----
+      ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+      -----END CERTIFICATE-----
+```
+
+The token should come from a user (or serviceaccount) with the proper privileges (for example, the `kubeadmin` user token). 
+Would it make sense to have those tokens stored in a secret that can be referenced in the CR, rather than have the actual token in there? Same thing for the cert data? That makes the logic in the operator more involved but I think would clean up the CR a bit. 
+> Would it make sense to have those tokens stored in a secret that can be referenced in the CR, rather than have the actual token in there? Same thing for the cert data? That makes the logic in the operator more involved but I think would clean up the CR a bit.
+
++1 I think that would be a better approach.
++1 I like this idea.

@@ -1,0 +1,65 @@
+Enable Routes Not allowed?
+Hi,
+
+We have attempted to create a new ArgoCD object using the operator, and when we enable the route on the server we get the following error:
+
+`Error "Invalid value: "boolean": spec.server.route in body must be of type object: "boolean"" for field "spec.server.route".`
+
+The following is an example of ArgoCD Object that we know it worked prior to 0.0.9:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  labels:
+    app: argocd
+  namespace: argocd
+spec:
+  dex:
+    openShiftOAuth: true
+  grafana:
+    enabled: false
+  ha:
+    enabled: true
+  prometheus:
+    enabled: false
+  server:
+    route: true
+  usersAnonymousEnabled: true
+```
+
+
+I have also attempted to enable the route after deployment, however when submitting changes, it is still not working.
+
+This issue started only after 0.0.9 I believe, and I tried it in 11 and 12 same problem.
+
+Any advice?
+Hi @AbdulR3hman, thank you for trying the operator. The spec for Routes changed in [v0.0.10](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.0.10), please see the [Routes documentation](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#server-route-options) for the new way to enable Routes.
+
+Using the example you provided, you would use the following:
+
+``` yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  labels:
+    app: argocd
+  namespace: argocd
+spec:
+  dex:
+    openShiftOAuth: true
+  grafana:
+    enabled: false
+  ha:
+    enabled: true
+  prometheus:
+    enabled: false
+  server:
+    route:
+        enabled: true
+  usersAnonymousEnabled: true
+```
+@jmckind Just noticed this as well. Looks like some of the examples in the repo just need updated (https://github.com/argoproj-labs/argocd-operator/blob/master/examples/argocd-oauth.yaml)
+The documentation was clarified in #140 

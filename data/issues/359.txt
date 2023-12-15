@@ -1,0 +1,2 @@
+Enable the addition of labels to the automatically created routes
+We use router shards and need to add a "shard={shardname}" label to each of our routes in order for them to be exposed properly. We can currently add annotations, but it would be useful to be able to add labels as well.

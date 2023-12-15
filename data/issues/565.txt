@@ -1,0 +1,26 @@
+Requesting to support latest version of argocd installation using operator
+### Is your task related to a problem? Please describe.
+<!-- A clear and concise description of what the problem is.-->
+- As we already there is an Argo CD High Severity Vulnerability and its impact on Kubernetes and fixes are available in the 
+
+
+   https://apiiro.com/blog/malicious-kubernetes-helm-charts-can-be-used-to-steal-sensitive-information-from-argo-cd-deployments/
+
+### Describe the solution you'd like
+<!-- A clear and concise description of what you want to happen. -->
+-. [A patch](https://github.com/argoproj/argo-cd/security/advisories/GHSA-63qx-x74g-jcr7) is available for Argo CD versions:
+
+v2.3.0
+v2.2.4
+v2.1.9
+
+-Upgrading the operator to support would help to avoid Vulnerability
+
+### Describe alternatives you've considered
+<!--A clear and concise description of any alternative solutions or features you've considered. -->
+- We can point to a fixed image, but it would be ideal to update using operator.
+
+### Additional context
+<!-- Add any other context or screenshots about the task here. -->
+
+latest version of the operator install v2.2.5. 

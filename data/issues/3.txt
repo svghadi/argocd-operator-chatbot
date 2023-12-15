@@ -1,0 +1,10 @@
+Need Finer Control Over Ingress and Routes
+The ability is needed to selectively toggle ingress and routes independently for each exposed resource.
+
+- Argo CD Server
+- Grafana
+- Prometheus
+
+Specifically, the Prometheus component may not need to be exposed with an Ingress or Route.
+Merged into master
+Released as part of v0.0.6.

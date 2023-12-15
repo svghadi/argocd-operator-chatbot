@@ -1,0 +1,42 @@
+resourceHealthChecks for APIs with no Group is generated incorrectly
+**Describe the bug**
+
+Defining a health check with resourceHealthChecks for APIs like PersistentVolumeClaim just has a Kind and no group results in the following being generated in argocd-cm which does not work:
+```
+  resource.customizations.health._PersistentVolumeClaim: |
+```
+I think however this needs to be generated as follows without the underscore:
+```
+  resource.customizations.health.PersistentVolumeClaim: |
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. In the Argo CD Spec define a resourceHealthCheck for an object with no group, for example:
+
+```
+  resourceHealthChecks:
+    - kind: PersistentVolumeClaim
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            if obj.status.phase == "Pending" then
+              hs.status = "Healthy"
+              hs.message = obj.status.phase
+              return hs
+            end
+            if obj.status.phase == "Bound" then
+              hs.status = "Healthy"
+              hs.message = obj.status.phase
+              return hs
+            end
+          end
+        end
+        hs.status = "Progressing"
+        hs.message = "Waiting for PVC"
+        return hs
+```
+**Expected behavior**
+
+The generated value in argocd-cm should not include the prefix underscore.

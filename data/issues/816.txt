@@ -1,0 +1,63 @@
+Argo CD .status.host is updated with wrong value when using Ingress on OpenShift clusters
+**Describe the bug**
+
+Argo CD .status.host is updated with wrong value when using Ingress on OpenShift clusters
+
+`Openshift 4.11`
+==================
+
+Create test-namespace 'test-ns'
+
+**Create Argo CD instance with the manifest** 
+```
+    apiVersion: argoproj.io/v1alpha1    
+    kind: ArgoCD    
+    metadata:      
+      name: example-argocd      
+      namespace: test-ns
+      labels:        
+        example: ingress    
+    spec:      
+      server:        
+        host: example-argocd.<apps_domain_name>
+        grpc:          
+          ingress:            
+            enabled: true        
+        ingress:          
+          enabled: true          
+          tls:          
+          - hosts:              
+            - example-argocd        
+        insecure: true
+```
+
+**Actual results:**
+
+The ingress is created and it's getting Argo CD's .spec.server.host as HOSTS (.spec.rules[0].host):
+
+```
+NAME                    CLASS    HOSTS                                                    ADDRESS                                             
+example-argocd-server   <none>   example-argocd.apps.rjeczkowaws-411z.ocp-gitops-qe.com   router-default.apps.rjeczkowaws-411z.ocp-gitops-qe.com 
+```
+
+**$ oc get ingress/example-argocd-server -o jsonpath="{.spec.rules[0].host}" -n test-ns**
+`example-argocd.apps.rjeczkowaws-411z.ocp-gitops-qe.com`
+
+_Argo CD on .status.host field is updated with `router-default.apps.xxxxxxx-411.ocp-xxxx-xx.com` which is the same as Ingress ADDRESS (`.status.loadBalancer.ingress[0].hostname`)._
+
+**$ oc get argocd -o jsonpath="{.items[*]['status.host']}" -n test-ns**
+`router-default.apps.rjeczkowaws-411z.ocp-gitops-qe.com`
+
+$ oc get ingress/example-argocd-server -o jsonpath="{.status.loadBalancer.ingress[0].hostname}" -n test-ns
+router-default.apps.rjeczkowaws-411z.ocp-gitops-qe.com
+
+**Expected behavior**
+
+Argo CD should copy the value of Ingress .spec.rules[0].host (instead of .status.loadBalancer.ingress[0].hostname) to .status.host because that's the URL of Argo CD.
+
+**Screenshots**
+NA
+
+**Additional context**
+NA
+

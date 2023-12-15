@@ -1,0 +1,122 @@
+Namespaced install 
+Hello,
+
+is here a setting for installing without cluster-admin permissions? Eg. namespaced-install.yaml from https://github.com/argoproj/argo-cd/tree/master/manifests.
+Hello @camabeh, thank you for trying the operator. This is something that I looked at initially but will revisit now that the operator has matured a bit.
+Ok, great. Thanks for answering.
+
+I guess I could delete `https://kubernetes.default.svc` credential from argocd clusters and use more restricted service account to access cluster (cluster-reader + admin for specific namespaces).
+
+
+
+
+>  here a setting for installing without cluster-admin permissions
+
+Hi @camabeh! Thank you for reporting this. 
+
+I've been looking into this, however I don't see any cluster-admin-ish privileges being granted, I do see that there's a grant to `argocd-application-controller` to read all cluster-scoped/namespace-scoped resources. Is that what you intended to refer to ?
+
+https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/olm-catalog/argocd-operator/0.0.13/argocd-operator.v0.0.13.clusterserviceversion.yaml#L527
+Hello @sbose78 , not exactly. Argocd operator is okay, I am talking directly about argocd. If you install argocd with [install.yaml](https://github.com/argoproj/argo-cd/blob/master/manifests/install.yaml) it creates `argocd-application-controller` cluster role. It has de-facto full system:admin access to your cluster.
+
+Below is the diff between install.yaml and namespaced-install.yaml.
+
+EDIT:
+You are right, I've just tried latest version and it has the permissions you described. I guess I can close this issue as it now uses more restrictive permissions.
+
+```patch
+$ diff namespaced-install.yaml install.yaml
+2001a2002,2052
+> kind: ClusterRole
+> metadata:
+>   labels:
+>     app.kubernetes.io/component: application-controller
+>     app.kubernetes.io/name: argocd-application-controller
+>     app.kubernetes.io/part-of: argocd
+>   name: argocd-application-controller
+> rules:
+> - apiGroups:
+>   - '*'
+>   resources:
+>   - '*'
+>   verbs:
+>   - '*'
+> - nonResourceURLs:
+>   - '*'
+>   verbs:
+>   - '*'
+> ---
+> apiVersion: rbac.authorization.k8s.io/v1
+> kind: ClusterRole
+> metadata:
+>   labels:
+>     app.kubernetes.io/component: server
+>     app.kubernetes.io/name: argocd-server
+>     app.kubernetes.io/part-of: argocd
+>   name: argocd-server
+> rules:
+> - apiGroups:
+>   - '*'
+>   resources:
+>   - '*'
+>   verbs:
+>   - delete
+>   - get
+>   - patch
+> - apiGroups:
+>   - ""
+>   resources:
+>   - events
+>   verbs:
+>   - list
+> - apiGroups:
+>   - ""
+>   resources:
+>   - pods
+>   - pods/log
+>   verbs:
+>   - get
+> ---
+> apiVersion: rbac.authorization.k8s.io/v1
+2047a2099,2132
+> ---
+> apiVersion: rbac.authorization.k8s.io/v1
+> kind: ClusterRoleBinding
+> metadata:
+>   labels:
+>     app.kubernetes.io/component: application-controller
+>     app.kubernetes.io/name: argocd-application-controller
+>     app.kubernetes.io/part-of: argocd
+>   name: argocd-application-controller
+> roleRef:
+>   apiGroup: rbac.authorization.k8s.io
+>   kind: ClusterRole
+>   name: argocd-application-controller
+> subjects:
+> - kind: ServiceAccount
+>   name: argocd-application-controller
+>   namespace: argocd
+> ---
+> apiVersion: rbac.authorization.k8s.io/v1
+> kind: ClusterRoleBinding
+> metadata:
+>   labels:
+>     app.kubernetes.io/component: server
+>     app.kubernetes.io/name: argocd-server
+>     app.kubernetes.io/part-of: argocd
+>   name: argocd-server
+> roleRef:
+>   apiGroup: rbac.authorization.k8s.io
+>   kind: ClusterRole
+>   name: argocd-server
+> subjects:
+> - kind: ServiceAccount
+>   name: argocd-server
+>   namespace: argocd
+```
+Correct, https://github.com/argoproj/argo-cd/blob/master/manifests/install.yaml is pretty wide. Operator isn't. 
+
+Thank you!
+Note: Namespaced installed is to be used when the objective is to not deploys apps in the same cluster as argocd, it is for remote cluster usage
+"Use this manifest set if you do not need Argo CD to deploy applications in the same cluster that Argo CD runs in, and will rely solely on inputted cluster credentials"
+

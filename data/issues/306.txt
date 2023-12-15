@@ -1,0 +1,107 @@
+DEX support for ArgoCD v2.0+
+**Describe the bug**
+ArgoCD updated the DEX helper from `argocd-util` to `argocd-dex`. The operator is currently configuring DEX to use the old binary locations/names when ArgoCD 2.0+ is used. See https://argoproj.github.io/argo-cd/operator-manual/upgrading/1.8-2.0/#dex-tool-migrated-from-argocd-util-to-argocd-dex
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install the operator
+2. Add in an instance of ArgoCD using v2.0.1.
+3. Dex Pod fails to start
+
+**Expected behavior**
+Dex deployment should be configured with the correct command line arguments.
+
+Note: I was able to work around the issue by bootstrapping the installation with an older version of ArgoCD, then updating the `image` and `version` fields in the `ArgoCD` spec. 
+
+
+Hi @Aenima4six2  This change is already addressed as part of https://github.com/argoproj-labs/argocd-operator/pull/270. This is part of new version 0.0.15. 
+> Hi @Aenima4six2 This change is already addressed as part of #270. This is part of new version 0.0.15.
+
+Hey @iam-veeramalla. Maybe I'm missing something. I'm currently on `0.0.15`.
+@Aenima4six2 
+Can I know how did you upgrade to 0.0.15? Also can you please share your dex deployment.yml here ? 
+
+Please mask any secure data.
+> @Aenima4six2
+> Can I know how did you upgrade to 0.0.15? Also can you please share your dex deployment.yml here ?
+> 
+> Please mask any secure data.
+
+For the upgrade, I removed version `0.0.14` of the operator along with all ArgoCD instances, added the below CatalogSource and installed `0.0.15`
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: argocd-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: Argo CD Operators
+  image: quay.io/jmckind/argocd-operator-registry@sha256:69148d9a3fd9d6d3b47fa9a45de3bd8bd7ecc932cb8cbb76ba4aea5f603d0567
+  publisher: Argo CD Community
+  sourceType: grpc
+status:
+  connectionState:
+    address: argocd-catalog.openshift-marketplace.svc:50051
+    lastConnect: "2021-05-04T09:16:24Z"
+    lastObservedState: READY
+  registryService:
+    createdAt: "2021-04-27T20:55:14Z"
+    port: "50051"
+    protocol: grpc
+    serviceName: argocd-catalog
+    serviceNamespace: openshift-marketplace
+```
+
+I don't have a `deployment.yaml` for DEX, since the operator sets that up. Here is my redacted ArgoCD config though.
+```
+ apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: bd-argocd
+  namespace: argocd
+spec:
+  repo:
+    mountsatoken: true
+    serviceaccount: argocd-server
+  kustomizeBuildOptions: --enable_alpha_plugins
+  applicationInstanceLabelKey: argocd.argoproj.io/instance
+  statusBadgeEnabled: true
+  helpChatURL:  '**REDACTED**'
+  helpChatText: "Need help? Slack @devopz"
+  image: quay.io/argoproj/argocd
+  version: 'v2.0.1'
+  server:
+    host: '**REDACTED**'
+    route:
+      enabled: true
+      path: /
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: passthrough
+      wildcardPolicy: None
+      port:
+        targetPort: https
+  initialRepositories: '**REDACTED**'
+  resourceCustomizations: |
+    networking.k8s.io/Ingress:
+        health.lua: |
+          hs = {}
+          hs.status = "Healthy"
+          return hs
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, deployment-admins, role:admin
+    scopes: '[groups]'
+  dex:
+    image: quay.io/redhat-cop/dex
+    openShiftOAuth: true
+    version: v2.22.0-openshift
+  resourceExclusions: |
+    - apiGroups:
+      - velero.io
+      kinds:
+      - Backup
+      clusters:
+      - "*"
+```

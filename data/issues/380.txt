@@ -1,0 +1,25 @@
+Dependabot reported - Helm OCI credentials leaked into Argo CD logs
+**Describe the bug**
+
+[GHSA-6w87-g839-9wv7](https://github.com/advisories/GHSA-6w87-g839-9wv7)
+ **moderate severity**
+Vulnerable versions: < 1.7.14
+Patched version: 1.7.14
+
+**Impact**
+When Argo CD was connected to a Helm OCI repository with authentication enabled, the credentials used for accessing the remote repository were logged.
+Anyone with access to the pod logs - either via access with appropriate permissions to the Kubernetes control plane or a third party log management system where the logs from Argo CD were aggregated - could have potentially obtained the credentials to the Helm OCI repository.
+If you are using Helm OCI repositories with Argo CD, it is strongly recommended to upgrade Argo CD to the latest patch version and to change the credentials used to access the repositories.
+
+**Patches**
+A patch for this vulnerability is available with the v1.8.7 and v1.7.14 releases of Argo CD.
+
+**Workarounds**
+No workaround available
+
+**Screenshots**
+NA
+
+**Additional context**
+NA
+

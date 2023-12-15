@@ -1,0 +1,71 @@
+ArgoCD Export fails - argocd-util: command not found
+**Describe the bug**
+When the export job is created, the container crashes with the following error:
+```
+$ kubectl logs -n argocd-production argocd-export-gcp-xnbzc
+exporting argo-cd
+creating argo-cd backup
+/usr/local/bin/argocd-operator-util: line 35: argocd-util: command not found
+```
+
+**To Reproduce**
+First, bypass this issue https://github.com/argoproj-labs/argocd-operator/issues/347 
+Create SA, RoleBinding and Role w/ expected names in the target namespace.
+
+Then set up a simple backup, in my case using GCS. 
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCDExport
+metadata:
+  name: argocd-export-gcp
+  namespace: argocd-production
+  labels:
+    test: version-1
+spec:
+  argocd: argocd
+  storage:
+    backend: gcp
+    secretName: argocd-export-gcp-secret
+```
+
+When the job is created, the error above occurs.
+
+I checked the pods yaml:
+```
+spec:
+  containers:
+  - command:
+    - uid_entrypoint.sh
+    - argocd-operator-util
+    - export
+    - gcp
+    image: quay.io/argoprojlabs/argocd-operator-util@sha256:0c779eea3f08ffa75fe9d06852b9ab7aed445cb5ac96831c2429b0ed98444324
+    imagePullPolicy: Always
+    name: argocd-export
+```
+Downloaded that image and ran it w/ bash
+```
+docker run \
+--rm \
+-ti \
+--name tmp \
+--entrypoint bash \
+quay.io/argoprojlabs/argocd-operator-util@sha256:0c779eea3f08ffa75fe9d06852b9ab7aed445cb5ac96831c2429b0ed98444324
+```
+
+That app/executable does not appear to be part of the image:
+```
+argocd@bb2fed5e2b1f:~$ which argocd-util
+argocd@bb2fed5e2b1f:~$ cd /
+argocd@bb2fed5e2b1f:/$ find -name "*argocd-util*"
+find: './var/cache/apt/archives/partial': Permission denied
+find: './var/cache/ldconfig': Permission denied
+find: './proc/tty/driver': Permission denied
+find: './etc/ssl/private': Permission denied
+find: './root': Permission denied
+argocd@bb2fed5e2b1f:/$ 
+```
+
+
+This was fixed via https://github.com/argoproj-labs/argocd-operator/pull/507 in version 0.2.0 of the operator.

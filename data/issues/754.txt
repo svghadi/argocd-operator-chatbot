@@ -1,0 +1,31 @@
+Notifications log level not implemented
+**Describe the bug**
+
+The `.spec.notifications.logLevel` is not reconciled on the notifications controller deployment as `--logvelel` argument.
+
+**To Reproduce**
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+spec:
+  notifications:
+    enabled: true
+    logLevel: debug
+```
+
+**Expected behavior**
+
+The notifications controller should get the log level as arguments:
+
+```
+    spec:
+      containers:
+        - command:
+            - argocd-notifications
+        - arguments:
+            - --loglevel
+            - debug
+

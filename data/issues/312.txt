@@ -1,0 +1,35 @@
+Automatically install and configure Keycloak SSO for ArgoCD instance
+**Is your feature request related to a problem? Please describe.**
+As an admin, I want to enable KeyCloak on my Argo CD instance by add the following stanza in the CR.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+
+spec:
+  sso:
+    provider: keycloak
+```
+Argocd operator should create all configurations necessary to enable SSO for my instance.
+
+As an admin, I want to disable KeyCloak SSO by removing sso provider in my CR.  All keycloak configurations and resources should be removed from cluster.
+
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
+Keycloak can automatically installed and configured to use.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+
+spec:
+  sso:
+    provider: keycloak
+```

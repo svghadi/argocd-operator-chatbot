@@ -1,0 +1,4 @@
+manual install and kustomize docs are wrong
+`deploy/` directory has nothing but operator yaml in it now.
+@iam-veeramalla I don't believe I see any instructions that reference the `/deploy` directory any longer. Looks to have been replaced with `make deploy` and `make deploy IMG=quay.io/my-org/argocd-operator:latest`. So I believe this can be closed?
+@tylerauerbeck .. Yes, docs are updated by @jopit . Thanks for noticing this.

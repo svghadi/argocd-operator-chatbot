@@ -1,0 +1,9 @@
+Multiple ArgoCD Instances in same namespace
+Until this bug is fixed https://github.com/argoproj-labs/argocd-operator/issues/337 I am forced to deploy multiple ArgoCD instances in the same namespace namely `argocd-operator-system`. 
+
+The operator does detect when I have multiple ArgoCD instances and attempt to create the resources. However my question is how this works since there is only ever one `argocd-cm`, and one `argocd-rbac-cm` and not one per each deployed instance. Perhaps this is something I am misunderstanding?
+
+Thank you for the awesome project btw!
+Hi @sylus , Thanks for raising issue with us. Multiple ArgoCDs in a same namespace is not supported. There are many downsides of supporting this feature.  
+```since there is only ever one argocd-cm, and one argocd-rbac-cm and not one per each deployed instance.```. This is one of the reasons.
+Thanks @iam-veeramalla I was expecting as such, I'll close this issue since works as designed!

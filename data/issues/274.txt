@@ -1,0 +1,14 @@
+argocd operator to support argocd version 2.0-rc1
+hi can you please confirm if there is argocd operator to support higher version of argocd 
+https://github.com/argoproj/argo-cd/releases/tag/v2.0.0-rc2
+
+Currently it supports 2.0.0-rc1
+https://github.com/argoproj-labs/argocd-operator/blob/15b58452ee5b25d6701b106be2d154ff101ee61a/pkg/common/defaults.go#L52
+
+
+hi @iam-veeramalla what version is that? is that in master branch? would there be a latest operator released based on that?
+> hi @iam-veeramalla what version is that? is that in master branch? would there be a latest operator released based on that?
+
+yes ... master... latest operator is not released yet. I will let you know as soon as we plan for one. 
+
+alternatively @iam-veeramalla , are you able to release a patch release or rc to allow deployment of argocd ver 2.0-rc1?

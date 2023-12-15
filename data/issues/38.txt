@@ -1,0 +1,29 @@
+ArgoCDExport getting InvalidImageName on pod creation
+Hey there!
+
+First of all thank you for all the hard work on the operator!
+
+I'm having problems with the ArgoCDExport on v0.0.5. I'm on Openshift 4.3 on aws.
+
+The operator creates the PVC and the Job, but I'm getting an error on the pod creation.
+
+I get `Error: InvalidImageName` error and upon further debugging I get:
+```
+Failed to apply default image tag "argoproj/argocd:sha256:f7a4a8e4542ef9d2e0cb6d3fe5814e87b79b8064089c0bc29ae7cefae8e93b66": couldn't parse image reference "argoproj/argocd:sha256:f7a4a8e4542ef9d2e0cb6d3fe5814e87b79b8064089c0bc29ae7cefae8e93b66": invalid reference format
+```
+I've tried pulling v1.4.2 instead, but I then get `/bin/bash: /backups/argocd-backup.yaml: Permission denied`
+
+Any ideia what it could be?
+
+Thanks!
+
+Thanks for your feedback @RicardoDMAraujo.
+
+Unfortunately it looks like a bug with the operator in the export logic with how image tags are handled. That was changed recently to support disconnected installs, hence the SHA digest you see. I may have missed something in the export job with regard to that, so I will investigate. The othere problem here is that I have the image and tag hard-coded so-to-speak in the export logic, so there is no good way to change the image tag. That needs to be fixed.
+
+This is good timing because I am going to begin working on support for AWS buckets as a storage location for the backups here soon. I will fix this as part of that. I want to roll out v0.0.6 next week at the latest.
+
+Would be interested in any feedback you may have.  
+Working on this in the [export_img](https://github.com/argoproj-labs/argocd-operator/tree/export_img) branch.
+Merged into master, will go out in v0.0.6
+Released as part of v0.0.6.

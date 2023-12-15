@@ -1,0 +1,17 @@
+Bundle Installation fails due to the etcd limit of 1 MB.
+**Describe the bug**
+With the recent upgradation of ApplicationSets CRD to `v0.3.0` the operator bundle size has grown over 1 MB(~ 1.3 MB). This is a blocker for installing the operator using OLM.
+
+OLM relies on etcd to store the bundle content. OLM copies the bundle files into a configmap and stores them in etcd which has a max object size restriction set to 1 MB. Unfortunately, the size of the bundle goes to 1.3 MB due to the increase in the size of applicationsets CRD from 400 KB to ~ 830 KB. This results in the installation failure.
+
+Note:
+OpenShift 4.9 and above, solved this problem by compressing the bundle data before it is stored into etcd. So, the issue is only with the < 4.9 versions of OpenShift and all versions of Kubernetes.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create the operator bundle(Please refer to the Makefile).
+2. Install the operator using OLM. Installation results in a failure on < 4.9 versions of OpenShift and all versions of kubernetes.
+
+**Expected behavior**
+No error during the installation.
+

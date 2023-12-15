@@ -1,0 +1,17 @@
+Updates to Server TLS Secret Should Sync With Argo Secret
+First, a little background on how the operator works with TLS certificates.
+
+When an ArgoCD resource is created, the operator either creates a new self-signed CA for the new cluster or uses the CA certificate and key found in the secret referenced by the `CA.SecretName` property.
+
+With the CA certificate and key, the operator then mints a new self-signed sever certificate and key to use for the argo-server component. If the cluster was named `example-argocd`, then the TLS secret would be named `example-argocd-tls`.
+
+The certificate and key data from that secret are then used to create the `argocd-secret` secret that is used by Argo CD.
+
+This all works when creating the Argo CD cluster, however updates to the cluster secret (`example-argocd-tls` in this case) do not sync with the internal `argocd-secret`.
+
+When the `tls.cert` and/or `tls.key` properties change on the server TLS certificate, the operator should notice the change and update the `argocd-secret` secret for the cluster.
+Merged into master and will go out in v0.0.13
+Is there no way to just provide a custom TLS cert for use in `argocd-secret`, instead of having the operator creating a new self signed cert from a provided CA and key?
+@Aenima4six2 If you create the `*-argocd-tls` certificate with your cert and key before you create the ArgoCD resource, the operator will not generate the self-signed certificate. You need to make sure the secret is named correctly. If your ArgoCD custom resource is named `example`, then the secret must be named `example-argocd-tls`. We should probably add the ability to pass the name of the secret to use, but for now this should work for you. 
+@jmckind Thanks so much for the quick response! One other interesting find, I noticed the cert that is generated uses the ArgoCD `metadata.name` in the `SAN`. Since the operator supports providing a `host` field, it might make sense to use that if provided, and fallback to the CRD name if absent, for the SAN hosts.
+Good catch @Aenima4six2 on the host field. I will add a bug to address that.

@@ -1,0 +1,7 @@
+openshift system:serviceaccount:argocd:argocd-application-controller create svc error
+In openshift, system:serviceaccount:argocd:argocd-application-controller can't create svc or deployment because the serviceaccount doesn't have corresponding permissions.
+So, I have to run this command "oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:argocd:argocd-application-controller" manually
+Duplicate of #40
+
+See https://argocd-operator.readthedocs.io/en/latest/install/openshift/#rbac
+

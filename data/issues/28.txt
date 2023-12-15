@@ -1,0 +1,21 @@
+Redis restarting issue
+After upgrading to v0.0.5 I am having a problem with Redis multiple restarts. Tried re-creating an empty namespace and using the most basic spec from examples, the result is always the same. It spawns multiple redis containers which terminate very rapidly. Describing them would return:
+```
+Pod 'example-argocd-redis-7667b47db5-l4wnq': error 'pods "example-argocd-redis-7667b47db5-l4wnq" not found', but found events.
+Events:
+  Type     Reason     Age   From                                Message
+  ----     ------     ----  ----                                -------
+  Normal   Scheduled  9s    default-scheduler                   Successfully assigned argocd/example-argocd-redis-7667b47db5-l4wnq to cl1pjlk884gsikfpe164-emev
+  Normal   Pulling    8s    kubelet, cl1pjlk884gsikfpe164-emev  Pulling image "redis:5.0.3"
+  Normal   Pulled     6s    kubelet, cl1pjlk884gsikfpe164-emev  Successfully pulled image "redis:5.0.3"
+  Warning  Failed     6s    kubelet, cl1pjlk884gsikfpe164-emev  Error: cannot find volume "default-token-9jf8s" to mount into container "redis"
+
+```
+I'm having the exact same issue on a Rancher cluster (kubernetes v1.16.4)
+
+
+
+Same issue here
+Same here on Rancher
+Thanks for reporting this, working on a fix  for the issue that everyone is seeing.
+Released as part of v0.0.5.

@@ -1,0 +1,15 @@
+Applicationset Controller does not deploy service or enable port to reach new webhook feature
+**Describe the bug**
+As per [v0.3.0 of the Applicationset controller](https://blog.argoproj.io/applicationset-controller-v0-3-0-for-argo-cd-now-available-3f56bd643312), it has support for wehbook notifications, the current installation of the Applicationset controller being reconciled only installs a `Deployment`, `RoleBinding`s, `ServiceAccount` and `Role`, but no `Service`. The deployment is also missing the new port `7000` exposed for webhook events.
+
+**To Reproduce**
+1. Install the latest ArgoCD operator release
+2. Enable the applicationSet controller option in your CRD installation
+3. The installation only creates the above mentioned resources without exposing a port
+4. The webhook is unreachable, since the deployment doesn't expose the port and a manual Service creation is needed.
+
+**Expected behavior**
+A similar service to the one created by the ApplicationSet controller project yamls should be created to allow the webhook to be reachable.
+The deployment should also expose the port 7000 to allow for communication to the webhook.
+
+

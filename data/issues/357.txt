@@ -1,0 +1,11 @@
+Support `kustomize.version` in ArgoCD config-map
+**Is your feature request related to a problem? Please describe.**
+Using the ArgoCD Operator, it is not possible to set `kustomize.version` in the ArgoCD config-map. 
+
+**Describe the solution you'd like**
+Update the `ArgoCD` CRD to support setting `kustomize.verion` as per https://argo-cd.readthedocs.io/en/release-1.8/user-guide/kustomize/#custom-kustomize-versions.
+
+**Describe alternatives you've considered**
+Manually edit the ArgoCD config-map post creation of the operator. This is brittle and leads to issues should owned config-map get recreated.
+
+

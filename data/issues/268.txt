@@ -1,0 +1,6 @@
+Consider using a restricted-cluster-friendly Application example in CSV alm-examples
+The included guestbook `Application` requires binding on port 80 which will fail on an OpenShift cluster which runs the workload as a non-root user out of the box. 
+
+I'm wondering if the sample could be changed to point to a restricted-friendly implementation of that so that it's a bit easier to get a demo standing in an OpenShift cluster.
+
+Also filed a bug against the examples repository that's referenced here https://github.com/argoproj/argocd-example-apps/issues/61#issuecomment-801495230

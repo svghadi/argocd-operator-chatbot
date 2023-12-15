@@ -1,0 +1,51 @@
+Cluster-scoped vs Namespace-scoped information in docs
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+- ArgoCD can be cluster or namespace scoped. It would be good to have information on how to control this behavior in the ArgoCD operator in the documentation. 
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+- Do X  for namespace-scoped ArgoCD via the operator
+
+- Do Y for cluster-scoped ArgoCD via the operator
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
+Issue https://github.com/argoproj-labs/argocd-operator/issues/385 implies the solution is to manually add a list of namespaces ArgoCD is allowed to manage to the Subscription in an environment variable ARGOCD_CLUSTER_CONFIG_NAMESPACES.
+
+
+i.e.
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: argocd-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: argocd-operator.v0.3.0
+  config:
+    env:
+    - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+      value: namespaceone, namespacetwo, argocd
+```
+With the downstream Red Hat openshift-gitops opeartor, if you deploy the ArgoCD CRD into the openshift-gitops namespace, its cluster-scoped. If you deploy it anywhere else, its namespace-scoped.
+
+https://developers.redhat.com/articles/2021/08/03/managing-gitops-control-planes-secure-gitops-practices
+
+```
+OpenShift GitOps provides single-click enablement of GitOps for OpenShift cluster configuration. When the OpenShift GitOps operator is installed, an Argo CD instance is set up for users out of the box. It comes with the configuration required to configure a cluster in the openshift-gitops namespace, which acts as the GitOps control plane for cluster configuration. Typical cluster configuration activities include configuring control plane operators, setting up developer namespaces, installing Operator Lifecycle Manager (OLM) operators, and managing storage.
+```
+> espace-scoped.
+
+@nccurry the behavior is same for both the upstream and downstream operators. You can configure an Argo CD for cluster scope(cluster configuration) by adding the namespace(in which it is installed) to the `ARGOCD_CLUSTER_CONFIG_NAMESPACES` env var of subscription.

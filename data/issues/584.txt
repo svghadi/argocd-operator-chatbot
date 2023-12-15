@@ -1,0 +1,140 @@
+keycloak sso does nothing 
+**Describe the bug**
+```
+  sso:
+    provider: keycloak
+    verifyTLS: false
+```
+Triggers nothing. There is no verbosity within the operator logs to see why. The entirety of the Argo ended side of deployment with operator does deploy successfully
+
+**To Reproduce**
+Steps to reproduce the behavior:
+```
+  sso:
+    provider: keycloak
+    verifyTLS: false
+```
+Add to CRD 
+**Expected behavior**
+Keycloak to build, or error to occur within operator container manager logs 
+
+argocd configmap to reflect the new keycloak integration - nothing happens
+**Additional context**
+The only differences between my deployment and the default, im using image 
+2.3.0-rc5 and this relelease application crds for skipCRD capability. i rebuilt the operator to omit all repo server reconciles because my repo server has ksops integration. 
+
+From what i can see, none of this would impact the sso.go code 
+
+Any suggestions for how i can better get a look at why nothing is happening?? Thanks ! 
+Hi @EHSchmitt4395 are you on openshift or kubernetes ?
+Hey thanks for the speedy reply. I’m on kubernetes. Also tested without my custom operator and it still didn’t work despite other Argo resources kicking off.
+
+Thanks !
+
+Get Outlook for iOS<https://aka.ms/o0ukef>
+________________________________
+From: Abhishek Veeramalla ***@***.***>
+Sent: Tuesday, March 8, 2022 7:39:14 PM
+To: argoproj-labs/argocd-operator ***@***.***>
+Cc: EHSchmitt4395 ***@***.***>; Mention ***@***.***>
+Subject: Re: [argoproj-labs/argocd-operator] keycloak sso does nothing (Issue #584)
+
+
+Hi @EHSchmitt4395<https://github.com/EHSchmitt4395> are you on openshift or kubernetes ?
+
+—
+Reply to this email directly, view it on GitHub<https://github.com/argoproj-labs/argocd-operator/issues/584#issuecomment-1062522593>, or unsubscribe<https://github.com/notifications/unsubscribe-auth/AOBELEBM5UVIKLK7GBL7XGLU7AMOFANCNFSM5QIG6ISA>.
+Triage notifications on the go with GitHub Mobile for iOS<https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&mt=8&pt=524675> or Android<https://play.google.com/store/apps/details?id=com.github.android&referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub>.
+You are receiving this because you were mentioned.Message ID: ***@***.***>
+
+> Hey thanks for the speedy reply. I’m on kubernetes. Also tested without my custom operator and it still didn’t work despite other Argo resources kicking off. Thanks ! Get Outlook for iOS<https://aka.ms/o0ukef>
+> […](#)
+> ________________________________ From: Abhishek Veeramalla ***@***.***> Sent: Tuesday, March 8, 2022 7:39:14 PM To: argoproj-labs/argocd-operator ***@***.***> Cc: EHSchmitt4395 ***@***.***>; Mention ***@***.***> Subject: Re: [argoproj-labs/argocd-operator] keycloak sso does nothing (Issue #584) Hi @EHSchmitt4395<https://github.com/EHSchmitt4395> are you on openshift or kubernetes ? — Reply to this email directly, view it on GitHub<[#584 (comment)](https://github.com/argoproj-labs/argocd-operator/issues/584#issuecomment-1062522593)>, or unsubscribe<https://github.com/notifications/unsubscribe-auth/AOBELEBM5UVIKLK7GBL7XGLU7AMOFANCNFSM5QIG6ISA>. Triage notifications on the go with GitHub Mobile for iOS<https://apps.apple.com/app/apple-store/id1477376905?ct=notification-email&mt=8&pt=524675> or Android<https://play.google.com/store/apps/details?id=com.github.android&referrer=utm_campaign%3Dnotification-email%26utm_medium%3Demail%26utm_source%3Dgithub>. You are receiving this because you were mentioned.Message ID: ***@***.***>
+
+let me try this real quick
+can you share the `.status` of you argocd resource using kubectl `edit` or `get -oyaml` ? I want to see the value of ssoConfig field.
+@EHSchmitt4395 
+@iam-veeramalla  hey sorry just got home! 
+
+```
+
+status:
+  applicationController: Running
+  dex: Running
+  phase: Available
+  redis: Running
+  repo: Running
+  server: Running
+  ssoConfig: Success
+  ```
+> @iam-veeramalla hey sorry just got home!
+> 
+> ```
+> 
+> status:
+>   applicationController: Running
+>   dex: Running
+>   phase: Available
+>   redis: Running
+>   repo: Running
+>   server: Running
+>   ssoConfig: Success
+> ```
+
+ok looks good. I will give it a try and get back to you. 
+
+Do you want to tell me any specific steps that you followed at your end that I should know ?
+> > @iam-veeramalla hey sorry just got home!
+> > ```
+> > 
+> > status:
+> >   applicationController: Running
+> >   dex: Running
+> >   phase: Available
+> >   redis: Running
+> >   repo: Running
+> >   server: Running
+> >   ssoConfig: Success
+> > ```
+> 
+> ok looks good. I will give it a try and get back to you.
+> 
+> Do you want to tell me any specific steps that you followed at your end that I should know ?
+
+my operator is built from 
+    commit: b5c30f9f17c53e158623fb94ee3d87957ff5f2ae
+    repo: https://github.com/argoproj-labs/argocd-operator.git
+    directory: /
+    ref: v0.1.0
+    
+    as a base. But even when trying this version without changes just sso on, i get no response. 
+   
+my CRD 
+```
+spec:
+  kustomizeBuildOptions: --enable-alpha-plugins
+  image: mycustomimageurl
+  version: 2.3.0-rc5
+ ```
+ wondering if sso may rely on this version key value? 
+ 
+   Really appreciate you testing this, thankyou.  Outside of this, the operator by default does not support adding local users correct? 
+   
+ like 
+ ```
+ data:
+  accounts.test-user: apiKey, login
+ ```
+ in cm ? 
+Hi @EHSchmitt4395 , Sorry for getting back late on this one.
+
+I looked into the reported issue on my kubernetes cluster today and in my case the integration is working like a charm.
+
+1. keycloak deployment created.
+2. operator updated the argocd-cm for the required OIDC changes.
+3. operator created realm, client and scopes required in the keycloak.
+4. I was able to create a user in keycloak and login to argo cd.
+
+
+Can you upgrade/re-build you custom operator from latest version/release of argocd-operator ? Currently we are v0.2.1  and I see you are using v0.1.0. 
+Closing this due to lack of response. Please feel free to re-open the issue if you would like to.

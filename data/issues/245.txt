@@ -1,0 +1,22 @@
+Operator adds (hard-coded?) sha256 to any ArgoCD image in Deployments
+**Environment:**
+- OpenShift 4.6.16
+- ArgoCD Operator 0.0.14 (installed via OperatorHub)
+- Artifactory for DockerHub pull-through mirroring
+
+I want to add the `helm-sops` plugin to my ArgoCD instance that I'm managing with the ArgoCD operator. In order to do so, I'm building my own derived ArgoCD image.
+
+When trying to use my own image (by specifying it in the ArgoCD CR) instead of the one from DockerHub, the ArgoCD operator appends a (hard-coded) sha256 hash to the image string in each of the relevant Deployments (application-controller, repo-server and server). This hash causes pulling the image to fail with "name not known to the manifest" because the hash is obviously not matching with the hash of my image.
+
+When I'm shutting down the operator (i.e. scaling it to 0) and remove the sha256 from the Deployments manually, the image can be pulled immediately.
+
+I guess, the ArgoCD operator is retrieving the hash when the ArgoCD instance is initially deployed and sticks with it. Can you please change this behavior so that it is possible to change the ArgoCD image at any time?
+
+**Edit:** I just tried to completely delete and recreate my ArgoCD instance and the operator shows the same behavior in that case as well.
+Nevermind: I completely overlooked that I have to explicitly specify the "version" property instead of adding the version tag to the image string.
+@Obirah  As I remember with the operator 0.14 there is this problem, even going to specify the image tag
+
+Hopefully I ask who knows best if he is still so 'or if we have something wrong in cr definition.
+
+
+It worked with specifying the version in the ArgoCD's spec. It's just important to delete and fully recreate the ArgoCD because it looks like the operator cannot cover every edge-case of reconciliation. (Similar to this issue, I had a few months ago: https://github.com/argoproj-labs/argocd-operator/issues/211 )

@@ -1,0 +1,11 @@
+Q: How to create Datadog annotations when using ArgoCD from the operator
+We are using the argocd-opertator and are quite happy with it. I want to set these annotation https://docs.datadoghq.com/integrations/argocd/ according to datadog docu, but how do I do that using the operator? 
+
+We use some settings with using the argocd-cmd-params-cm configmap, but I did not find any hints in the docu how I could set annotations there, same in the crd of the operator.
+
+Any input on how to properly do it is appreciated, thanks.
+I was wondering the same. Doesn't seem possible. #637 
+I see, that is unfortunate. In that case I think I need to see how I can resolve this for my team. Well I still hope this on is going to be supported later.
+I think it would be possible to mutate the Pod/Deployments with a Kyverno policy. It doesn't seem that the operator's reconciliation controller is interested in the annotations field.
+
+It does, however, appear that the reconciler is [interested](https://github.com/argoproj-labs/argocd-operator/blob/master/controllers/argocd/statefulset.go#L136) in the annotations of the Redis HA StatefulSet.

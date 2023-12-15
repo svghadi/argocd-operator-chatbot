@@ -1,0 +1,131 @@
+PodPolicy error when installing argoCD "v0.6.0" and "latest" (commit id: ba14854) on k8s-1.25
+**Describe the bug**
+
+Installing ArgoCD using this documentation https://argocd-operator.readthedocs.io/en/latest/install/olm/ lead to error below:
+
+```
+kubectl describe -n olm catalogsources.operators.coreos.com argocd-catalog | tail -n 7
+  Image:         quay.io/argoprojlabs/argocd-operator-registry@sha256:dcf6d07ed5c8b840fb4a6e9019eacd88cd0913bc3c8caa104d3414a2e9972002
+  Publisher:     Argo CD Community
+  Source Type:   grpc
+Status:
+  Message:  couldn't ensure registry server - error ensuring pod: : error creating new pod: argocd-catalog-: pods "argocd-catalog-zkdkw" is forbidden: violates PodSecurity "restricted:latest": allowPrivilegeEscalation != false (container "registry-server" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (container "registry-server" must set securityContext.capabilities.drop=["ALL"]), runAsNonRoot != true (pod or container "registry-server" must set securityContext.runAsNonRoot=true), seccompProfile (pod or container "registry-server" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
+  Reason:   RegistryServerError
+Events:     <none>
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install OLM:
+
+```
+ fjs@host:  cat conf.sh 
+ARGO_CLIENT_VERSION="v3.4.4"
+
+# Check that appVersion in https://github.com/argoproj/argo-helm/blob/main/charts/argo-workflows/Chart.yaml
+# to know which argo release is installed
+HELMCHART_ARGO_WORFLOWS_VERSION="0.20.8"
+
+OLM_VERSION="v0.25.0"
+ fjs@host: cat olm-install.sh
+#!/bin/bash
+
+# Install operator-lifecycle-manager inside k8s
+
+# @author Fabrice Jammes
+
+set -euxo pipefail
+
+DIR=$(cd "$(dirname "$0")"; pwd -P)
+. "$DIR/conf.sh"
+. "$DIR/include.sh"
+
+echo "Install operator-lifecycle-manager $OLM_VERSION"
+
+curl -L https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$OLM_VERSION/install.sh -o /tmp/install.sh
+chmod +x /tmp/install.sh
+/tmp/install.sh "$OLM_VERSION"
+
+echo "Wait for operator-lifecycle-manager to be ready"
+kubectl rollout status deployment/olm-operator --timeout=120s -n olm
+
+echo "Wait for operatorhubio-catalog pod to be ready"
+kubectl wait -n olm pod --for=condition=Ready -l olm.catalogSource=operatorhubio-catalog
+```
+
+3. Install ArgoCD operator
+
+```
+ fjs@host: cat argocd-install.sh 
+#!/bin/bash
+
+# Install operator-lifecycle-manager inside k8s
+
+# @author Fabrice Jammes
+
+set -euxo pipefail
+
+DIR=$(cd "$(dirname "$0")"; pwd -P)
+. "$DIR/conf.sh"
+. "$DIR/include.sh"
+
+ARGO_OPERATOR_VERSION="v0.6.0"
+ARGO_OPERATOR_VERSION="ba14854"
+echo "Install ArgoCD Operator $ARGO_OPERATOR_VERSION"
+
+GITHUB_URL="https://raw.githubusercontent.com/argoproj-labs/argocd-operator/$ARGO_OPERATOR_VERSION"
+kubectl apply -n olm -f "$GITHUB_URL/deploy/catalog_source.yaml"
+kubectl get catalogsources -n olm argocd-catalog
+kubectl get pods -n olm -l olm.catalogSource=argocd-catalog
+
+kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -n argocd -f "$GITHUB_URL/deploy/operator_group.yaml"
+kubectl get operatorgroups -n argocd
+kubectl apply -n argocd -f "$GITHUB_URL/deploy/subscription.yaml"
+kubectl get subscriptions -n argocd argocd-operator
+kubectl get installplans -n argocd
+
+echo "Wait for ArgoCD Operator to be ready"
+kubectl rollout status deployment/argocd-operator --timeout=120s -n argocd
+kubectl get pods -n argocd -l name=argocd-operator
+
+echo "Install ArgoCD $ARGOCD_VERSION"
+kubectl apply -n argocd -f "$GITHUB_URL/examples/argocd-basic.yaml"
+```
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+The pod `argocd-catalog-zkdkw` should be created with a restricted PodSecurity in order to be compliant with the `olm` namespace PodSecurity level.
+
+**Additional context**
+
+- It seems this issue was fixed in this PR: https://github.com/argoproj-labs/argocd-operator/pull/675, but this code does not seems to be available in the main branch tip or in v0.6.0 release.
+- Install scripts for OLM and argoCD are available here: https://github.com/k8s-school/argoproj-helper
+
+Hi, I know it might not be the best solution since it involves updating policies and relaxing them. However, one way to solve it is to configure your namespace to allow installation with the current implementation.
+If you inspect the namespace where your argocd-catalog pod is running, you'll see the following annotations.
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+...
+  labels:
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+  name: olm
+```
+To workaround the error seen before, we need to relax a bit the enforced policy, and set it to `baseline`. It should end up as follows:
+```yaml
+pod-security.kubernetes.io/enforce: baseline
+```
+
+That will allow the catalog-source-operator to create the needed pods for the catalog sources.
+
+Again, this is only a workaround, and will only be viable if this complies with your security policies.
+Big thanks to @LaloLoop for sharing this awesome hack that's doing the trick. Still, thinking long-term and wanting a sturdy fix, I'm leaning towards getting the ArgoCD installation procedure in sync with OLM's default security level. Would it be possible to find out if there's a go-to person on the ArgoCD team responsible for this development?

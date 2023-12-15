@@ -1,0 +1,15 @@
+Allow setting replicas for applicationset controller
+> if your feature request is a large change and requires a formal proposal or design doc, please read the docs for [contributing](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/developer-guide/contributing.md) first. You may need to submit an additional Pull Request using the [enhancement proposal template](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/proposals/001-proposal-template.md).
+
+
+**Is your feature request related to a problem? Please describe.**
+We want to deploy the applicaset controller with more than 1 replicas to enhance the avaliblity of the controller.
+
+**Describe the solution you'd like**
+Add a parameter to the `applicationset` to set the replicas.
+
+**Describe alternatives you've considered**
+
+
+**Additional context**
+

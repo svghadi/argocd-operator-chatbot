@@ -1,0 +1,37 @@
+RBAC issues with 0.0.5
+I've tried setting up ArgoCD with this operator (both installed with OLM and manually)
+And now when I create an Application I am getting this error:
+`secrets is forbidden: User "system:serviceaccount:argocd:argocd-application-controller" cannot create resource "secrets" in API group "" in the namespace "clickhouse"`
+
+Application yaml:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: clickhouse
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@domain.com:some/path/gitops.git
+    targetRevision: HEAD
+    path: service/overlays/production/clickhouse
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: clickhouse
+  syncPolicy:
+    validate: true
+```
+Was this working for you previously?
+
+I believe that the issue here is that by default the ServiceAccount that is created for the Argo CD application controller does not have permission to manage resources outside of the namespace where the cluster is running. In this case, the `argocd` namespace.
+
+The application controller out-of-the-box only has cluster read permissions through it's ClusterRole. Depending on your use-case and environment, you could get around this by giving the application controller cluster write permissions.
+Here is the section of the docs that mention how to do this on OpenShift.
+
+https://argocd-operator.readthedocs.io/en/latest/install/openshift/#rbac
+
+Does that work for you?
+I just re-defined Roles and Bindings from manual ArgoCD installation and of course that worked, yet I think it should be included into the operator installation.
+Global cluster write permissions (cluster-admin) is not allowed for an operator to be included in the OpenShift Operator Hub. This is why the decision was made to ship the operator with cluster read permissions only and can be overridden by the user using the documentation referenced above if cluster-admin is something you need.

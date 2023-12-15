@@ -1,0 +1,45 @@
+add option to enable Service Monitor deployment
+**Is your feature request related to a problem? Please describe.**
+Currently operator supports deployment of prometheus instance within argocd object deployment. It would be great to have option to enable deployment of just service monitors to collect metrics by existing prometheus installation on the cluster.
+
+**Describe the solution you'd like**
+would be something like this:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: insights
+spec:
+  metrics:
+    serviceMonitor:
+      enabled: true
+```
+or more granularly
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: insights
+spec:
+  metrics:
+    serviceMonitor:
+      applicationController:
+        enabled: true
+      apiServer:
+        enabled: true
+      repoServer:
+        enabled: true
+```
+
+**Describe alternatives you've considered**
+currently deploying service monitors separately along with argo cd.
+
+**Additional context**
+N/A
+
+Would be awesome. Not much work to implement ;)
+@jopit What do you think about this one ? 

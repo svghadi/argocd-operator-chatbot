@@ -1,0 +1,70 @@
+Wildcards in ArgoCD sourceNamespaces prevent resource creation
+**Describe the bug**
+
+Wildcards in `ArgoCD` `sourceNamespaces` prevent resource creation.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+1. Follow [Applications in any namespace](https://argocd-operator.readthedocs.io/en/latest/usage/apps-in-any-namespace/#using-application-namespaces) using
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+spec:
+  sourceNamespaces:
+    - "*"
+ ``` 
+2. Apply the manifest to a cluster running argocd-operator v0.5.0
+3. Actual resources don't get created
+
+**Expected behavior**
+Actual resources being created. Full access to all namespaces.
+
+**Screenshots**
+n/a
+
+**Additional context**
+Using v0.5.0
+
+Hi @deas 
+This feature only works with cluster  scoped Argo CD instances and also requires that the AppProject that is associated with the application being deployed includes the namespace in its allow list 
+have you tried this out with those things in mind?
+Please see https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace/#prerequisites and point no. 2 of https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace/#implementation-details
+Hi @jaideepr97 
+
+I'm very much an ArgoCD newbie (been working with flux only so far).
+There is no way to set `--application-namespaces=*` on the application controller STS.
+
+- This is the args logic:
+  https://github.com/argoproj-labs/argocd-operator/blob/1caabde5752157b6b22832e878e7c06ce42636d8/controllers/argocd/util.go#L140C13-L140C29 
+- There is no `extraCommandArgs` like for server.
+- setting `spec.sourceNamespaces` to only have '*' results in the operator not reconciling anything giving this error:
+  ```
+  1.6899737327749107e+09	ERROR	controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "app", "namespace": "argocd", "error": "Namespace \"*\" not found"}
+  
+  sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+  
+	  /go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:266
+  
+  sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+  
+	  /go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:227
+  
+  1.6899737737350497e+09	INFO	controller.argocd	Reconciling ArgoCD	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "app", "namespace": "argocd", "namespace": "argocd", "name": "app"}
+  
+  1.6899737737356455e+09	INFO	controller_argocd	reconciling SSO
+  
+  1.6899737737356603e+09	INFO	controller_argocd	reconciling status
+  
+  1.689973773752915e+09	INFO	controller_argocd	reconciling roles
+  
+  1.6899737737629137e+09	INFO	controller_argocd	reconciling roles for source namespaces
+  
+  1.6899737737629364e+09	INFO	controller_argocd	Namespace "*" not found
+  
+  1.6899737737629745e+09	ERROR	controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "app", "namespace": "argocd", "error": "Namespace \"*\" not found"}
+  ```
+

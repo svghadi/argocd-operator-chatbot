@@ -1,0 +1,64 @@
+Installation of argocd operator stuck on status "UpgradePending" in a fresh openshift cluster
+Steps to reproduce
+
+Step 1:
+Spinup a fresh 4.6 openshift cluster
+
+Step 2:
+Login to the cluster as kubeadmin
+
+Step 3:
+Apply the sealed-secrets-operator subscription through oc command
+```
+oc create -f - <<EOF
+  apiVersion: operators.coreos.com/v1alpha1
+  kind: Subscription
+  metadata: 
+    labels: 
+      operators.coreos.com/argocd-operator.argocd: ""
+    managedFields: 
+      - 
+        apiVersion: operators.coreos.com/v1alpha1
+        manager: olm
+        operation: Update
+      - 
+        apiVersion: operators.coreos.com/v1alpha1
+        manager: catalog
+        operation: Update
+    name: argocd-operator
+    namespace: argocd
+  spec: 
+    channel: alpha
+    installPlanApproval: Automatic
+    name: argocd-operator
+    source: community-operators
+    sourceNamespace: openshift-marketplace
+    startingCSV: argocd-operator.v0.0.13
+EOF
+```
+Step 4:
+Check the operator status from the openshift console
+
+<img width="1136" alt="Screen Shot 2020-10-04 at 9 09 25 AM" src="https://user-images.githubusercontent.com/19851115/95109122-c693f080-0759-11eb-9a88-7103894bd3e6.png">
+
+The steps i have mentioned above works fine after one round of creation and deletion of sealed secrets operator through web console.
+Even after removing the white spaces from the subscription yaml, i am hitting the same issue on a fresh cluster.
+
+Steps to reproduce:
+
+1. Create a fresh cluster (Use cluster-bot)
+2. Fetch pr redhat-developer/kam#54
+3. login to the cluster
+4. create namespace cicd and argocd
+```
+$ oc create namespace cicd
+$ oc create namespace argocd
+```
+5. Run the operator script
+```
+$ ./scripts/setup-operators.sh
+```
+Details log - https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/origin-ci-test/pr-logs/pull/redhat-developer_kam/54/pull-ci-redhat-developer-kam-master-v4.5-integration-e2e/1315961750822064128/artifacts/integration-e2e/integration-e2e-steps/container-logs/test.log
+
+**NOTE: The steps i have mentioned above works fine after one round of creation and deletion of argocd operator through web console.**
+Reference - https://docs.openshift.com/container-platform/4.5/operators/admin/olm-adding-operators-to-cluster.html#olm-installing-operator-from-operatorhub-using-cli_olm-adding-operators-to-a-cluster

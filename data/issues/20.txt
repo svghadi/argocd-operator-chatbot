@@ -1,0 +1,25 @@
+Issues with openshift installation
+In the openshift installation there are couple of things i am seeing issues. I have Openshift V4 -
+1. The openshift install document says - oc create -f deploy/crds/argoproj_v1alpha1_argocd_crd.yaml however file argoproj_v1alpha1_argocd_crd.yaml doesnt exist.
+2. The operator install is erroring out with below message -
+2. The operator install is erroring out with below message -
+oc logs argocd-operator-769676587-l6nwl
+....
+....
+{"level":"info","ts":1581389982.2209306,"logger":"cmd","msg":"Registering Components."}
+{"level":"info","ts":1581389982.2213113,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"error","ts":1581389985.7235928,"logger":"controller-runtime.source","msg":"if kind is a CRD, it should be installed before calling Start","kind":"ArgoCD.argoproj.io","error":"no matches for kind \"ArgoCD\" in version \"argoproj.io/v1alpha1\"","stacktrace":"github.com/go-logr/zapr.(*zapLogger).Error\n\t/home/john/go/pkg/mod/github.com/go-logr/zapr@v0.1.1/zapr.go:128\nsigs.k8s.io/controller-runtime/pkg/source.(*Kind).Start\n\t/home/john/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.3.0/pkg/source/source.go:88\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Watch\n\t/home/john/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.3.0/pkg/internal/controller/controller.go:122\ngithub.com/argoproj-labs/argocd-operator/pkg/controller/argocd.watchResources\n\targocd-operator/pkg/controller/argocd/util.go:400\ngithub.com/argoproj-labs/argocd-operator/pkg/controller/argocd.add\n\targocd-operator/pkg/controller/argocd/argocd_controller.go:58\ngithub.com/argoproj-labs/argocd-operator/pkg/controller/argocd.Add\n\targocd-operator/pkg/controller/argocd/argocd_controller.go:46\ngithub.com/argoproj-labs/argocd-operator/pkg/controller.AddToManager\n\targocd-operator/pkg/controller/controller.go:27\nmain.main\n\targocd-operator/cmd/manager/main.go:152\nruntime.main\n\t/usr/local/go/src/runtime/proc.go:203"}
+{"level":"error","ts":1581389985.7236865,"logger":"cmd","msg":"","error":"no matches for kind \"ArgoCD\" in version \"argoproj.io/v1alpha1\"","stacktrace":"github.com/go-logr/zapr.(*zapLogger).Error\n\t/home/john/go/pkg/mod/github.com/go-logr/zapr@v0.1.1/zapr.go:128\nmain.main\n\targocd-operator/cmd/manager/main.go:153\nruntime.main\n\t/usr/local/go/src/runtime/proc.go:203"}
+
+Please let me know if any additional info is needed,
+I will have a look at this shortly @JTG2020, I think just have some old file names in there with the recent refactoring that I did. Thanks for the feedback!
+
+@JTG2020 I believe that I fixed the issue with the document that you referenced. I still had the old CRD filename in the documentation. I ran through that install doc and it worked for me after I made the change. The update should be available in master.
+
+The error that you were getting was due to the CRDs needed by the operator not being installed due to the filename not being correct in the documentation.
+@JTG2020, Can you confirm that this is fixed for you in the latest documentation?
+
+https://argocd-operator.readthedocs.io/en/latest/install/openshift/#crds
+
+Thanks!
+@jmckind Thank you. I'll test this out and provide you the feedback.

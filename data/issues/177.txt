@@ -1,0 +1,4 @@
+Add Support for Managing Resource Inclusions
+Currently, Resource Exclusions [can be managed via the Operator](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#resource-exclusions). However, it is not possible to do the same for [Resource Inclusions](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#resource-exclusioninclusion).
+
+In the scenario where I only want ArgoCD to manage a small subset of Resources, I would like to do this by excluding `*` and then including my set of allowed Resources. To do this with the Operator, I have to manually edit `argocd-cm` ConfigMap which will then likely be overwritten when I make any further changes to the Operator CRDs. 

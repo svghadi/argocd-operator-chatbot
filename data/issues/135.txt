@@ -1,0 +1,110 @@
+ArgoCD Operator doesn't have enough authority to deploy Azure Files PVC on OpenShift on Azure
+**Checklist:
+
+* [x] I've searched in the docs and FAQ for my answer: http://bit.ly/argocd-faq.
+* [x] I've included steps to reproduce the bug.
+* [x] I've pasted the output of `argocd version`.
+
+**Describe the bug**
+
+ArgoCD Operator doesn't have enough authority to deploy PVC on OpenShift on Azure.
+Failed to sync the repository which has the Azure Files PVC resources.
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: example
+  namespace: foo-demo
+spec:
+  storageClassName: azurefiles # which mounts Azure Files
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+status: {}
+```
+
+**To Reproduce**
+
+1. Prepare OpenShift on Azure.
+2. Install ArgoCD Operator via OperatorHub.
+3. Sync the repository.
+
+**Expected behavior**
+
+Sync the repository which has the PVC resources if no more authorities for ArgoCD Operator or add the explanation about the RBAC.
+
+**How did you get around the issue?**
+
+Add the cluster-admin-role to ArgoCD Operator and ReSync.
+(I supposed it's too much authority.)
+
+```shell
+oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:foo-demo:argocd-application-controller
+clusterrole.rbac.authorization.k8s.io/cluster-admin added: "system:serviceaccount:foo-demo:argocd-application-controller"
+```
+
+**Version**
+
+* ArgoCD Operator
+`0.0.12 provided by Argo CD Community`
+
+* OpenShift
+
+  ```shell
+  Client Version: 4.4.6
+  Server Version: 4.4.6
+  Kubernetes Version: v1.17.1+f63db30
+  ```
+@soharaki Do you happen to have the error message that you received when you tried to create this PVC?
+> @soharaki Do you happen to have the error message that you received when you tried to create this PVC?
+
+This is an error message for "delete" from the ArgoCD web console, but the same error happens with "patch".
+The ArgoCD-controller is deployed on the same ns as PVC.
+
+```shell
+Unable to delete resource: persistentvolumeclaims "example" is forbidden: User "system:serviceaccount:foo-demo:argocd-server" cannot delete resource "persistentvolumeclaims" in API group "" in the namespace "foo-demo"
+```
+@soharaki So the PVC gets created fine but cannot be deleted?
+I believe that this is an issue with the roles for the argocd application-controller/server and not the operator itself based on that error and your workaround.
+
+Just for some background with regard to the roles, I mirrored those defined [upstream](https://github.com/argoproj/argo-cd/blob/v1.6.1/manifests/install.yaml#L2028-L2069) but notice that the non cluster roles do not allow for managing PVCs. I also reduced the cluster roles to read-only based on the [docs](https://argoproj.github.io/argo-cd/operator-manual/security/#cluster-rbac). The main reason for doing that was to get the operator into the OpenShift Operator Hub where cluster-admin as the default is a blocker.
+>@soharaki So the PVC gets created fine but cannot be deleted?
+
+the PVC cannnot get created, patched and deleted. 
+
+>Just for some background with regard to the roles, I mirrored those defined upstream but notice that the non cluster roles do not allow for managing PVCs. I also reduced the cluster roles to read-only based on the docs. The main reason for doing that was to get the operator into the OpenShift Operator Hub where cluster-admin as the default is a blocker.
+
+@jmckind 
+
+Thanks for the answer.
+I understand the background of different Role given to ArgoCD's argocd-application-controller and ArgoCD operator's.
+
+`https://github.com/argoproj-labs/argocd-operator/blob/e540fb87289969e76c95dbba2927d71161778f02/deploy/role.yaml#L89`
+
+`https://github.com/argoproj/argo-cd/blob/v1.6.1/manifests/install.yaml#L2078`
+
+And the azure-files provider need read/write  ClusterRole permission to read and write the secrets, as shown in the following URL.
+
+https://github.com/Azure/AKS/issues/525#issuecomment-458983313
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+```
+
+It will always fail to synchronize the PVC since the operator does not have the ClusterRole.
+This is unavoidable as long as we distribute operators in the OpenShift Operator Hub where cluster-admin as the default is a blocker.
+
+If you can, please make these explanations clear somewhere.
+Thank you very much.
+
+

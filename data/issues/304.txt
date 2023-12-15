@@ -1,0 +1,11 @@
+Pods with init containers fail to start when installed into a namespace with resource quotas
+**Describe the bug**
+The Dex and HAProxy deployments and the Application Controller stateful set (when import is configured in the CR) define init containers, but do not specify the required compute resources.  This will cause the pods to fail to start when installed into a namespace that has resource quotas set.
+
+**To Reproduce**
+Install ArgoCD into a namespace that has resource quotas set, using a CR that specifies compute resources for the components.
+The Dex pod will not start.
+
+**Expected behavior**
+All pods should start
+

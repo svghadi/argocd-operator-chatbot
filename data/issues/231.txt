@@ -1,0 +1,9 @@
+Add a Makefile to the project. 
+Its a pretty common practice to have a Makefile for a project as it enables the developer to execute certain operations (trivial but important) very easily like building a docker image or running unit/integration tests etc .. 
+So it would be great to have one for this project as well ! 
+Hi @shubhamagarwal19 , thank you for the suggestion.
+
+For a bit of background, this operator was created prior to operator-sdk v0.18.0 and represents the project structure in use at that time, which did not include a Makefile. While I prefer using make for the tasks that you describe, the decision was made at the time to use regular shell scripts that live in the `hack` directory, as it was more consistent with how the SDK generated projects. It also avoided the requirement of developers needing make. However, we can argue whether that last point really matters but here we are. :)
+
+All of that said, I DO want to move to using a Makefile as you describe. I planned to do this when the project is migrated over to the current SDK project layout, which does in fact use a Makefile for tasks.
+After the bump to the more recent version of operator-sdk, we've got a Makefile! So this can probably be closed.

@@ -1,0 +1,17 @@
+Deprecation warning event spamming and incomplete association with operand 
+**Describe the bug**
+Currently the operator spams deprecation warning events on the cluster when any of the soon-to-be-deprecated SSO/dex related fields/env vars are used. There are too many events being generated and they aren't timestamped or properly associated with the affected CR 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+Install/run the operator and have a CR using the old SSO config method or specifying the `DISABLE_DEX` env var in the subscription
+
+**Expected behavior**
+A single event is generated with proper timestamps and CR association, and its count updated if multiple occurances of the event are observed, instead of spamming events and polluting the cluster 
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Additional context**
+https://issues.redhat.com/browse/GITOPS-2230

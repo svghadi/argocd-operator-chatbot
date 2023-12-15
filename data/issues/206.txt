@@ -1,0 +1,19 @@
+Installation fails due to rate limits
+The installation fails due to rate limits on Docker Hub:
+
+~~~
+Failed to pull image "argoproj/argocd@sha256:b835999eb5cf75d01a2678cd971095926d9c2566c9ffe746d04b83a6a0a2849f": rpc error: code = Unknown desc = Error reading manifest sha256:b835999eb5cf75d01a2678cd971095926d9c2566c9ffe746d04b83a6a0a2849f in docker.io/argoproj/argocd: toomanyrequests: You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+~~~
+
+It would be great to provide an alternate location of the container images.
+@ctron This is really an issue with the upstream images
+I see … I will raise an issue there …
+
+However, I think the operator could be more open to accepting other versions. It looked like it pulled a specific sha. I wasn't able to re-upload the image to another container repository, as that changed the shasum.
+You can override the images in the `ArgoCD` CR, and we're working on being able to configure this through OLM too.
+
+https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#image
+I was trying to do this, but it didn't work. It continued to pull the specific sha256 images
+Can you share an excerpt from the CR?
+two days ago i had got similar problem, tomorrow i'll try to recover some logs or try to another installation. We tried to use another image but operator  put a sort of override inside at the deployment, with image tag version and sha
+It looks like all the default images pull from quay now and I believe the ability to specify images for each component is also in place. Can this be closed?

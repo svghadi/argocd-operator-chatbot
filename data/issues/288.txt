@@ -1,0 +1,19 @@
+Volume mount for TLS configuration of Argo CD repo server is not reconciled
+**Describe the bug**
+
+Argo CD v2.0 introduced a method to configure the TLS certificate used by the repository server's gRPC endpoint. This method requires mounting a TLS secret to the repo server's pods. Also, this secret needs to be mounted to the `<instance>-server` and `<instance>-application-controller` pods as well, so they'll be able to use the cert for TLS validation.
+
+This is related to https://github.com/argoproj/argo-cd/pull/5764
+
+**To Reproduce**
+
+* Create `argocd-repo-server-tls` secret in Argo CD namespace containing a valid TLS key pair (e.g. using `kubectl create secret tls argocd-repo-server-tls --cert=cert.pem --key=key.pem`)
+* Restart repo server pods
+* Use `curl` or `openssl` to connect to repo servers gRPC endpoint and see that certificate is still the self-signed, self-generated one
+
+**Expected behavior**
+
+* Repo server as installed by the Argo CD Operator should pick up the custom TLS certificate and configure its gRPC endpoint to provide it to its clients.
+* API server and application controller should pick up the cert to validate TLS connections to the repo server
+
+

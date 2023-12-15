@@ -1,0 +1,36 @@
+default admin password issue
+To view it, i use : of course it's bcrypted
+kubectl get secret -n argocd argocd-secret -o json | jq '.data|to_entries|map({key, value:.value|@base64d})|from_entries'
+
+Tried the pod name as password for user admin, ie. "snapcore-argocd-server-66f8db6487-7m8tx"
+Tried to force the password with 
+kubectl patch secret -n argocd argocd-secret -p '{"stringData": { "admin.password": "'$(htpasswd -bnBC 10 "" newpassword | tr -d ':\n')'"}}'
+
+then restarted the server pod, still getting an "Invalid username or password"
+
+running out of ideas ;-)
+Hey @orefalo, thanks for using the operator! Can you provide me with a couple of things?
+
+- What version of the operator are you running?
+- What platform are you running on (OpenShift, vanilla k8s)?
+- How are you installing it (olm/operator hub or mannually)?
+
+Please find my answers below:
+
+What version of the operator are you running?
+Latest as of today
+
+What platform are you running on (OpenShift, vanilla k8s)?
+rancher k3s cluster - 
+
+How are you installing it (olm/operator hub or mannually)?
+I installed it manually. I don't think olm is an option on k8s
+
+Thank you
+@orefalo the behavior of the operator with regard to the admin password changed in v0.0.6. The operator now manages a cluster secret that is used for Argo as well as Grafana if enabled. The idea is that the admin password can be managed in one place and the operator will keep everything synchronized.
+
+You should have a Secret named [CLUSTER NAME]-cluster, where [CLUSTER NAME] is the name you gave in the ArgoCD resource. There is an `admin.password` property in that Secret that the operator watches. If that value changes, it updates Argo and Grafana to use the new value. This is the value you should use and does not need the use of bcrypt.
+
+I need to document all of this much better, so I will create an issue for that.
+Merged a doc update that I hope helps to describe the purpose of the cluster secret.
+Clear, thank you for the prompt reply.

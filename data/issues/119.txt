@@ -1,0 +1,6 @@
+ArgoCD Version
+I know I can set the ArgoCD version [under `.spec.version.`](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/reference/argocd.md#version) 
+
+But it would be nice to bump the default version up to 1.6.1 since it's been out for a while.
+Perfect timing! v0.0.11 just reased yesterday with 1.6.1 as the default version. I am submitting the PRs for the Operator Hubs and should show up there as soon as those can get merged.
+The [PR](https://github.com/operator-framework/community-operators/pull/1938) was merged, so expect v0.0.11 to land in the Hub soon.

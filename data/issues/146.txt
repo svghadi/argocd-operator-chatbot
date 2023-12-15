@@ -1,0 +1,14 @@
+ArgoCD Operator in a disconnected env
+Hi !
+I'm trying to create argocd deployment on openshift.
+I used this operator and the installation guide in: https://argocd-operator.readthedocs.io/en/latest/install/openshift/
+I tried to create the basic example: https://argocd-operator.readthedocs.io/en/latest/usage/basics/
+
+But it tries to use images from internet.
+I have those images in my registry, but what images do I need to build again ? Iv'e seen that under build/util/Dockerfile there's a usage of argocd image, but I don't know what is this image for.
+
+My question is how to fit this operator to a disconnected network ? what to build again ? what to edit ?
+
+This is being tracked here as well https://github.com/argoproj-labs/argocd-operator/issues/76 we are yet to address this.
+proxy environment variables have been added to argocd pods by https://github.com/argoproj-labs/argocd-operator/pull/194
+

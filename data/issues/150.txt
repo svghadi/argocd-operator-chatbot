@@ -1,0 +1,5 @@
+Operator Status Condition
+/question
+
+Can we have the Argo CD operator status to be reported in a standard Kubernetes way  with `status -> conditions[*]`, that will help the automation tools like Ansible or others to query the install status of the Operator/CR and do the needed actions.
+This is a good suggestion @kameshsampath and has been in my thoughts to change for a while.

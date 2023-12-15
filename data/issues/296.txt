@@ -1,0 +1,82 @@
+Syncronize an application when creating it
+**Is your feature request related to a problem? Please describe.**
+The typical workflow I follow when deploying apps in ArgoCD is first to create the app, and then syncronize it so that ArgoCD starts working. Without using the operator I would do something as:
+```
+$ argocd app create guestbook --repo https://github.com/kubernetes/examples.git --path guestbook/all-in-one --dest-server https://kubernetes.default.svc --dest-namespace argocd
+
+$ argocd app sync guestbook
+```
+In order to implement this behavior making use of the `ArgoCD` CR object I do:
+```
+- apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: guestbook
+    namespace: ${OPERATOR_NAMESPACE}
+  spec:
+    destination:
+      namespace: ${OPERATOR_NAMESPACE}
+      server: 'https://kubernetes.default.svc'
+    project: default
+    source:
+      path: guestbook
+      targetRevision: HEAD
+      repoURL: 'https://github.com/argoproj/argocd-example-apps.git'
+    syncPolicy:
+      automated: {}
+```
+After executing it the CR `Application` gets generated but not synchronized, so the pods, services ... are not created.
+I have followed the **Sync** chapter from the documentation https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/
+But it does not work.
+
+```
+[hesteban-redhat.com@bastion argo]$ oc process -f deploy-app.yaml | oc apply -f -
+application.argoproj.io/guestbook created
+```
+It creates the app but does not launch it. Then I need to manually login to `ArgoCD` and execute the `sync`:
+
+```
+$ argocd  app sync guestbook
+TIMESTAMP                  GROUP        KIND   NAMESPACE                  NAME    STATUS   HEALTH            HOOK  MESSAGE
+2021-04-28T11:02:08+00:00            Service      argocd          guestbook-ui    Synced  Healthy                  
+2021-04-28T11:02:08+00:00   apps  Deployment      argocd          guestbook-ui    Synced  Progressing              
+2021-04-28T11:02:10+00:00            Service      argocd          guestbook-ui    Synced  Healthy                  service/guestbook-ui unchanged
+2021-04-28T11:02:10+00:00   apps  Deployment      argocd          guestbook-ui    Synced  Progressing              deployment.apps/guestbook-ui unchanged
+
+Name:               guestbook
+Project:            default
+Server:             https://kubernetes.default.svc
+Namespace:          argocd
+URL:                https://example-argocd-server-argocd.apps.apps.sandbox9.opentlc.com/applications/guestbook
+Repo:               https://github.com/argoproj/argocd-example-apps.git
+Target:             HEAD
+Path:               guestbook
+SyncWindow:         Sync Allowed
+Sync Policy:        Automated
+Sync Status:        Synced to HEAD (53e28ff)
+Health Status:      Progressing
+
+Operation:          Sync
+Sync Revision:      53e28ff20cc530b9ada2173fbbd64d48338583ba
+Phase:              Succeeded
+Start:              2021-04-28 11:02:08 +0000 UTC
+Finished:           2021-04-28 11:02:10 +0000 UTC
+Duration:           2s
+Message:            successfully synced (all tasks run)
+
+GROUP  KIND        NAMESPACE  NAME          STATUS  HEALTH       HOOK  MESSAGE
+       Service     argocd     guestbook-ui  Synced  Healthy            service/guestbook-ui unchanged
+apps   Deployment  argocd     guestbook-ui  Synced  Progressing        deployment.apps/guestbook-ui unchanged
+
+$ oc get pods
+NAME                                                     READY   STATUS             RESTARTS   AGE
+...
+guestbook-ui-85985d774c-5vtvn                            0/1     Running   9          22m
+```
+
+**Describe the solution you'd like**
+I want to be able to do what I manually do by just using objects from the operator
+**Describe alternatives you've considered**
+Do it manually but it does not work according to customer specifications
+
+

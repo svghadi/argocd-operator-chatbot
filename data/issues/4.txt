@@ -1,0 +1,3 @@
+Handle Argo CD Component Upgrades
+The operator should support the ability to upgrade one or more of the components that make up an Argo CD cluster. For example, upgrade the version of Redis server. Currently, the version can be set on the ArgoCD CR but the operator does not support changing this value after the cluster has been deployed. Ideally, the operator would notice the version change and update the component.
+This has been merged into master and will go out in the next release.

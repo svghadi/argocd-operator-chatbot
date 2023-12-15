@@ -1,0 +1,15 @@
+Unable to configure Dex to accept auth from Argo Workflows
+**Describe the bug**
+The docs for configuring Argo Workflows to use Argo CD's Dex instance describe adding an environment variable to the Dex deployment to allow Argo Workflows to authenticate. The argocd-operator doesn't have an option for adding environment variables to the Dex deployment.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Look at the struct for the Dex spec: https://github.com/argoproj-labs/argocd-operator/blob/master/api/v1beta1/argocd_types.go#L183
+
+**Expected behavior**
+I'd expect to see a field that will allow the user to add environment variables to the Dex deployment.
+
+**Screenshots**
+
+**Additional context**
+

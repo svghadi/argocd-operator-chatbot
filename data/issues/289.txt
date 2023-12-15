@@ -1,0 +1,42 @@
+ApplicationSet controller not mounting ArgoCD secrets to access repositories through SSH
+**Describe the bug**
+ApplicationSet controller is not mounting the ArgoCD repositories SSH keys to clone the repo for a given Git Generator configuration.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Deploy an ArgoCD instance with the latest ArgoCD operator.
+2. Add the ApplicationSet controller by adding the required configuration: `spec. applicationSet: {}`.
+3. Deploy an ApplicationSet pointing to the same repo as an ArgoCD Application CRD definition, as described in [this issue of the ArgoCD repo](https://github.com/argoproj-labs/applicationset/issues/163).
+4. The ApplicationSet controller will report an error indicating that it cannot download the repo.
+
+```shell
+time="2021-04-22T21:32:00Z" level=error msg="`git fetch origin --tags --force` failed exit status 128: No RSA host key is known for bitbucket.org and you have requested strict checking.\r\nHost key verification failed.\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists." execID=QodnG
+time="2021-04-22T21:32:00Z" level=info msg=Trace args="[git fetch origin --tags --force]" dir=/tmp/git@bitbucket.org_applications operation_name="exec git" time_ms=241.42172
+time="2021-04-22T21:32:00Z" level=error msg="error generating params" error="Error during fetching repo: `git fetch origin --tags --force` failed exit status 128: No RSA host key is known for bitbucket.org and you have requested strict checking.\r\nHost key verification failed.\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists." generator="&{0xc000b04e40}"
+2021-04-22T21:32:00.166Z ERROR controller-runtime.manager.controller.applicationset Reconciler error {"reconciler group": "argoproj.io", "reconciler kind": "ApplicationSet", "name": "kube-external-secrets", "namespace": "argocd", "error": "Error during fetching repo: `git fetch origin --tags --force` failed exit status 128: No RSA host key is known for bitbucket.org and you have requested strict checking.\r\nHost key verification failed.\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.", "errorVerbose": "`git fetch origin --tags --force` failed exit status 128: No RSA host key is known for bitbucket.org and you have requested strict checking.\r\nHost key verification failed.\r\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\nError during fetching repo\ngithub.com/argoproj-labs/applicationset/pkg/services.checkoutRepo\n\t/workspace/pkg/services/repo_service.go:159\ngithub.com/argoproj-labs/applicationset/pkg/services.(*argoCDService).GetFilePaths\n\t/workspace/pkg/services/repo_service.go:59\ngithub.com/argoproj-labs/applicationset/pkg/generators.(*GitGenerator).generateParamsForGitFiles\n\t/workspace/pkg/generators/git.go:102\ngithub.com/argoproj-labs/applicationset/pkg/generators.(*GitGenerator).GenerateParams\n\t/workspace/pkg/generators/git.go:64\ngithub.com/argoproj-labs/applicationset/pkg/controllers.(*ApplicationSetReconciler).generateApplications\n\t/workspace/pkg/controllers/applicationset_controller.go:349\ngithub.com/argoproj-labs/applicationset/pkg/controllers.(*ApplicationSetReconciler).Reconcile\n\t/workspace/pkg/controllers/applicationset_controller.go:93\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\n\t/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.7.0/pkg/internal/controller/controller.go:263\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.7.0/pkg/internal/controller/controller.go:235\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func1.1\n\t/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.7.0/pkg/internal/controller/controller.go:198\nk8s.io/apimachinery/pkg/util/wait.JitterUntilWithContext.func1\n\t/go/pkg/mod/k8s.io/apimachinery@v0.19.2/pkg/util/wait/wait.go:185\nk8s.io/apimachinery/pkg/util/wait.BackoffUntil.func1\n\t/go/pkg/mod/k8s.io/apimachinery@v0.19.2/pkg/util/wait/wait.go:155\nk8s.io/apimachinery/pkg/util/wait.BackoffUntil\n\t/go/pkg/mod/k8s.io/apimachinery@v0.19.2/pkg/util/wait/wait.go:156\nk8s.io/apimachinery/pkg/util/wait.JitterUntil\n\t/go/pkg/mod/k8s.io/apimachinery@v0.19.2/pkg/util/wait/wait.go:133\nk8s.io/apimachinery/pkg/util/wait.JitterUntilWithContext\n\t/go/pkg/mod/k8s.io/apimachinery@v0.19.2/pkg/util/wait/wait.go:185\nk8s.io/apimachinery/pkg/util/wait.UntilWithContext\n\t/go/pkg/mod/k8s.io/apimachinery@v0.19.2/pkg/util/wait/wait.go:99\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_amd64.s:1371"}
+
+```
+
+**Expected behavior**
+The ArgoCD operator should create the ApplicationSet controller and mount the required secrets, as it was implemented in [this issue](https://github.com/argoproj-labs/applicationset/pull/164) for the ApplicationSet controller.
+
+
+**Additional context**
+I noticed the fix in the ArgoCD repo was submitted around 19 days after the inclusion of the feature in the operator.
+* [Add support for Argo CD ApplicationSet controller installation, March 3rd](https://github.com/argoproj-labs/argocd-operator/pull/252)
+* [ApplicationSet does not support private repos configured using SSH, March 22](https://github.com/argoproj-labs/applicationset/pull/164)
+
+Let me know if you need more information.
+
+Thank you!
+
+@jgwest I would like to start with this. This should be a good start to gain some understanding on Application Sets as well. 
+@iam-veeramalla thanks for volunteering! Fortunately, I've actually got a fix on a local branch already which I worked on last week... opened the PR for it here: https://github.com/argoproj-labs/argocd-operator/pull/291
+> @iam-veeramalla thanks for volunteering! Fortunately, I've actually got a fix on a local branch already which I worked on last week... opened the PR for it here: #291
+
+@jgwest was about to raise a PR for the same :p .. Always a next time :) 
+@iam-veeramalla Ah, sorry, I had hoped that you hadn't started working on it yet :frowning_face:, you're just too quick :smile:. 
+As a workaround for folks that hit this issue:
+- You can use a https url, rather than an SSH URL, which avoids the issue.
+- You can use [personal access token](https://argoproj.github.io/argo-cd/user-guide/private-repositories/#access-token) rather than an SSH key to connect to the repository, which avoids the issue.
+My current solution was to install the AppSet controller separately with the YAMLs provided by [the original project](https://argocd-applicationset.readthedocs.io/en/stable/Geting-Started/), since it already has the fix applied, and it has worked nicely so far. Glad you already committed the changes, thanks @jgwest .

@@ -1,0 +1,37 @@
+Operator errors on reconciling namespaces, Cannot list resource "namespace"
+**Describe the bug**
+Operator errors on reconciling namespaces, Cannot list resource "namespace"
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create a new operator build using the below steps.
+  - Replace env variables in env.sh
+  - Run ./hack/build.sh
+  - ./hack/push.sh
+  - ./hack/bundle.sh
+  - ./hack/registry.sh
+  - Create catalog source with the image in the previous step
+2. Install the operator in default namespace.
+3. Create a basic Argo CD resource from installed operators -> ArgoCD -> YAML view -> Create
+4. Log the operator pod to see the below error.
+`E0802 08:01:24.138395       1 reflector.go:178] sigs.k8s.io/controller-runtime/pkg/cache/internal/informers_map.go:224: Failed to list *v1.Namespace: namespaces is forbidden: User "system:serviceaccount:default:argocd-operator" cannot list resource "namespaces" in API group "" at the cluster scope`
+
+**Expected behavior**
+No error
+@shubhamagarwal19  Do you know what is going wrong here ?
+
+Do we need something like this for the `argocd-operator` serviceaccount ?
+
+https://github.com/redhat-developer/gitops-operator/blob/d3144efd43abc002642749394677f7c9257d8546/deploy/olm-catalog/gitops-operator/manifests/gitops-operator.clusterserviceversion.yaml#L409
+> @shubhamagarwal19 Do you know what is going wrong here ?
+> 
+> Do we need something like this for the `argocd-operator` serviceaccount ?
+> 
+> https://github.com/redhat-developer/gitops-operator/blob/d3144efd43abc002642749394677f7c9257d8546/deploy/olm-catalog/gitops-operator/manifests/gitops-operator.clusterserviceversion.yaml#L409
+
+From the error, it clearly says that the `serviceAccount` does not have enough permissions to list the `namespace resource`. Also, like you suggested the fix would be to add the namespace resource to the list of resources in the permissions defined in CSV. 
+Thanks for reporting this @iam-veeramalla !! 
+@iam-veeramalla is the issue reproduced in Openshift GitOps Operator 1.2?
+@wtam2018  no ... It works on the GitOps-operator
+
+@iam-veeramalla bundle.sh builds a bundle picking up matadata files from deploy/olm-catalog which have not been updated yet.   After operator-sdk upgrade, the tool scripts/bundle building will be changed.   We might want to wait until operator upgrade is done.

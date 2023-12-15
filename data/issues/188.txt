@@ -1,0 +1,13 @@
+Support to change Grafana datasource to custom prometheus
+Hi,
+ We use openshift, and we will adopt  "User Workload Manager" instead to install different Prometheus Instances into a cluster [ref here](https://docs.openshift.com/container-platform/4.5/monitoring/monitoring-your-own-services.html#enabling-monitoring-of-your-own-services_monitoring-your-own-services), the feature will be in GA in next ocp 4.6 release.
+
+Is there any way to configure Grafana instance to use different prometheus  url/credentials  ?
+
+Are you planning to support  "User Workload Manager" directly  ?
+
+bye
+Alessandro
+
+Hi @alekonko, thank you for the suggestion. Still doing a bit of research on it but I feel that it is something that the operator can support.  
+@alekonko Did you try to combine any other custom grafana with "User workload monitoring"?

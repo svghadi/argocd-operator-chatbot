@@ -1,0 +1,47 @@
+ArgoCDExport to AWS not working as expected
+There are currently two issues with the export job to AWS:
+
+1. **There is no way to specify your default region**, so the script only supports buckets in AWS default region (USEast). A simple fix for this would be to add a key names `aws.bucket.region` to the kubernetes Secret used by ArgoCDExport, let the backup script use this and add a `--region` argument when creating the S3 bucket. Without a default region specified, the script fails with the following error message: `make_bucket failed: s3://<redacted> An error occurred (IllegalLocationConstraintException) when calling the CreateBucket operation: The unspecified location constraint is incompatible for the region specific endpoint this request was sent to.`
+
+2. Even with 1. above fixed, **the script will only work the first time**, because the script attempts to create the bucket on every run. So, if the bucket already exists, the backup will fail. If the script should indeed create the bucket, it needs to first check if it already exists. Alternatively, you could assume that the bucket always exists, thereby removing the need to check and create the bucket. With the current implementation, the backup fails with the following error message: `make_bucket failed: s3://<redacted> An error occurred (BucketAlreadyOwnedByYou) when calling the CreateBucket operation: Your previous request to create the named bucket succeeded and you already own it.`
+
+Juding by the way the [util.sh](https://github.com/argoproj-labs/argocd-operator/blob/master/build/util/util.sh) script is constructed, p.2 above could potentially be relevant also when backing up to Google Cloud or Azure.
+
+I'd say it shouldn't be the operator's (or the export's) job to create the bucket. That's rarely what you want to see in a production environment at least. If anything, it should be an opt-in setting disabled by default.
+
+BTW there is a workaround: Create the bucket manually in us-east-1. Then it should succeed.
+
+A slightly better solution is just getting rid of that make bucket command from the script.
+
+Here is a fork that I created with that change: https://github.com/sagikazarmark/argocd-operator-util
+> I'd say it shouldn't be the operator's (or the export's) job to create the bucket. That's rarely what you want to see in a production environment at least. If anything, it should be an opt-in setting disabled by default.
+> 
+> BTW there is a workaround: Create the bucket manually in us-east-1. Then it should succeed.
+> 
+> A slightly better solution is just getting rid of that make bucket command from the script.
+> 
+> Here is a fork that I created with that change: https://github.com/sagikazarmark/argocd-operator-util
+
+Thanks alot @sagikazarmark . This should help :)
+@iam-veeramalla do you think we could change the upstream script and remove the bucket creation part?
+
+I'd also consider creating a separate image just for the export (I don't really know what other stuff is included in the util image, but targeted replacement of different components would be easier with separate images IMO)
+> @iam-veeramalla do you think we could change the upstream script and remove the bucket creation part?
+> 
+> I'd also consider creating a separate image just for the export (I don't really know what other stuff is included in the util image, but targeted replacement of different components would be easier with separate images IMO)
+
+Hi @sagikazarmark I am not well versed with the export code, Let me take a look at your suggestion and get back to you. However, the suggestion makes sense at the first look. At least operator should check if the bucket already exists.
+> At least operator should check if the bucket already exists.
+
+Not sure if that's necessary. I mean, what would be the result? An error? Most probably the push commands would return anyway.
+@sagikazarmark Does this need an EKS or can also be tested using a local kubernets cluster pointing to S3 for export ?
+Should work from local Kubernetes as well. (In fact it doesn't integrate well with AWS workload identities at all which is another problem to solve)
+> @iam-veeramalla do you think we could change the upstream script and remove the bucket creation part?
+> 
+> I'd also consider creating a separate image just for the export (I don't really know what other stuff is included in the util image, but targeted replacement of different components would be easier with separate images IMO)
+
+@sagikazarmark sorry for taking ages to get back on this but it's never too late.
+
+I got chance to play around with the export functionality in the last few days and I am totally up for refactoring/building a separate image for Argo CD Export. I also found an existing issue in the same lines created by @jomkz who is one of the authors of the export functionality.
+https://github.com/argoproj-labs/argocd-operator/issues/182
+Thanks for getting back to me. Let me know if I can help.

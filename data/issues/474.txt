@@ -1,0 +1,105 @@
+argocd-dex-server configuration
+**Describe the bug**
+Need help in configuring argocd with ldap authentication
+
+**To Reproduce**
+argocd-cm has been edited to have the dex.config information as follows 
+  dex.config: |-
+    connectors:
+    - type: ldap
+      name: myad.local
+      id: ldap
+      config:
+        # Ldap server address
+        host: 172.28.8.3:10389
+        insecureNoSSL: true
+        insecureSkipVerify: true
+        # Variable name stores ldap bindDN in argocd-secret
+        bindDN: ou=admin,dc=sdomain,dc=com
+        # Variable name stores ldap bind password in argocd-secret
+        bindPW: *****
+        usernamePrompt: ""
+        # Ldap user serch attributes
+        userSearch:
+          baseDN: ou=people,dc=sdomain,dc=com
+          filter: "(objectClass=inetOrgPerson)"
+          username: uid
+          idAttr: uid
+          emailAttr: mail
+          nameAttr: displayName
+        # Ldap group serch attributes
+        groupSearch:
+          baseDN: ou=people,dc=sdomain,dc=com
+          filter: "(objectClass=inetOrgPerson)"
+          userAttr: uid
+          groupAttr: uid
+          nameAttr: displayName
+
+data.url has been provided the argocd URL 
+
+Clicking on argoCD login via myad.local gives the following error (503 Service Unavailable ) 
+Failed to query provider "https://172.28.8.9/api/dex": 503 Service Unavailable: <HTML><HEAD>
+<TITLE>Network Error</TITLE>
+</HEAD>
+<BODY>
+
+argocd-dex-server logs
+lockmaker01:/opt/glcg/certificates # kubectl logs pod/argocd-dex-server-6d59765b55-8tqm2 -n argocd
+time="2021-11-08T14:28:58Z" level=info msg="Starting configmap/secret informers"
+time="2021-11-08T14:28:58Z" level=info msg="Configmap/secret informer synced"
+time="2021-11-08T14:28:58Z" level=info msg="Loading TLS configuration from secret argocd/argocd-server-tls"
+time="2021-11-08T14:28:58Z" level=info msg="0xc000706960 subscribed to settings updates"
+time="2021-11-08T14:28:58Z" level=info msg="config issuer: https://172.28.8.9/api/dex"
+time="2021-11-08T14:28:58Z" level=info msg="config storage: memory"
+time="2021-11-08T14:28:58Z" level=info msg="config static client: Argo CD"
+time="2021-11-08T14:28:58Z" level=info msg="config static client: Argo CD CLI"
+time="2021-11-08T14:28:58Z" level=info msg="config connector: ldap"
+time="2021-11-08T14:28:58Z" level=info msg="config skipping approval screen"
+time="2021-11-08T14:28:58Z" level=info msg="keys expired, rotating"
+time="2021-11-08T14:28:58Z" level=info msg="keys rotated, next rotation: 2021-11-08 20:28:58.401423999 +0000 UTC"
+time="2021-11-08T14:28:58Z" level=info msg="listening (http/telemetry) on 0.0.0.0:5558"
+time="2021-11-08T14:28:58Z" level=info msg="listening (http) on 0.0.0.0:5556"
+time="2021-11-08T14:28:58Z" level=info msg="listening (grpc) on 0.0.0.0:5557"
+
+argocd-server logs 
+time="2021-11-08T14:29:45Z" level=info msg="Initializing OIDC provider (issuer: https://172.28.8.9/api/dex)"
+time="2021-11-08T14:30:48Z" level=info msg="Initializing OIDC provider (issuer: https://172.28.8.9/api/dex)"
+time="2021-11-08T14:38:56Z" level=info msg="Alloc=10251 TotalAlloc=31662 Sys=74321 NumGC=12 Goroutines=158"
+time="2021-11-08T14:48:56Z" level=info msg="Alloc=10204 TotalAlloc=35580 Sys=74321 NumGC=17 Goroutines=156"
+time="2021-11-08T14:58:56Z" level=info msg="Alloc=10156 TotalAlloc=39296 Sys=74321 NumGC=22 Goroutines=156"
+time="2021-11-08T15:08:56Z" level=info msg="Alloc=10231 TotalAlloc=43109 Sys=74321 NumGC=27 Goroutines=156"
+time="2021-11-08T15:18:56Z" level=info msg="Alloc=10183 TotalAlloc=46941 Sys=74321 NumGC=32 Goroutines=156"
+time="2021-11-08T15:28:56Z" level=info msg="Alloc=10182 TotalAlloc=50744 Sys=74321 NumGC=37 Goroutines=156"
+time="2021-11-08T15:38:56Z" level=info msg="Alloc=10123 TotalAlloc=54315 Sys=74321 NumGC=42 Goroutines=156"
+time="2021-11-08T15:48:56Z" level=info msg="Alloc=10243 TotalAlloc=58122 Sys=74321 NumGC=47 Goroutines=156"
+time="2021-11-08T15:58:49Z" level=info msg="Initializing OIDC provider (issuer: https://172.28.8.9/api/dex)"
+time="2021-11-08T15:58:56Z" level=info msg="Alloc=10300 TotalAlloc=61994 Sys=74321 NumGC=52 Goroutines=157"
+time="2021-11-08T15:59:03Z" level=info msg="Initializing OIDC provider (issuer: https://172.28.8.9/api/dex)"
+time="2021-11-08T16:00:14Z" level=info msg="Initializing OIDC provider (issuer: https://172.28.8.9/api/dex)"
+
+
+
+**Screenshots**
+![image](https://user-images.githubusercontent.com/55496734/140775864-6e6764dd-872a-4f18-af64-b66d2dbf0019.png)
+
+
+Questions:
+What needs to be provided in data.url ?
+Are there any special configurations that needs to be performed on argocd-dex-server pod ?
+ Where do we configure dex server endpoint /api/dex/callback ?
+Hi @divya-prakash2 , Have you already been through this doc ?
+https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#dex 
+Hi @iam-veeramalla  , yes i did go through the link . 
+
+My questions 
+Where do we configure dex server endpoint /api/dex/callback ? Is it on the argocd side or ldap server side ?
+
+Since clicking on myad.local on the argocd UI , i see a 503 Service Unavailable where do we configure the argocd-dex-server specifications ?
+Failed to query provider "https://172.28.8.9/api/dex": 503 Service Unavailable: <HTML><HEAD>
+<TITLE>Network Error</TITLE>
+</HEAD>
+<BODY>
+<FONT face="Helvetica">
+<big><strong></strong></big><BR>
+</FONT>
+

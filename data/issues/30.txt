@@ -1,0 +1,22 @@
+Lauching application using an SSH repository
+Hello there,
+
+I'm having an issue with the operator on Openshift 4.3 using the operator hub for installation.
+Even though I can connect to an ssh repository in the repositories settings, when I try and create and application that uses that same repo I get the following error:
+```
+Unable to create application: application spec is invalid: InvalidSpecError: Unable to get app details: rpc error: code = Internal desc = Failed to fetch git repo: `git fetch origin --tags --force` failed exit status 128: No user exists for uid 1000540000 fatal: Could not read from remote repository. Please make sure you have the correct access rights and the repository exists.
+```
+
+When trying to debug the issue, when I access the argocd-repo-server pod the "default" user is not present and I get greated with `I have no name!@argocd-repo-server-74757c9cb-hsc8c:/home/argocd$`
+
+Is there a problem with my particular installation or is it a known problem?
+
+Thanks
+@RicardoDMAraujo @jmckind You can look at my PR from `argo-helm` here to see what needs fixed. What needs done here is the repo-server needs to also run the `uid_entrypoint.sh` workaround that was added to argo-cd.
+
+https://github.com/argoproj/argo-helm/pull/276
+
+I can provide more details if necessary.
+I see what you are saying. I will include this addition in the upcoming release.
+https://github.com/argoproj-labs/argocd-operator/blob/master/pkg/controller/argocd/deployment.go#L84
+Released as part of v0.0.5.

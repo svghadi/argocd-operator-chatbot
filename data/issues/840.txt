@@ -1,0 +1,242 @@
+Login via openshift not working after update to 0.5.0
+Argo CD Server fails to connect to Dex after updating the operator to 0.5.0. This worked before the update, the message we get is:
+
+Failed to query provider "https://argocd-server-argocd.apps.ocp01.softronic.se/api/dex": Get "https://argocd-dex-server.argocd.svc.cluster.local:5556/api/dex/.well-known/openid-configuration": http: server gave HTTP response to HTTPS client
+
+Hi @tormig-softronic , Quick question
+Are you using a different version of Argo CD that is not OOTB with Operator v0.5.0 ?
+
+I mean do you have:
+1. ArgoCD_Image Env variable set in the operator ?
+2. Do you have `.spec.Image` set for Argo CD in the Argo CD CR ?
+
+If possible, Please share the output of the below commands.
+1. login in to the operator pod and run `env`
+2. `kubectl describe deploy/argocd-operator-controller-manager -n <operator-namespace>`
+or to put this in a simple way,
+
+@tormig-softronic can you please share the `Argo CD` Version post upgrade ?
+
+You can get this information from the first line of your `argocd-application-controller` pod logs.
+Hi,
+we have not set any image. 
+
+For some reason I cannot open a terminal on the "argocd-operator-controller-manager" but it is running. The first line of that log is:
+```
+1.672817286780264e+09	INFO	setup	Go Version: go1.18.9
+1.6728172867803195e+09	INFO	setup	Go OS/Arch: linux/amd64
+1.6728172867803254e+09	INFO	setup	Version of operator-sdk: v0.18.2
+1.6728172867803295e+09	INFO	setup	Version of argocd-operator: 0.5.0
+```
+
+oc describe deploy/argocd-operator-controller-manager -n argocd gives:
+```
+Name:                   argocd-operator-controller-manager
+Namespace:              argocd
+CreationTimestamp:      Mon, 03 Jan 2022 08:29:57 +0100
+Labels:                 olm.deployment-spec-hash=8475d64768
+                        olm.owner=argocd-operator.v0.5.0
+                        olm.owner.kind=ClusterServiceVersion
+                        olm.owner.namespace=argocd
+                        operators.coreos.com/argocd-operator.argocd=
+Annotations:            deployment.kubernetes.io/revision: 10
+Selector:               control-plane=controller-manager
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:           control-plane=controller-manager
+  Annotations:      alm-examples:
+                      [
+                        {
+                          "apiVersion": "argoproj.io/v1alpha1",
+                          "kind": "AppProject",
+                          "metadata": {
+                            "name": "example"
+                          },
+                          "spec": null
+                        },
+                        {
+                          "apiVersion": "argoproj.io/v1alpha1",
+                          "kind": "Application",
+                          "metadata": {
+                            "name": "example"
+                          },
+                          "spec": null
+                        },
+                        {
+                          "apiVersion": "argoproj.io/v1alpha1",
+                          "kind": "ApplicationSet",
+                          "metadata": {
+                            "name": "example"
+                          },
+                          "spec": null
+                        },
+                        {
+                          "apiVersion": "argoproj.io/v1alpha1",
+                          "kind": "ArgoCD",
+                          "metadata": {
+                            "name": "argocd-sample"
+                          },
+                          "spec": {
+                            "controller": {
+                              "resources": {
+                                "limits": {
+                                  "cpu": "2000m",
+                                  "memory": "2048Mi"
+                                },
+                                "requests": {
+                                  "cpu": "250m",
+                                  "memory": "1024Mi"
+                                }
+                              }
+                            },
+                            "ha": {
+                              "enabled": false,
+                              "resources": {
+                                "limits": {
+                                  "cpu": "500m",
+                                  "memory": "256Mi"
+                                },
+                                "requests": {
+                                  "cpu": "250m",
+                                  "memory": "128Mi"
+                                }
+                              }
+                            },
+                            "redis": {
+                              "resources": {
+                                "limits": {
+                                  "cpu": "500m",
+                                  "memory": "256Mi"
+                                },
+                                "requests": {
+                                  "cpu": "250m",
+                                  "memory": "128Mi"
+                                }
+                              }
+                            },
+                            "repo": {
+                              "resources": {
+                                "limits": {
+                                  "cpu": "1000m",
+                                  "memory": "512Mi"
+                                },
+                                "requests": {
+                                  "cpu": "250m",
+                                  "memory": "256Mi"
+                                }
+                              }
+                            },
+                            "server": {
+                              "resources": {
+                                "limits": {
+                                  "cpu": "500m",
+                                  "memory": "256Mi"
+                                },
+                                "requests": {
+                                  "cpu": "125m",
+                                  "memory": "128Mi"
+                                }
+                              },
+                              "route": {
+                                "enabled": true
+                              }
+                            },
+                            "sso": {
+                              "dex": {
+                                "resources": {
+                                  "limits": {
+                                    "cpu": "500m",
+                                    "memory": "256Mi"
+                                  },
+                                  "requests": {
+                                    "cpu": "250m",
+                                    "memory": "128Mi"
+                                  }
+                                }
+                              },
+                              "provider": "dex"
+                            }
+                          }
+                        },
+                        {
+                          "apiVersion": "argoproj.io/v1alpha1",
+                          "kind": "ArgoCDExport",
+                          "metadata": {
+                            "name": "argocdexport-sample"
+                          },
+                          "spec": {
+                            "argocd": "argocd-sample"
+                          }
+                        }
+                      ]
+                    capabilities: Deep Insights
+                    categories: Integration & Delivery
+                    certified: false
+                    containerImage: quay.io/argoprojlabs/argocd-operator@sha256:2f5c0d4567607266ccacb91d8c2e3b18c2afe0edaf55855dcb1a06b02173b520
+                    description: Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes.
+                    olm.operatorGroup: argocd-lt4kb
+                    olm.operatorNamespace: argocd
+                    olm.targetNamespaces: argocd
+                    operatorframework.io/properties:
+                      {"properties":[{"type":"olm.gvk","value":{"group":"argoproj.io","kind":"Application","version":"v1alpha1"}},{"type":"olm.gvk","value":{"gr...
+                    operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
+                    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+                    repository: https://github.com/argoproj-labs/argocd-operator
+                    support: Argo CD
+  Service Account:  argocd-operator-controller-manager
+  Containers:
+   kube-rbac-proxy:
+    Image:      gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+    Port:       8443/TCP
+    Host Port:  0/TCP
+    Args:
+      --secure-listen-address=0.0.0.0:8443
+      --upstream=http://127.0.0.1:8080/
+      --logtostderr=true
+      --v=10
+    Environment:
+      ARGOCD_CLUSTER_CONFIG_NAMESPACES:  argocd
+      OPERATOR_CONDITION_NAME:           argocd-operator.v0.5.0
+    Mounts:                              <none>
+   manager:
+    Image:      quay.io/argoprojlabs/argocd-operator@sha256:2f5c0d4567607266ccacb91d8c2e3b18c2afe0edaf55855dcb1a06b02173b520
+    Port:       <none>
+    Host Port:  <none>
+    Command:
+      /manager
+    Args:
+      --health-probe-bind-address=:8081
+      --metrics-bind-address=127.0.0.1:8080
+      --leader-elect
+    Liveness:   http-get http://:8081/healthz delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:8081/readyz delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      WATCH_NAMESPACE:                    (v1:metadata.annotations['olm.targetNamespaces'])
+      ARGOCD_CLUSTER_CONFIG_NAMESPACES:  argocd
+      OPERATOR_CONDITION_NAME:           argocd-operator.v0.5.0
+    Mounts:                              <none>
+  Volumes:                               <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Progressing    True    NewReplicaSetAvailable
+  Available      True    MinimumReplicasAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   argocd-operator-controller-manager-6f85fbd5dd (1/1 replicas created)
+Events:          <none>
+```
+The first lines of the argocd-application-controller pod log are:
+```
+time="2023-01-04T07:44:54Z" level=info msg="Processing all cluster shards"
+time="2023-01-04T07:44:54Z" level=info msg="appResyncPeriod=3m0s"
+time="2023-01-04T07:44:54Z" level=info msg="Application Controller (version: v2.2.4+78d749e, built: 2022-02-03T20:41:00Z) starting (namespace: argocd)"
+```
+Hey @tormig-softronic , the Argo CD version in your case is `v2.2.4` but it should be `v2.5.4`.
+Do you have settings for Argo CD Image in the Argo CD CR? because it is using a very old version not even the version that comes OOTB with operator 0.4.0.
+There is(was) a generic "version" statement:
+  version: 'sha256:d45eefcd810e53739883d43832918bae0764e0fe80b57f57989bf7f21863ca10'
+Not sure where that came from though because it is not present in our original yaml manifest. And when I removed it it started working!
+perfect, great !!

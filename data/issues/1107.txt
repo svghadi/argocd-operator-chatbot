@@ -1,0 +1,12 @@
+Installation documentation should contain actual code or at least link to the files in the `deploy/` folder
+https://github.com/argoproj-labs/argocd-operator/blob/d424ebd71f4d1e67ade00a8b329e3a6e8688950d/docs/install/olm.md?plain=1#L84
+
+The line tells the user to deploy some file called `deploy/catalog_source.yam` without specifying where that comes from.
+
+It would be nice to
+- state that this comes from the argocd-operator git repository in the deploy folder OR
+- link to the actual file in the argocd-operator git repository OR
+- previously show the contents of the file directly in the documentation (which avoids copy&paste from multiple locations and mismatches between docs and file content).
+
+If desired I can come up with a PR to fix this.
+

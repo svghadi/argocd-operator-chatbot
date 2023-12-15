@@ -1,0 +1,35 @@
+Version 0.0.15 ClusterRoles and ClusterRoleBindings for argocd-application-controller and argocd-server not showing as connected with the ArgoCD
+**Describe the bug**
+We install ArgoCD Operator and create ArgoCD Server in a namespace on OpenShift 4.7 by defining necessary manifest files in GIT and let a central ArgoCD-server in same OpenShift cluster sync these manifests. Like this: Central ArgoCD v0.0.14 --> Namespace ArgoCD v0.0.15.
+What I observed in GUI in the central ArgoCD Server after upgradring the namespace ArgoCD Operator from 0.0.14 to 0.0.15 was that ClusterRoles and ClusterRoleBindings regarding argocd-application-controller and argocd-server showed as disconnected from the namesace ArgoCD server/object. See the screenshot below for the resources marked as yellow and ready for pruning.
+
+If I copy the ownerReferences from one of the other resources, i.e rolebinding, and add this to one of the clusterroles or clusterrolebindings, they get connected to the central ArgoCD. Now showing as synced, but not connected to the namespace ArgoCD.
+
+  ownerReferences: 
+  - apiVersion: argoproj.io/v1alpha1 
+    blockOwnerDeletion: true 
+    controller: true 
+    kind: ArgoCD 
+    name: argocd 
+    uid: d412eb32-e506-4976-bccf-ce578f0d9812
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+See description above
+
+**Expected behavior**
+The clusterroles and clusterrolebindings for argocd-application-controller and argocd-server to be connected to the namespace ArgoCD in the GUI of the central ArgoCD Server.
+
+**Screenshots**
+![bilde](https://user-images.githubusercontent.com/25543712/119767976-26d9cd00-beb8-11eb-981a-6768a8298e5f.png)
+
+![bilde](https://user-images.githubusercontent.com/25543712/119766963-4bcd4080-beb6-11eb-8aa7-ef87dd21bd2e.png)
+
+
+
+Added yaml manifestes for namespace argocd and rolebinding.
+
+[namespace_argocd.yaml.txt](https://github.com/argoproj-labs/argocd-operator/files/6551246/namespace_argocd.yaml.txt)
+[namespace_crb_argocd-server.yaml.txt](https://github.com/argoproj-labs/argocd-operator/files/6551247/namespace_crb_argocd-server.yaml.txt)
+

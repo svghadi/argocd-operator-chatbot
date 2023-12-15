@@ -1,0 +1,12 @@
+Add service annotations
+We need to add ability to set annotations to the server object.
+I'm trying to use external-dns to point it to internal ip address.
+Hi @adubkov, can you elaborate on this?
+Argocd operator creates `kind: Service` object in response of `kind: Argocd` resource.
+It would be great to be able set custom annotations for that service in configuration of `kind:Argocd` resource.
+We are using Datadog to collect ArgoCD metrics. For this we need to configure annotations on the service, which is not currently possible.
+
+Another usecase is configuring Prometheus with annotations instead of ServiceMonitor.
+
+Configuring service annotations for services created by operator should be IMHO basic functionality same way as it is done for Ingress/Route.
+Does this functionality really not exist? 

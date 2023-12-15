@@ -1,0 +1,13 @@
+Upgrade argo-cd dependency in go.mod from v1.8.7 to v2.1.2
+### Is your task related to a problem? Please describe.
+Currently, argocd-operator pulls in `v1.8.7` of argo-cd as a dependency in go.mod, which is an old version of argo-cd
+
+### Describe the solution you'd like
+We should update the go.mod file to pull in argo-cd `v2.1.2` as a dependency instead
+
+### Describe alternatives you've considered
+<!--A clear and concise description of any alternative solutions or features you've considered. -->
+
+### Additional context
+<!-- Add any other context or screenshots about the task here. -->
+

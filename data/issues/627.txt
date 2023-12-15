@@ -1,0 +1,15 @@
+Missing applicationset controller status field in Argo CD CR 
+**Describe the bug**
+The Argo CD CR status section is currently missing a field to reflect the status of the applicationset controller. To be consistent with the rest of the components managed by the operator, the status of the CR should be updated to also indicate the present condition of the applicationset controller
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install operator 
+2. Spin up an Argo CD instance and enable applicationset controller
+3. Notice that the CR does not show the "running" status of applicationset controller
+
+**Expected behavior**
+the status of the CR should be updated to also indicate the present condition of the applicationset controller
+
+**Additional context** 
+https://github.com/argoproj-labs/argocd-operator/blob/master/api/v1alpha1/argocd_types.go#L656

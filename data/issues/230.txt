@@ -1,0 +1,13 @@
+Update operator to use ArgoCD version 1.8.x
+With many recent changes in version 1.8.x, the ArgoCD operator might need to be updated to use ArgoCD version 1.8.x. 
+@bigkevmcd 
+Should we change this to point to the latest when the user doesn't worry to specify `cr.Spec.Image` and `cr.Spec.Version`. 
+
+https://github.com/argoproj-labs/argocd-operator/blob/53da9a9e5d3554eae98dc652f9b8270834ed5a42/pkg/common/defaults.go#L46
+
+
+The [Deployment that's created for the controller](https://github.com/argoproj-labs/argocd-operator/blob/9e257ece79533368c168f7a4b6648e9567171028/pkg/controller/argocd/deployment.go#L295) should be converted to a StatefulSet https://argoproj.github.io/argo-cd/operator-manual/upgrading/1.7-1.8/
+
+The old Deployment should be deleted, and we need to test the upgrade.
+Operator now supports Argo 2.X and the application-controller has been converted to use a statefulset (https://github.com/argoproj-labs/argocd-operator/blob/master/controllers/argocd/statefulset.go). So I think this can be closed?
+Per @tylerauerbeck's comment, closing this issue. Thanks.

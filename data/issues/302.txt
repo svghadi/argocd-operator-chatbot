@@ -1,0 +1,24 @@
+Refactor unit tests to make use of github.com/stretchr/testify
+### Is your task related to a problem? Please describe.
+
+Currently, we are using a lot of code in the unit tests for evaluating outcomes in our unit tests, such as `reflect.DeepEqual` in  `if/else` branch constructs to trigger `t.Errorf()` and the likes. This makes writing good unit tests quite a burden.
+
+### Describe the solution you'd like
+
+Argo CD uses `github.com/stretchr/testify` for its unit tests, which is a quite flexible and convenient way to describe assertions on the expected test results, which also has nice output on failures. 
+
+We should refactor our unit tests to make use of this framework.
+
+### Describe alternatives you've considered
+
+None really.
+
+Found a nice and well elaborated comparisons of the most popular options:
+https://bmuschko.com/blog/go-testing-frameworks/
+
+Can we also consider BDD testing options like ginkgo/gomega ?  @jannfis 
+Thanks for that link, @iam-veeramalla, it's a great summary.
+
+And sure, I think it's a great idea to explore possible other options. I'm only a little opinionated on `testify`, since its used in other Argo CD sub-projects already and is quite lightweight and very easy to use. But maybe we can pick up a set of certain existing unit tests and try to model them in various frameworks, to see how it will fit. WDYT?
+@jannfis sure .. That would be great !!
+First chunk of migration to `stretchr/testify` can be seen in https://github.com/argoproj-labs/argocd-operator/pull/437

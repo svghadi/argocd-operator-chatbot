@@ -1,0 +1,70 @@
+v0.8.0 update will no longer support wild card health checks
+**Is your feature request related to a problem? Please describe.**
+In ArgoCD 2.6.0 release, support for wildcard health checks was added under the `resource.customization` config map field:
+https://github.com/argoproj/argo-cd/pull/10885
+https://github.com/argoproj/argo-cd/releases/tag/v2.6.0
+
+The config map section in question looks as follows:
+``` 
+  resource.customizations: |
+    "*.aws.crossplane.io/*":
+      health.lua: | 
+        ...
+```
+
+Your documentation states:
+> resourceCustomizations is being deprecated, and support will be removed in Argo CD Operator v0.8.0. Please use the new formats resourceHealthChecks, resourceIgnoreDifferences, and resourceActions.
+
+In order to use `resourceHealthChecks` to try to achieve the wild card match, we would need to do something like 
+
+```
+  resourceHealthChecks:
+    - group: "*.aws.crossplane.io"
+      kind: "*"
+      check: |
+```
+
+However, the `resourceHealthChecks` field maps `group` and `kind` as follows:
+
+``` 
+resource.customizations.health.<group>_<kind>
+```
+
+so attempting wild card matches in this way will naturally result in reconciler error:
+
+```
+Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "argocd", "error": "ConfigMap \"argocd-cm\" is invalid: [data[resource.customizations.health.*.aws.crossplane.io_*]: Invalid value: \"resource.customizations.health.*.aws.crossplane.io_*\": a valid config key must consist of alphanumeric characters, '-', '_' or '.' (e.g. 'key.name',  or 'KEY_NAME',  or 'key-name', regex used for validation is '[-._a-zA-Z0-9]+')]"}
+```
+
+**Describe the solution you'd like**
+I would expect one of two solutions to be taken:
+
+1. Either abandon the deprication of `resourceCustomization` field in ArgoCD CRD, or
+2. Configure the mapping from `resourceHealthChecks` to `resource.customizations.health` differently such that wildcard can still be used in the manner of `group: *.aws.crossplane.io, kind: *`. 
+
+This should be easy to achieve, by avoiding `snake_case` mapping and quoting the input instead, such that any input with "*" is still YAML compliant.
+
+**Describe alternatives you've considered**
+An alternative would be to add customized key for defining wild card health checks, such as allowing the spec:
+
+```
+resourceHealthChecks:
+  - allMatching: "*.aws.crossplane.io/*"
+    check: | 
+```
+
+Hi @andreabjork, thanks for bringing this to attention.
+
+`resource.customizations` configmap field in ArgoCD has been deprecated(https://github.com/argoproj/argo-cd/issues/11055) in favor of new keys. Therefore, we decided to remove it in argocd-operator v0.8.0. 
+
+If the new keys don't support your use-case, you can workaround it in the operator by adding old customizations into `.spec.extraConfig` field in ArgoCD CR. This field maps its content to `argocd-cm` configmap, which is used by ArgoCD. 
+```yaml
+spec:
+  extraConfig:
+    resource.customizations: |
+      "*.aws.crossplane.io/*":
+        health.lua: | 
+          ...
+```
+
+As for your feature request, what you've highlighted regarding lack of support for wildcards in new keys is true. However, it has to be supported in ArgoCD first before operator can use it. Can you create an issue in https://github.com/argoproj/argo-cd to discuss about wildcard support for new resource keys added in https://github.com/argoproj/argo-cd/pull/6060? 

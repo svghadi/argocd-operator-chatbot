@@ -1,0 +1,26 @@
+Cant Build Catalog | Error: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+**Describe the bug**
+On catalog build via 
+```
+make catalog-build 
+```
+error recieved 
+```
+Error: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+```
+Dockerfile by default includes: 
+```
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$LD_FLAGS" -a -o manager main.go
+```
+**To Reproduce**
+build catalog on Mac  catalina 10.15.7  - make no changes to dockerfile 
+
+**Expected behavior**
+catalog builds correctly 
+
+**Additional context**
+I fulfil all requirements, i would think that goach of amd64 with go is compatible? 
+
+go version go1.17.5 darwin/amd64
+solved with opm v1.15.2.  not v1.15.1 in makefile
+Thanks for that @EHSchmitt4395 , Do you want to raise a PR with fix version ? 

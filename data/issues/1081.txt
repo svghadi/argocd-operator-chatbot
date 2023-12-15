@@ -1,0 +1,66 @@
+ArgoCD on OKD 4.14 wont install.
+**Describe the bug**
+argocd-operator-controller-manager wont start, error:
+
+ERROR controller-runtime.source.EventHandler failed to get informer from cache {"error": "failed to get API group resources: unable to retrieve the complete list of server APIs: apps.openshift.io/v1: the server could not find the requested resource"}
+
+**To Reproduce**
+Steps to reproduce the behavior:
+Install ArgoCD operator on OKD 4.14
+
+**Expected behavior**
+Operator installs and starts all required pods. 
+
+
+
+Hi @srekkas ,
+
+I am also wondering if I should upgrade from 0.7.0 to 0.8.0 in production... There are no release notes available and git issues in this project that get created lately do not get answered or taken. :/
+
+I did the upgrade in my staging environment(`4.14.0-0.okd-2023-11-14-101924`) and that looks to work ok... but my `kind: Subscription` on argocd-operator gives the following message which makes me reluctant to upgrade production...
+
+```
+- message: 'constraints not satisfiable: @existing/openshift-operators//argocd-operator.v0.7.0
+      and @existing/openshift-operators//argocd-operator.v0.8.0 provide ArgoCDExport
+      (argoproj.io/v1alpha1), clusterserviceversion argocd-operator.v0.7.0 exists
+      and is not referenced by a subscription, subscription argocd-operator exists,
+      subscription argocd-operator requires @existing/openshift-operators//argocd-operator.v0.8.0'
+    reason: ConstraintsNotSatisfiable
+    status: "True"
+    type: ResolutionFailed
+
+```
+
+Which version of OKD4.14 are you running? `DeploymentConfigs` are deprecated since OKD4.14(which uses `apps.openshift.io/v1`)... but it should not have been removed yet?
+
+
+
+
+
+@jonasbartho I use same 4.14.0-0.okd-2023-11-14-101924.
+It works on 4.13.0-0.okd-2023-09-30-084937
+
+
+
+
+Hmm,
+
+Do you get an output when running `oc api-resources | grep -i deploymentconfig`? 
+
+The output should be:
+```
+deploymentconfigs  dc  apps.openshift.io/v1  true    DeploymentConfig
+```
+Output empty, it is fresh installation ...
+
+4.14
+oc api-resources | grep -i deploymentconfig
+
+4.13
+oc api-resources | grep -i deploymentconfig
+deploymentconfigs                     dc                                   apps.openshift.io/v1                          true         DeploymentConfig
+
+
+OK, thanks, my cluster missing "DeploymentConfig" capability ...
+
+Just want to mention that DeploymentConfigs are deprecated starting with OpenShift 4.14, so it would be great if the controller-manager would also start if DeploymentConfigs are not available

@@ -1,0 +1,46 @@
+server rolebinding does not have access to applicationset resource
+**Describe the bug**
+If `spec.applicationSet` is enabled, the operator does not reconcile the server RoleBinding to manage `ApplicationSet`s.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create a basic cluster with `applicationset-controller` enabled:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example
+spec:
+  applicationSet: {}
+```
+```sh
+$ kubectl apply -n argocd -f example.yaml
+```
+2. Login into the CLI (in this case, with port-forward):
+```sh
+$ kubectl port-forward -n argocd services/example-server 8080:443 &>/dev/null &
+$ argocd login localhost:8080 --insecure
+```
+3. List applicationsets (for example):
+```sh
+$ argocd appset list
+```
+**Expected behavior**
+A list containing the installed applicationsets should display, instead the following error appears:
+
+```
+FATA[0000] rpc error: code = PermissionDenied desc = error listing ApplicationSets with selectors: applicationsets.argoproj.io is forbidden: User "system:serviceaccount:argocd:example-argocd-server" cannot list resource "applicationsets" in API group "argoproj.io" in the namespace "argocd"
+```
+
+**Additional information**
+Operator version: v0.5.0 (`2f5c0d456760`)
+Hi @cgrs , can you tell me which version of the operator are you using ? 
+> Hi @cgrs , can you tell me which version of the operator are you using ?
+
+I'm using v0.5.0 (`2f5c0d456760`)
+> > Hi @cgrs , can you tell me which version of the operator are you using ?
+> 
+> I'm using v0.5.0 (`2f5c0d456760`)
+
+let me quickly try this out and get back to you
+Thanks for reporting @cgrs , I am able to reproduce it, I will get back to you asap. Thanks :)

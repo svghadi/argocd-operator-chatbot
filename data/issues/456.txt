@@ -1,0 +1,36 @@
+Additional ENVs are not getting configured (HTTP_PROXY, HTTPS_PROXY, no_proxy)
+**Describe the bug**
+Adding proxy ENVs while deploying basic argocd (after deploying argocd-operator), the ENVs are not reflected. 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Deploy ArgoCD Operator (Latest version v0.0.15)
+2. Deploy basic ArgoCD (YAML attached)
+3. Check ArgoCD Repo Server has ENV set
+[ArgoCD-Install.zip](https://github.com/argoproj-labs/argocd-operator/files/7329635/ArgoCD-Install.zip)
+
+
+**Expected behavior**
+ENV should reflect the proxy values.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+![image](https://user-images.githubusercontent.com/31176140/136949179-fa88ef72-3cec-4180-81ae-63722f351ba8.png)
+
+
+**Additional context**
+There was already a request raised for this earlier -> https://github.com/argoproj-labs/argocd-operator/issues/201
+
+It was fixed as part of -> https://github.com/argoproj-labs/argocd-operator/pull/437
+
+But looks like this is not releases, since last tag on the PR is of April 2021 and this PR is merged in Sept 2021. Also on the Operator Hub webpage, latest version is v0.0.15 which was last updated on Oct 2020.
+https://operatorhub.io/operator/argocd-operator/alpha/argocd-operator.v0.0.15
+
+Hi @SahilMutha , Thanks for reaching out. Yes, this issue is fixed and will be part of the next release which is planned this month.
+> Hi @SahilMutha , Thanks for reaching out. Yes, this issue is fixed and will be part of the next release which is planned this month.
+
+Thanks for confirming @iam-veeramalla. One quick detail - Will this support only proxy related ENVs or any other ENVs also ? 
+> lated ENVs or any other ENV
+
+Other ENVs also :)
+we have released operator v0.2.0. Please feel free to re-open the issue if you still see this after upgrading.

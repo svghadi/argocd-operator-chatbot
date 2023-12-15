@@ -1,0 +1,25 @@
+Request to support manual install with a single YAML file
+**Is your feature request related to a problem? Please describe.**
+As we can see from the [document]() about how to install Argo CDoperator manually.
+
+```shell
+make deploy IMG=quay.io/my-org/argocd-operator:latest
+```
+
+Users need to clone the git repository to the local environment. This is not convenient if they just want to install instead of exploring the codebase.
+
+**Describe the solution you'd like**
+Provide a single YAML file for that. Users can download the YAML from GitHub releaser assets. And install it manually with the following instruction:
+
+```shell
+kubectl apply -f argocd-operator.yaml
+```
+
+**Describe alternatives you've considered**
+None.
+
+**Additional context**
+None.
+
+I'd like to help with this. But I didn't find the corresponding GitHub action script file. Please feel free to leave your comment below.
+Hi @LinuxSuRen what help are you looking for ? Would you like to create a new action for this ?

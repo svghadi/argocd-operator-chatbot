@@ -1,0 +1,66 @@
+Routes in OKD deployments with their own SSL termination do not work
+**Describe the bug**
+
+Routes in OKD deployments with their own SSL termination do not work and end in `ERR_TOO_MANY_REDIRECTS`. This is caused by argocd redirecting back to https when receiving http traffic. A supposed fix should be `spec.server.insecure: true`, this create the route correctly with `termination: edge`, but fails to add `--insecure` to argocd server.
+
+**To Reproduce**
+Create argo cd instance with:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  labels:
+    app: argocd
+spec:
+  server:
+    route:
+      enabled: true
+      tls:
+        termination: edge
+```
+
+**Expected behavior**
+
+`spec.server.insecure: true` should create a working route or reencryption should be enabled for the route.
+@bo0ts  Thanks for reaching us. I tried to reproduce the issue but it works fine for me.
+
+`.spec.server.insecure: true` creates route correctly with termination: edge and also  adds `--insecure` to argocd server.
+https://github.com/argoproj-labs/argocd-operator/blob/ea71f3c57dea089dcdcc6b8ca4bb9e3cb270e43a/pkg/controller/argocd/deployment.go#L205
+
+
+However, this does not work.
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  labels:
+    app: argocd
+spec:
+  server:
+    route:
+      enabled: true
+      tls:
+        termination: edge
+```
+> However, this does not work.
+> 
+> ```
+> apiVersion: argoproj.io/v1alpha1
+> kind: ArgoCD
+> metadata:
+>   name: argocd
+>   labels:
+>     app: argocd
+> spec:
+>   server:
+>     route:
+>       enabled: true
+>       tls:
+>         termination: edge
+> ```
+
+This brings a very good point on why OpenAPI scheme validation is very important. Looking at the code, the only supported types is Passthrough.  One can get things working with Edge Termination but they also need to set --insecure flag on argocd-server commands in container. So, simply setting Edge termination on the route does not work. This can be achieved by  `.spec.server.insecure: true`
+@iam-veeramalla I've tried .spec.server.insecure but this did not set the `--insecure` parameter for me. I'll try to investigate why that did not happen.

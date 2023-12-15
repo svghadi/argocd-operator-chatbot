@@ -1,0 +1,17 @@
+Version 0.0.15 with ArgoCD 1.8.7 leads to Dex crashlooping
+**Describe the bug**
+After upgrading the operator to 0.0.15 we let it re-deploy our ArgoCD instance. The version ist explicitly set to 1.8.7. Now, our argocd-dex-server deployment is crashlooping with error:
+`level=datal msg="unknown command \"rundex\" for \"argocd\"`
+
+It seems like the changes done in #270 to use the new binary made the created deployments of the operator incompatible with ArgoCD 1.8.7. The behavior is related to #322, but kind of reversed.
+
+**To Reproduce**
+Upgrade to 0.0.15 in Openshift 4.6, fix version of ArgoCD to v.1.8.7, create new ArgoCD instance or delete deployment argocd-dex-server -> DEX server does not start
+
+**Expected behavior**
+Dex Server should start. The argocd-util binary should be used, when older versions of ArgoCD are used with the operator.
+
+**Additional context**
+Had no issues with this in 0.0.14 using Openshift 4.6
+Manually editing the deployment argocd-dex-server and changing the command blocks manually (effectively reverting https://github.com/argoproj-labs/argocd-operator/pull/270) solves the problem.
+I guess everybody is using ArgoCD 2.x now, so this need is obsolete now.

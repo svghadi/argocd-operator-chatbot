@@ -1,0 +1,25 @@
+The `url` in argocd-cm is set incorrectly when using an ingress
+When an ingress is used, the value of the `url` field in the `argocd-cm` always gets set to the service endpoint (e.g. https://argocd-server) instead of the ingress host. Looking at the code, it appears that when the ingress is created it is named `${cr.Name}` but when the ConfigMap logic looks for the ingress it is looking for `${cr.Name}-server`. Since it doesn't find the ingress it keeps the server url.
+
+To make matters worse, when using the operator you are unable to manually change the value in the configmap because the operator will immediately change it back.
+
+## ArgoCD CSV
+
+`argocd-operator.v0.0.8` 
+
+## CR
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+  server:
+    host: argocd-tools.{ingress subdomain}
+    ingress: true
+    insecure: true
+```
+
+
+Merged #98 to address this, thanks!

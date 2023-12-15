@@ -1,0 +1,12 @@
+0.8.0 release in operatorhub / OpenShift without any release here on GitHub?
+**Describe the bug**
+Without any release here on GitHub, there is a new release 0.8.0 in operatorhub: https://operatorhub.io/operator/argocd-operator and therefore also in OpenShift itself
+
+**Expected behavior**
+Releases should be consistent and made here as well as on operatorhub.
+We subscribed to the releases here to be kept up to date and where surprised about the new release in OpenShift...
+Hi @BGrasnick , I just realised this morning that the tag was not created in this repo.
+
+Sorry for the inconvenience. I will make sure that this does not happen going forward.
+v0.8.0 is out now. Release notes can be found at https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.8.0 
+

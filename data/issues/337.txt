@@ -1,0 +1,204 @@
+Multiple ArgoCD Instances in different Namespaces
+Using the watched_namespace environment variable I set ArgoCD to watch multiple namespaces such as "argocd-operator-system,org-fdi-system". However while ArgoCD does detect all of the ArgoCD instances I get an issue with the following message:
+
+```sh
+unable to get: %v because of unknown namespace for the cache
+```
+
+It seems this is related to the following upstream bug:
+
+- https://github.com/kubernetes-sigs/controller-runtime/issues/934
+
+I was just curious as to if any other people have came across this issue and maybe if I myself am doing something wrong. Appreciate any insight you can provide!
+Hi @sylus , Thanks for raising issue with us. 
+
+v0.0.15 natively supports this without need to add any watched_namespace environment variable or any other settings. However, I would recommend you to look at the list of issues users faced while upgrading.
+https://github.com/argoproj-labs/argocd-operator/issues?q=is%3Aissue+is%3Aopen+label%3Aupgrade-issues
+
+Hey @iam-veeramalla thanks for the response I think I am on 
+
+quay.io/argoprojlabs/argocd-operator@sha256:38254c8d53172993cb51c0b4c72645757ba36e7e8e3b1251683b00cede47fa7c
+
+Which to my knowledge is that v0.0.15, I believe i first tried to not set the watch namespace, but maybe I missed something I will try again today and report back!
+Hey @iam-veeramalla so I must be doing something wrong but not sure. 
+
+I manually made another ArgoCD instance and the operator doesn't seem to detect the new namespace at all
+
+![image](https://user-images.githubusercontent.com/984304/121958670-e9879300-cd31-11eb-9cef-2fada040022a.png)
+
+```sh
+{"level":"info","ts":1623704248.684759,"logger":"cmd","msg":"Go Version: go1.16.3"}
+{"level":"info","ts":1623704248.684787,"logger":"cmd","msg":"Go OS/Arch: linux/amd64"}
+{"level":"info","ts":1623704248.6847906,"logger":"cmd","msg":"Version of operator-sdk: v0.18.0"}
+{"level":"info","ts":1623704248.6847942,"logger":"cmd","msg":"Version of argocd-operator: 0.0.15"}
+{"level":"info","ts":1623704248.7337055,"logger":"argoutil","msg":"monitoring.coreos.com/v1 API verified"}
+{"level":"info","ts":1623704248.7482235,"logger":"leader","msg":"Trying to become the leader."}
+{"level":"debug","ts":1623704248.7482865,"logger":"k8sutil","msg":"Found namespace","Namespace":"argocd-operator-system"}
+I0614 20:57:29.799529       1 request.go:621] Throttling request took 1.037356614s, request: GET:https://10.131.0.1:443/apis/apps/v1?timeout=32s
+{"level":"debug","ts":1623704251.4092524,"logger":"k8sutil","msg":"Found podname","Pod.Name":"argocd-operator-59f5d5ff4f-tflms"}
+{"level":"debug","ts":1623704251.425559,"logger":"k8sutil","msg":"Found Pod","Pod.Namespace":"argocd-operator-system","Pod.Name":"argocd-operator-59f5d5ff4f-tflms"}
+{"level":"info","ts":1623704251.439129,"logger":"leader","msg":"No pre-existing lock was found."}
+{"level":"info","ts":1623704251.5554168,"logger":"leader","msg":"Became the leader."}
+{"level":"info","ts":1623704254.2139874,"logger":"controller-runtime.metrics","msg":"metrics server is starting to listen","addr":"0.0.0.0:8383"}
+{"level":"info","ts":1623704254.2143655,"logger":"cmd","msg":"Registering Components."}
+{"level":"info","ts":1623704254.2283442,"logger":"argoutil","msg":"monitoring.coreos.com/v1 API verified"}
+{"level":"debug","ts":1623704254.2426877,"logger":"k8sutil","msg":"Found namespace","Namespace":"argocd-operator-system"}
+{"level":"debug","ts":1623704254.2428062,"logger":"kubemetrics","msg":"Starting collecting operator types"}
+{"level":"debug","ts":1623704254.2428145,"logger":"kubemetrics","msg":"Generating metric families","apiVersion":"argoproj.io/v1alpha1","kind":"ArgoCDExport"}
+{"level":"debug","ts":1623704256.905965,"logger":"kubemetrics","msg":"Generating metric families","apiVersion":"argoproj.io/v1alpha1","kind":"ArgoCD"}
+{"level":"debug","ts":1623704259.5700045,"logger":"kubemetrics","msg":"Starting serving custom resource metrics"}
+I0614 20:57:40.620098       1 request.go:621] Throttling request took 1.037339514s, request: GET:https://10.131.0.1:443/apis/config.istio.io/v1alpha2?timeout=32s
+{"level":"debug","ts":1623704262.2279713,"logger":"k8sutil","msg":"Found namespace","Namespace":"argocd-operator-system"}
+{"level":"debug","ts":1623704262.228021,"logger":"k8sutil","msg":"Found podname","Pod.Name":"argocd-operator-59f5d5ff4f-tflms"}
+{"level":"debug","ts":1623704262.2381775,"logger":"k8sutil","msg":"Found Pod","Pod.Namespace":"argocd-operator-system","Pod.Name":"argocd-operator-59f5d5ff4f-tflms"}
+{"level":"debug","ts":1623704262.2591453,"logger":"metrics","msg":"Pods owner found","Kind":"Deployment","Name":"argocd-operator","Namespace":"argocd-operator-system"}
+{"level":"info","ts":1623704262.8282301,"logger":"metrics","msg":"Metrics Service object updated","Service.Name":"argocd-operator-metrics","Service.Namespace":"argocd-operator-system"}
+{"level":"info","ts":1623704265.8186328,"logger":"cmd","msg":"Could not create ServiceMonitor object","error":"servicemonitors.monitoring.coreos.com \"argocd-operator-metrics\" already exists"}
+{"level":"info","ts":1623704265.8187153,"logger":"cmd","msg":"Starting the Cmd."}
+{"level":"info","ts":1623704265.8190892,"logger":"controller-runtime.manager","msg":"starting metrics server","path":"/metrics"}
+{"level":"info","ts":1623704265.8191533,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704265.8192215,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocdexport-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704265.9197893,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704265.9198775,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocdexport-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.02073,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocdexport-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.020825,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.1211717,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocdexport-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.1212506,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.2224026,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.2224464,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocdexport-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.2227328,"logger":"controller-runtime.controller","msg":"Starting Controller","controller":"argocdexport-controller"}
+{"level":"info","ts":1623704266.3227088,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.3228278,"logger":"controller-runtime.controller","msg":"Starting workers","controller":"argocdexport-controller","worker count":1}
+{"level":"info","ts":1623704266.4237823,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.5241468,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.6245656,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.7254903,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.8260698,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704266.9274447,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704267.0284517,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1623704267.1297338,"logger":"controller-runtime.controller","msg":"Starting Controller","controller":"argocd-controller"}
+{"level":"info","ts":1623704267.1297965,"logger":"controller-runtime.controller","msg":"Starting workers","controller":"argocd-controller","worker count":1}
+{"level":"info","ts":1623704267.1298666,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd-operator-system","name":"fdi"}
+{"level":"info","ts":1623704267.1299193,"logger":"controller_argocd","msg":"reconciling status"}
+{"level":"info","ts":1623704267.1300335,"logger":"controller_argocd","msg":"reconciling roles"}
+{"level":"info","ts":1623704271.0189397,"logger":"controller_argocd","msg":"reconciling rolebindings"}
+{"level":"info","ts":1623704274.5250163,"logger":"controller_argocd","msg":"reconciling service accounts"}
+{"level":"info","ts":1623704280.415694,"logger":"controller_argocd","msg":"reconciling certificate authority"}
+{"level":"info","ts":1623704280.4157407,"logger":"controller_argocd","msg":"reconciling CA secret"}
+{"level":"info","ts":1623704280.4157984,"logger":"controller_argocd","msg":"reconciling CA config map"}
+{"level":"info","ts":1623704280.415821,"logger":"controller_argocd","msg":"reconciling secrets"}
+{"level":"info","ts":1623704280.4949777,"logger":"controller_argocd","msg":"reconciling config maps"}
+{"level":"info","ts":1623704280.603312,"logger":"controller_argocd","msg":"reconciling services"}
+{"level":"info","ts":1623704280.6034033,"logger":"controller_argocd","msg":"reconciling deployments"}
+{"level":"info","ts":1623704282.4395044,"logger":"controller_argocd","msg":"reconciling statefulsets"}
+{"level":"info","ts":1623704282.43955,"logger":"controller_argocd","msg":"existing argocd export not found, skipping import"}
+{"level":"info","ts":1623704283.1311972,"logger":"controller_argocd","msg":"reconciling autoscalers"}
+{"level":"info","ts":1623704283.2325745,"logger":"controller_argocd","msg":"reconciling ingresses"}
+{"level":"info","ts":1623704283.2326992,"logger":"controller_argocd","msg":"reconciling prometheus"}
+{"level":"debug","ts":1623704283.2327368,"logger":"controller-runtime.controller","msg":"Successfully Reconciled","controller":"argocd-controller","request":"argocd-operator-system/fdi"}
+```
+Updated my comment above with latest information and debug level logging. 
+
+It just seems ArgoCD only see the argocd-operator-system NS and not my "testnew" instance.
+
+Is the problem that i am still using this spec and / or using raw Kubernetes and not OpenShift?
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: argocd-operator
+  template:
+    metadata:
+      labels:
+        name: argocd-operator
+    spec:
+      serviceAccountName: argocd-operator
+      containers:
+        - name: argocd-operator
+          image: quay.io/argoprojlabs/argocd-operator@sha256:38254c8d53172993cb51c0b4c72645757ba36e7e8e3b1251683b00cede47fa7c
+          command:
+          - argocd-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "argocd-operator"
+          resources: {}
+```
+Please let me know if any more information i can provide @iam-veeramalla  :D 
+> Please let me know if any more information i can provide @iam-veeramalla :D
+
+Did you follow the same steps ?
+1. Install the argocd-operator in the `openshift-operators` ns. [DONOT modify the installation, by default it watches all ns]
+2. Created ArgoCD 1 and ArgoCD 2 in different namespaces.
+@iam-veeramalla I am not using openshift so I put it in the argocd-operator-system NS, beyond I made no adjustments.
+
+My thinking is this multi namespace logic was added only for OpenShift looking at the commit history?
+
+Also greatly appreciate you taking the time to help me :D 
+> @iam-veeramalla I am not using openshift so I put it in the argocd-operator-system NS, beyond I made no adjustments.
+> 
+> My thinking is this multi namespace logic was added only for OpenShift looking at the commit history?
+> 
+> Also greatly appreciate you taking the time to help me :D
+
+ah, sorry I missed that. Let me try to get a k8s cluster and see whats going there :)
+@iam-veeramalla I was trying to update myself to fix the cache bug which I think is needed but updating controller-manager also updates a lot of other deps and this doesn't include the operator-framework updates as well.
+
+Seems like a fair bit of work to get this fixed.
+@iam-veeramalla ok it wasn't so bad I just had to update to latest controller-runtime and then was able to specify multiple namespaces and everything worked :D 
+Hello @sylus , sorry to bother you with this old issue, but I just updated to the operator v0.1.0. Previous to that, I already had three namespaces with different ArgoCD CRDs installed, detected and running, but my way to do that with v0.0.15, was to modify the catalog source to watch for namespaces set to the empty string `""`, whenever I do that now, it throws an error mentioning that it cannot watch multiple namespaces.
+```
+time="2021-12-10T01:01:54Z" level=warning msg="issue getting operatorgroup target namespaces" error="TargetNamespaces cannot contain NamespaceAll: []" namespace=argocd operatorGroup=argocd-operator
+```
+I see that there have been several PRs to account to watch for multiple namespaces already, but I cannot get this to work.
+Only the ArgoCD in the `argocd` namespace was updated to the latest release, the other namespaces are no longer being recognized by the ArgoCD operator to update them. 
+
+What do you mean by:
+> then was able to specify multiple namespaces
+
+Where should I specify multiple namespaces?
+
+One weird thing is that my ArgoCD operator installation is actually recognizing all of the other namespace instances, but for some reason it simply does not update them.
+
+Does it have to do with the env var mentioned:
+
+```yaml
+- name: WATCH_NAMESPACE
+    valueFrom:
+      fieldRef:
+        apiVersion: v1
+        fieldPath: metadata.annotations['olm.targetNamespaces']
+```
+
+And the annotation set to:
+```yaml
+olm.targetNamespaces: argocd
+```
+Thanks in advance.
+Sorry, I'll answer myself. I was able to fix it by editing the OperatorGroup and removing the spec, as described [here](https://docs.openshift.com/container-platform/4.3/operators/understanding_olm/olm-understanding-operatorgroups.html#olm-operatorgroups-target-namespace_olm-understanding-operatorgroups).
+
+> Alternatively, you can omit both spec.selector and spec.targetNamespaces to specify a global OperatorGroup, which selects all namespaces:
+
+```
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: argocd-operator
+  namespace: argocd
+```
+
+Not sure if that's the way it's meant to be, but it worked and generated a Cluster Service Version (CSV) for all the namespaces, then all my other instances were updated as well.

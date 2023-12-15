@@ -1,0 +1,23 @@
+Remove the support to disable dex installation using DISABLE_DEX env 
+**Is your feature request related to a problem? Please describe.**
+In the current code, we can skip the dex installation using an environmental variable "DISABLE_DEX". It does not make any sense to maintain such wrappers/conditions in the upstream operator. Any downstream operator implementing the argocd-operator should handle such cases if needed.
+
+Dex should be a default installation.
+
+**Describe the solution you'd like**
+Remove the code overhead and complexity.
+
+**Describe alternatives you've considered**
+Any downstream implementation of argocd-operator should handle their use-cases. For example, if any downstream operator /application implementing argocd-operator does not require DEX, they need to handle it in their code and not in the argocd-operator.
+
+**Additional context**
+NA
+
+@iam-veeramalla I know there have been a number of issues opened around being able to turn off Dex. Is there a bigger driver around removing that ability? It still seems like it would be useful to multiple folks (and not just downstream operators)
+You mean a number of users would like to uninstall the dex using DISABLE_DEX ? 
+Ah. Okay. Maybe I misunderstood this one. I know a number of folks have expressed wanting to be able to decide whether Dex is deployed or not. I'm not sure if it's directly tied to the implementation of using the `DISABLE_DEX` env var (i.e. people want to be able to disable dex, I'm not sure they care "how")
+@tylerauerbeck unless configured using `openShiftOAuth: true` in the Argo CD CR, Dex installation is merely a pod creation. Can you point me to any issue or link what exactly is the users issue with having Dex installed ?
+Here's an existing issue: https://github.com/argoproj-labs/argocd-operator/issues/142
+
+A lot of the other conversation has happened in various chat's, so nothing that I can immediately dig up. Even though dex is _just_ a deployment, I can see a number of users having requirements for only running what is necessary -- due to things like resources constraints, security requirements (only run what you need / reduce attack surface), etc.
+@tylerauerbeck thanks for bringing this discussion :). I will close this issue and we will continue to use the DISABLE_DEX env var. 

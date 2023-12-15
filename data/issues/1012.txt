@@ -1,0 +1,285 @@
+.spec.sso.dex.openShiftOAuth: true no longer seems to work
+**Describe the bug**
+
+Setting `.spec.sso.dex.openShiftOAuth: true` in the ArgoCD CR causes the "Log in via Openshift" button to appear in ArgoCD's UI but clicking that button causes a 400 error on `GET https://argocd-server-argocd.apps-crc.testing/auth/login?return_url=https://argocd-server-argocd.apps-crc.testing/applications` with the message:
+
+````
+Invalid redirect URL: the protocol and host (including port) must match and the path must be within allowed URLs if provided
+````
+
+**To Reproduce**
+
+I have been running ArgoCD on Openshift CRC successfully for a couple of months now but I recently redid my Openshift CRC setup from scratch to increase its dedicated disk size. After installing ArgoCD operator through OperatorHub interface in Openshift I created an "argocd" namespace with `oc create ns argocd` and then provisioned an ArgoCD CR with `oc apply -f` on the yaml below.
+
+I have v0.7.0 of the operator installed (image: quay.io/argoprojlabs/argocd-operator@sha256:5541a1c2323016b767f53bcadf696ebd199903d2048f7bd2aee377a332ea5f2c)
+
+````
+---
+apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: cluster-admins
+users:
+- kubeadmin
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: cluster-admins
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  server:
+    autoscale:
+      enabled: false
+    grpc:
+      ingress:
+        enabled: false
+    ingress:
+      enabled: false
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 20m
+        memory: 128Mi
+    route:
+      enabled: true
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: reencrypt
+    service:
+      type: ''
+  grafana:
+    enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: false
+  resourceTrackingMethod: annotation
+  notifications:
+    enabled: false
+  prometheus:
+    enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: false
+  initialSSHKnownHosts: {}
+  sso:
+    dex:
+      openShiftOAuth: true
+      resources:
+        limits:
+          cpu: 25m
+          memory: 256Mi
+        requests:
+          cpu: 10m
+          memory: 128Mi
+    provider: dex
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, cluster-admins, role:admin
+    scopes: '[groups]'
+  repo:
+    resources:
+      limits:
+        cpu: 25m
+        memory: 512Mi
+      requests:
+        cpu: 10m
+        memory: 256Mi
+  ha:
+    enabled: false
+    resources:
+      limits:
+        cpu: 25m
+        memory: 256Mi
+      requests:
+        cpu: 10m
+        memory: 128Mi
+  tls:
+    ca: {}
+  redis:
+    resources:
+      limits:
+        cpu: 25m
+        memory: 256Mi
+      requests:
+        cpu: 10m
+        memory: 128Mi
+  controller:
+    processors: {}
+    resources:
+      limits:
+        cpu: 50m
+        memory: 2Gi
+      requests:
+        cpu: 20m
+        memory: 1Gi
+    sharding: {}
+````
+
+I also tried adding `.spec.server.url: https://argocd-server-argocd.apps-crc.testing` in the ArgoCD CR but that did not help.
+
+**Additional information**
+
+The `argocd-cm` ConfigMap contains this (plus some other properties that I don't think are related to this):
+
+````
+data:
+  dex.config: |
+    connectors:
+    - config:
+        clientID: system:serviceaccount:argocd:argocd-argocd-dex-server
+        clientSecret: $oidc.dex.clientSecret
+        groups: []
+        insecureCA: true
+        issuer: https://kubernetes.default.svc
+        redirectURI: https://argocd-server/api/dex/callback
+      id: openshift
+      name: OpenShift
+      type: openshift
+  url: https://argocd-server
+````
+
+The `argocd-argocd-dex-server` ServiceAccount has the following annotation:
+
+````
+  annotations:
+    serviceaccounts.openshift.io/oauth-redirecturi.argocd: https://argocd-server/api/dex/callback
+````
+
+Unfortunately I don't have the exact contents of `argocd-cm` and `argocd-argocd-dex-server` from before the reinstall of Openshift CRC but at least one theory is that it used to use the Route FQDN and not use "https://argocd-server".
+
+I tried setting `--loglevel debug` on both the argocd-server and argocd-dex-server Deployments. I can't see what is happening when I click "Log in via Openshift" but on startup of argocd-dex-server this entry in the log file is interesting (I replaced "\n" with line breaks here for readability). Why is `config.redirectURI` and `staticClients[0].redirectURIs` completely different for example?
+
+````
+time="2023-10-01T13:05:13Z" level=debug msg="
+connectors:
+- config:
+    clientID: system:serviceaccount:argocd:argocd-argocd-dex-server
+    clientSecret: '********'
+    groups: []
+    insecureCA: true
+    issuer: https://kubernetes.default.svc
+    redirectURI: https://argocd-server/api/dex/callback
+  id: openshift
+  name: OpenShift
+  type: openshift
+grpc:
+  addr: 0.0.0.0:5557
+issuer: https://argocd-server/api/dex
+oauth2:
+  skipApprovalScreen: true
+staticClients:
+- id: argo-cd
+  name: Argo CD
+  redirectURIs:
+  - https://argocd-server/auth/callback
+  secret: '********'
+- id: argo-cd-cli
+  name: Argo CD CLI
+  public: true
+  redirectURIs:
+  - http://localhost
+  - http://localhost:8085/auth/callback
+storage:
+  type: memory
+telemetry:
+  http: 0.0.0.0:5558
+web:
+  https: 0.0.0.0:5556
+  tlsCert: /tmp/tls.crt
+  tlsKey: /tmp/tls.key
+
+````
+
+**Update 1: Setting .spec.server.host**
+
+Setting `.spec.server.host: argocd-server-argocd.apps-crc.testing` explicitly gets me further. I do get the Openshift login screen now but after entering credentials there I end up back on the ArgoCD login screen and it says "Login failed". This is the HTTP communication that takes place during the login process:
+
+````
+>>> GET https://argocd-server-argocd.apps-crc.testing/auth/login?return_url=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fapplications
+<<< 303 location: https://argocd-server-argocd.apps-crc.testing/api/dex/auth?client_id=argo-cd&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fauth%2Fcallback&response_type=code&scope=openid+profile+email+groups&state=iXOenGNGOIVlqEUhKMECLJhR
+
+>>> GET https://argocd-server-argocd.apps-crc.testing/api/dex/auth?client_id=argo-cd&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fauth%2Fcallback&response_type=code&scope=openid+profile+email+groups&state=iXOenGNGOIVlqEUhKMECLJhR
+<<< 302 location: /api/dex/auth/openshift?client_id=argo-cd&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fauth%2Fcallback&response_type=code&scope=openid+profile+email+groups&state=iXOenGNGOIVlqEUhKMECLJhR
+
+>>> GET https://argocd-server-argocd.apps-crc.testing/api/dex/auth/openshift?client_id=argo-cd&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fauth%2Fcallback&response_type=code&scope=openid+profile+email+groups&state=iXOenGNGOIVlqEUhKMECLJhR
+<<< 302 location: https://oauth-openshift.apps-crc.testing/oauth/authorize?client_id=system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fapi%2Fdex%2Fcallback&response_type=code&scope=user%3Ainfo&state=y6svfjhybow3jmivvdillts72
+
+>>> GET https://oauth-openshift.apps-crc.testing/oauth/authorize?client_id=system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fapi%2Fdex%2Fcallback&response_type=code&scope=user%3Ainfo&state=y6svfjhybow3jmivvdillts72
+<<< 302 location: /login?then=%2Foauth%2Fauthorize%3Fclient_id%3Dsystem%253Aserviceaccount%253Aargocd%253Aargocd-argocd-dex-server%26redirect_uri%3Dhttps%253A%252F%252Fargocd-server-argocd.apps-crc.testing%252Fapi%252Fdex%252Fcallback%26response_type%3Dcode%26scope%3Duser%253Ainfo%26state%3Dy6svfjhybow3jmivvdillts72
+
+>>> GET https://oauth-openshift.apps-crc.testing/login?then=%2Foauth%2Fauthorize%3Fclient_id%3Dsystem%253Aserviceaccount%253Aargocd%253Aargocd-argocd-dex-server%26redirect_uri%3Dhttps%253A%252F%252Fargocd-server-argocd.apps-crc.testing%252Fapi%252Fdex%252Fcallback%26response_type%3Dcode%26scope%3Duser%253Ainfo%26state%3Dy6svfjhybow3jmivvdillts72
+<<< 200 OK (here we get the actual Openshift login UI, enter credentials and submit)
+
+>>> POST https://oauth-openshift.apps-crc.testing/login with body (password replaced by stars here):
+then=%2Foauth%2Fauthorize%3Fclient_id%3Dsystem%253Aserviceaccount%253Aargocd%253Aargocd-argocd-dex-server%26redirect_uri%3Dhttps%253A%252F%252Fargocd-server-argocd.apps-crc.testing%252Fapi%252Fdex%252Fcallback%26response_type%3Dcode%26scope%3Duser%253Ainfo%26state%3Dy6svfjhybow3jmivvdillts72&csrf=ChQ3VPupdznVCVwu9Nlr4gyXBtGjq7lCpAh_SF8rqtE&username=kubeadmin&password=**********
+<<< 302 location: /oauth/authorize?client_id=system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fapi%2Fdex%2Fcallback&response_type=code&scope=user%3Ainfo&state=y6svfjhybow3jmivvdillts72
+
+>>> GET https://oauth-openshift.apps-crc.testing/oauth/authorize?client_id=system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fapi%2Fdex%2Fcallback&response_type=code&scope=user%3Ainfo&state=y6svfjhybow3jmivvdillts72
+<<< 302 location: https://argocd-server-argocd.apps-crc.testing/api/dex/callback?code=sha256~Y2OB_pukTXVV9qlgFW3flNCmmnedlOMARE8hM_AiLdI&state=y6svfjhybow3jmivvdillts72
+
+>>> GET https://argocd-server-argocd.apps-crc.testing/api/dex/callback?code=sha256~Y2OB_pukTXVV9qlgFW3flNCmmnedlOMARE8hM_AiLdI&state=y6svfjhybow3jmivvdillts72
+<<< 303 location: /login?has_sso_error=true
+
+>>> GET https://argocd-server-argocd.apps-crc.testing/login?has_sso_error=true
+<<< 200 OK (we are back on the ArgoCD login screen with "Login failed" message)
+````
+
+Looking at the argocd-dex-server log file I have this:
+
+````
+time="2023-10-01T19:09:50Z" level=error msg="Failed to authenticate: oidc: failed to get token: oauth2: cannot fetch token: 400 Bad Request\nResponse: {\"error\":\"invalid_request\",\"error_description\":\"The request is missing a required parameter, includes an invalid parameter value, includes a parameter more than once, or is otherwise malformed.\"}\n"
+````
+
+In the logs for the oauth-openshift pod in the openshift-authentication namespace I see the following:
+
+````
+E1001 19:09:50.762229       1 access.go:177] osin: error=server_error, internal_error=&errors.errorString{s:"invalid resource name \"system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server\": [may not contain '%']"} get_client=error finding client
+E1001 19:09:50.762244       1 osinserver.go:111] internal error: invalid resource name "system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server": [may not contain '%']
+E1001 19:09:50.762738       1 access.go:154] osin: error=invalid_request, internal_error=&errors.errorString{s:"Client authentication not sent"} get_client_auth=client authentication not sent
+E1001 19:09:50.762779       1 osinserver.go:111] internal error: Client authentication not sent
+````
+
+Could there be some double encoding going on perhaps where ":" gets encoded as %3A and then %253A, which after decoding once becomes %3A rather than ":"?
+
+**Expected behavior**
+Log in via Openshift works. 
+
+#995 seems like mostly a duplicate of the bug I reported here but I think this bug can still have some merit in that it seems behavior of `.spec.sso.dex.openShiftOAuth: true`changed w.r.t that the redirect URL was previously by default set based on the Route if the Openshift Route was enabled but in v0.7.0 that no longer seems to be the case.
+
+Since that can be worked around by explicitly setting `.spec.server.url` the more serious problem is the seemingly invalid request sent from argocd-dex-server to openshift-oauth (which is what #995 also is about).
+
+I looked a bit at the code for openshift-oauth and it is using the basic Golang request.FormValue("client_id") (and previously used request.Form.Get("client_id")) both of which would do one level URI unescaping. So that suggests that what gets sent over the wire is double encoded.
+I figured out how to increase the log level on oauth-openshift so I can see the HTTP requests in its log file and there it looks like the ArgoCD Dex Server request is correct with one level of escaping. I created an issue in the openshift/oauth-server project to maybe get some feedback from there.
+
+This was the interesting log snippet from the oauth-openshift pod, as you can see the `client_id` has the same level of escaping as the `redirect_uri`.
+
+````
+I1013 10:29:35.684794       1 httplog.go:131] "HTTP" verb="GET" URI="/oauth/authorize?client_id=system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server&redirect_uri=https%3A%2F%2Fargocd-server-argocd.apps-crc.testing%2Fapi%2Fdex%2Fcallback&response_type=code&scope=user%3Ainfo&state=qtdg2lscsyrq7qlkgutypygxi" latency="90.415571ms" userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.103 Safari/537.36" audit-ID="cac191fd-8164-452d-b1ca-0040fc0a621b" srcIP="10.217.0.1:54130" resp=302
+I1013 10:29:35.701586       1 request.go:833] Error in request: invalid resource name "system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server": [may not contain '%']
+E1013 10:29:35.701646       1 access.go:177] osin: error=server_error, internal_error=&errors.errorString{s:"invalid resource name \"system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server\": [may not contain '%']"} get_client=error finding client
+E1013 10:29:35.701664       1 osinserver.go:111] internal error: invalid resource name "system%3Aserviceaccount%3Aargocd%3Aargocd-argocd-dex-server": [may not contain '%']
+````
+oauth-openshift or the https://github.com/openshift/osin library looks like the main culprit here. I was able to verify that I got login to work in https://github.com/openshift/oauth-server/issues/136 by reverting one of the commits done there which made some fixes and updated the openshift/osin library to a newer version.
+I'm not sure why but this seems to have magically solved itself last week, presumably due to some auto-update of the Openshift authentication operator or oauth-openshift. Since then I have not been able to reproduce this problem with the code exchange failing.
+
+The `.spec.server.url` still needs to be set, i.e. it is not implicitly based on the exposed Route like it was in an earlier version.
+Thanks for reporting @bergner , sure we will take a look at it.

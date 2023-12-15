@@ -1,0 +1,39 @@
+Wildcard for objects with resourceCustomizations
+Hi,
+Dealing with resourceCustomizations is ok for all kind of objects.
+In my case, it is for ignoreDifferences.
+
+```
+resourceCustomizations: |
+  apps/StatefulSet:
+    ignoreDifferences: |
+      jqPathExpressions:
+        - '.metadata.labels."app.kubernetes.io/instance"'
+  Service:
+    ignoreDifferences: |
+      jqPathExpressions:
+        - '.metadata.labels."app.kubernetes.io/instance"'
+  Pod:
+    ignoreDifferences: |
+      jqPathExpressions:
+        - '.metadata.labels."app.kubernetes.io/instance"'
+```
+
+But can i use a wildcard ?
+To consider every object with only one declaration in resourceCustomizations parameter ?
+
+Something like :
+```
+resourceCustomizations: |
+  all:
+    ignoreDifferences: |
+      jqPathExpressions:
+        - '.metadata.labels."app.kubernetes.io/instance"'
+```
+or anything else ?!
+
+It's seem that it's possible, as mentioned here :
+https://argo-cd.readthedocs.io/en/stable/user-guide/diffing/#:~:text=Argo%20CD%20allows%20ignoring%20differences,managedFields%20in%20live%20resources
+
+Regards
+Sebastien

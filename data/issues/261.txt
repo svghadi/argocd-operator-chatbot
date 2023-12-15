@@ -1,0 +1,5 @@
+Use updated Application CRD ( apiextensions/v1beta1 to v1 ) #145
+after argoproj/argo-cd#5516 is merged.
+Argo CD CRDs have been updated from `v1beta1` to `v1` here: https://github.com/argoproj-labs/argocd-operator/pull/272
+
+The operator CRDs will be updated with https://github.com/argoproj-labs/argocd-operator/pull/294

@@ -1,0 +1,21 @@
+Reduce the frequency of updates to /build/util/Dockerfile by dependabot
+### Is your task related to a problem? Please describe.
+dependabot opens PR to update argocd image in `/build/util/Dockerfile` nearly daily. This is too frequent, too much noise, and wasting ci cycles. See https://github.com/argoproj-labs/argocd-operator/pulls?q=is%3Apr+is%3Aclosed . The latest one as of now is https://github.com/argoproj-labs/argocd-operator/pull/1049 
+
+### Describe the solution you'd like
+Currently this Dockerfile uses sha256 id as the version number, which may have caused dependabot to detect an update whenever a newer build is published, even if it may be a nightly build.
+
+One solution is to use semver number instead, such as `v2.8.3`, so that dependabot will open a PR when the next stable version `v2.8.4` is available.
+
+One downside is this defeats the purpose of versioning with sha256 for security protection.
+
+### Describe alternatives you've considered
+some alternatives:
+* configure dependabot to ignore updates for argocd in this directory. Instead, we manually update it when needed.
+* configure dependabot with less frequent update for argocd in this directory, such as `monthly`. The monthly PR can serve as a reminder for manual update.
+
+Since there is also a comment of human-readable version (e.g., `v2.8.3`), so there is always some human editing needed even with dependabot PR, if we keep using sha256 versioning.
+
+### Additional context
+See update history of this artifact: https://github.com/argoproj-labs/argocd-operator/commits/master/build/util/Dockerfile
+argocd images in quay.io: https://quay.io/repository/argoproj/argocd?tab=tags

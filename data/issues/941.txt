@@ -1,0 +1,10 @@
+Update ArgoCD version and SSH known hosts
+**Describe the bug**
+Operator is using an old Argo CD version and out of date SSH keys. Please update them to the latest.
+
+**Expected behavior**
+Operator should use the update to date Argo CD version and SSH known host keys.
+
+**Additional context**
+Add any other context about the problem here.
+

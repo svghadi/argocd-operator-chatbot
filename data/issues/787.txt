@@ -1,0 +1,34 @@
+Add support for application namespaces
+**Is your feature request related to a problem? Please describe.**
+In https://github.com/argoproj/argo-cd/pull/9755 Argo CD gained support for pulling in Application from outside of the namespace Argo CD is being deployed.
+
+**Describe the solution you'd like**
+As this feature will be added to Argo CD 2.5 I would be happy if argocd-operator would be able to support this parameter.
+@ishitasequeira is already working on this one. Thanks for raising the enhancement @tongpu 
+
+If there is `spec.controller.extraCommandArgs`, this config would work:
+``` yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: server
+spec:
+  resourceTrackingMethod: annotation+label
+  controller:
+   # Does not exists 
+    extraCommandArgs:
+      - '--application-namespaces=*'
+  server:
+    extraCommandArgs:
+      - '--application-namespaces=*'
+```
+This will allow the user to use new features before they are supported by the operator.
+
+I also see `--application-namespaces` is generated from `spec.sourceNamespaces`, but setting it to `["*"]` will cause this error when reconciling Role(?):
+```
+1.6831749006287725e+09	ERROR	controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "app", "namespace": "argocd", "error": "Namespace \"*\" not found"}
+```
+
+My current workaround is to disable the operator...

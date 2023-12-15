@@ -1,0 +1,104 @@
+Define `spec.url` in Configmap
+When deploying Ingress externally to ArgoCD operator (GKE with Traefik), altering `spec.url` in Operator CR will not cause `argocd-cm` to change. It is a problem when using DEX.
+
+1) Regular approach:
+```yaml
+data:
+  url: https://example-argocd-server
+``` 
+
+It will keep the default value of:
+```yaml
+url: https://argocd-server
+```
+
+2) https://github.com/argoproj-labs/argocd-operator/issues/103 did not work:
+```yaml
+spec:
+  server:
+    route:
+      enabled: true
+    host: my.domain.app
+```
+```yaml
+kubectl get configmap argocd-cm -n argocd -o yaml      
+apiVersion: v1
+data:
+  url: https://argocd-server
+```
+
+3) https://github.com/argoproj-labs/argocd-operator/pull/236 also did not work:
+```yaml
+spec:
+  server:
+    host: my.domain.app
+```
+```yaml
+kubectl get configmap argocd-cm -n argocd -o yaml                                        
+apiVersion: v1
+data:
+  url: https://argocd-server
+```
+
+4) Only (but not viable) way found makes ArgoCD Operator to create additional Ingress:
+```yaml
+spec:
+  server:
+    grpc:
+      ingress:
+        enabled: true
+    ingress:
+      enabled: true
+    insecure: true
+    host: my.domain.app
+```
+```yaml
+kubectl get configmap argocd-cm -n argocd -o yaml                                        
+apiVersion: v1
+data:
+  url: https://my.domain.app
+```
+ 
+**Please, is not possible to add a direct way to set URL value to any defined in CR `spec.url`?**
+Hi @rv-silva , Thanks for using operator and raising issue with us :)
+
+> Only (but not viable) way found makes ArgoCD Operator to create additional Ingress:
+
+I am trying to understand why is this not a viable solution for you ?
+@iam-veeramalla thank you for your prompt answer.
+It is not viable because Ingress is being used externally to ArgoCD, in this case with Traefik. The Ingress created by Operator will be duplicated.
+@rv-silva Does your traefik ingress controller read the ingress created by operator? 
+@iam-veeramalla nope, in fact they conflict and ArgoCD becomes unreachable.
+> @iam-veeramalla nope, in fact they conflict and ArgoCD becomes unreachable.
+
+@rv-silva  Thanks for making it clear :) . Can you please let me know few more things to  label this issue as a bug.
+
+1. Instead of deploying ingress externally, Is it possible to make traefik read the ingress created by the operator? Probably by updating the ingress-class or something?
+
+2. Can you workaround this issue by updating argocd-cm manually ? 
+
+Thanks :)
+
+Thank you for accepting my request.
+
+1) Not sure if works, but still ArgoCD is creating a new Ingress resource, consequently a billed load balancer in GCP.
+2) Unfortunately not, whenever `url` field is updated in `argocd-cm`, ArgoCD returns its value to `https://argocd-server`.
+
+I tried all ways before opening the issue.
+@iam-veeramalla Pls, can you save me with that feature? Lots of pressure to put ArgoCD in production.
+Hi @rv-silva Sure :)
+
+Have you tried the point no.1 that I suggested above ? 
+> Instead of deploying ingress externally, Is it possible to make traefik read the ingress created by the operator? Probably by updating the ingress-class or something?
+
+Meanwhile, please give me sometime to look at a permanent solution to this bug.
+@rv-silva  looking at the code, Point no. 3 in your issue description should work.
+
+> Allow user to provide custom external hostname for argo-server #236 also did not work:
+
+https://github.com/argoproj-labs/argocd-operator/blob/6fa33c97c84411e589ff0465b03ae8d5d0e0bb71/pkg/controller/argocd/util.go#L232
+
+
+Can you please confirm the version of argocd-operator that you are running ?
+@iam-veeramalla It worked after updating and using the config you pointed out. Thank you so much!
+Closing the issue as the configuration works :)

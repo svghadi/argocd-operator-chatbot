@@ -1,0 +1,55 @@
+argocd-operator Service Account Missing RBAC for v1.HorizontalPodAutoscaler when installing via OLM
+
+The argocd-operator Service Account Missing is missing RBAC for v1.HorizontalPodAutoscaler when installing via Operator Lifecycle Manager ( OLM ). An initial install works ( I believe ), but subsequent reconciles are blocked from the error. I think this has been added on master https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/role.yaml#L50 , and it's just a version skew with what's deployed for OLM.
+
+I followed the directions from the docs site for installing the argocd operator, as well as OLM ( 0.14.1 )
+
+You can add a new role or patch an existing role bound to the SA to resolve the issue. 
+```apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-operator-hack
+rules:
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-operator-hack
+subjects:
+  - kind: ServiceAccount
+    name: argocd-operator
+roleRef:
+  kind: Role
+  name: argocd-operator-hack
+  apiGroup: rbac.authorization.k8s.io
+```
+
+Here is the log message below from the `k logs -f argocd-operator-cbd8b45cf-wxstt -n argocd`
+
+> E0217 23:54:22.476979       1 reflector.go:125] pkg/mod/k8s.io/client-go@v0.0.0-20190918200256-06eb1244587a/tools/cache/reflector.go:98: Failed to list *v1.HorizontalPodAutoscaler: horizontalpodautoscalers.autoscaling is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "horizontalpodautoscalers" in API group "autoscaling" in the namespace "argocd"
+
+And once you apply the hack for the service account
+> 1 reflector.go:125] pkg/mod/k8s.io/client-go@v0.0.0-20190918200256-06eb1244587a/tools/cache/reflector.go:98: Failed to list *v1.HorizontalPodAutoscaler: horizontalpodautoscalers.autoscaling is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "horizontalpodautoscalers" in API group "autoscaling" in the namespace "argocd"
+{"level":"info","ts":1581985470.2491558,"logger":"controller_argocd","msg":"reconciling ingresses"}
+{"level":"info","ts":1581985470.2693412,"logger":"controller_argocd","msg":"Reconciling ArgoCD","namespace":"argocd","name":"example-argocd"}
+{"level":"info","ts":1581985470.2694004,"logger":"controller_argocd","msg":"reconciling service accounts"}
+{"level":"info","ts":1581985470.2694175,"logger":"controller_argocd","msg":"reconciling certificate authority"}
+{"level":"info","ts":1581985470.2699878,"logger":"controller_argocd","msg":"reconciling CA secret"}
+{"level":"info","ts":1581985470.2700505,"logger":"controller_argocd","msg":"reconciling CA config map"}
+{"level":"info","ts":1581985470.2704508,"logger":"controller_argocd","msg":"reconciling secrets"}
+
+**System Info:**
+minikube version: v1.7.2
+commit: 50d543b5fcb0e1c0d7c27b1398a9a9790df09dfb
+
+Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.5", GitCommit:"20c265fef0741dd71a66480e35bd69f18351daea", GitTreeState:"clean", BuildDate:"2019-10-15T19:16:51Z", GoVersion:"go1.12.10", Compiler:"gc", Platform:"darwin/amd64"}
+Server Version: version.Info{Major:"1", Minor:"17", GitVersion:"v1.17.2", GitCommit:"59603c6e503c87169aea6106f57b9f242f64df89", GitTreeState:"clean", BuildDate:"2020-01-18T23:22:30Z", GoVersion:"go1.13.5", Compiler:"gc", Platform:"linux/amd64"}
+Thank you for reporting this @pmcjury . Will add a PR today to fix this.
+The fix for this has been merged into master and will go out with v0.0.5
+Released as part of v0.0.5.

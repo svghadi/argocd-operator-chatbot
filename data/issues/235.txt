@@ -1,0 +1,42 @@
+Changing route termination to reencrypt fails
+Hello,
+
+First of all, thank you for providing such a nice tool and operator.
+
+I run ArgoCD operator 0.0.14 on top of OpenShift 4.6. And I have recently installed a custom default ingress certificate for the routers [1].
+Until then I was running with the usual "self-signed" browser warnings with the simple configuration:
+```
+  server:
+    route:
+      enabled: true
+```
+
+I wanted the ArgoCD route to benefit from this default certificate and thus tried to re-encrypt the connection. So I changed the route configuration in the CRD:
+```
+  server:
+    route:
+      enabled: true
+      tls:
+        termination: reencrypt
+```
+Unfortunately, it failed to handle the request properly and replied with the usual OpenShift "Application is not available" page.
+The error page was served with the new trusted default certificate though :)
+
+I played with the various route fields but I haven't found a configuration that works. 
+
+As a side-note, I also gave a try to let the internal connection unencrypted and rely on edge termination (even though fully encrypted seems nicer). I thought I could achieve this with insecure: true and termination: edge combination but it also failed (I assume because of #217 and #220)
+
+Any hint at what I am missing?
+Thanks!
+
+[1] https://docs.openshift.com/container-platform/4.6/security/certificates/replacing-default-ingress-certificate.html
+I just ran into the same issue. This might be because the openshift router doesn't trust the internal CA of argocd. Using the service CA would work.
+
+Also would a termination policy of "edge" work. But it looks like the server doesn't expose itself on port 80, even when setting `.server.insecure=true`.
+
+I guess the three possible options would be:
+* Use `edge` termination, having the server on port 80, with `insecure=true`
+* Use the service CA certificates, these are trusted by the openshift router, use termination `reencrypt`
+* When using an internal CA, add the certificates to the created route, use termination `reencrypt`
+Workaround: create first a secret `argocd-tls` (tls type containing the tls.crt & tls.key files) before launching argocd instantiation.
+

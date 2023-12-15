@@ -1,0 +1,13 @@
+Create argocd password
+For folks who won't be using an outside authentication system, being able to create the initial argocd-server password would be beneficial (versus having to go through the process of grabbing the podname). Would this by something that could be added to the operator?
+@tylerauerbeck Yes, the intention was to generate a password and store that in a secret, that would then be used for the server. This is already in place for the grafana dashboard. 
+@tylerauerbeck How did you imagine this working?
+
+Initially, my thinking was to have the operator generate the initial password and store it as a Secret. This single password would then be used as the initial admin password for Argo, Grafana, etc. The operator would then watch the secret for changes and update/restart Pods as necessary.
+
+Like you mentioned however, Argo already generates an initial password (server pod name) and stores a bcypt hash of it in `argocd-secret`. I want to make sure I am actually solving the problem that you are actually facing.
+Yepp, this is the problem I'm looking to solve. I'd like to have an initial password created and then be able to be used by other systems. Then the operator would watch it for changes and alert the other components, so this sounds good to me.
+I am working on this in the [admin_secret](https://github.com/argoproj-labs/argocd-operator/tree/admin_secret) branch.
+Merged this into master and will go out in v0.0.6
+That would be great.
+Released as part of v0.0.6.

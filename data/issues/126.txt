@@ -1,0 +1,6 @@
+Migrate to Kubebuilder Project Layout
+The Operator SDK will be migrating to the Kubebuilder style project layout as part of the 1.0 release. When the time is right, this project should migrate to the new format.
+
+https://github.com/operator-framework/operator-sdk/pull/2851
+ 
+@jannfis Did this happen with the work that was done to bump operator-sdk v1.11?

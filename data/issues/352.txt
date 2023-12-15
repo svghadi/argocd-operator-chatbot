@@ -1,0 +1,78 @@
+Automating K8s RBAC for Argo CD instances
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+Proposed by @jannfis 
+
+Currently, the integration pattern for the Operator is the following
+
+* Use the out-of-the-box (OOTB) Argo CD instance to manage some cluster resources
+* Use a dedicated Argo CD instance to manage an application in the instance’s target namespace
+
+When a user creates a new Argo CD instance with a target namespace of e.g. “myapp”, the operator will automatically create Kubernetes RBAC permissions in the target namespace in the form of a Role and a RoleBinding for the ServiceAccount used by the Argo CD instance’s application controller. 
+
+This is fine if the target namespace is the only namespace being managed by the Argo CD instance. However, users also want to use this instance to manage multiple namespaces in the cluster. The current recommendation is to create the Role and RoleBinding objects manually. This can be cumbersome to set up, complicated to manage and should be automated.
+
+**Describe the solution you'd like**
+
+### Overview
+
+We should give users an easy way to configure namespaces that should be managed by a given Argo CD instance.
+
+I envision this by using a label on any namespace:
+`argocd.argoproj.io/managed-by: <name of Argo CD instance>`
+
+Each namespace should be only manageable by a single Argo CD instance, but one Argo CD instance will manage N namespaces, effectively establishing a 1:n relationship.
+
+This pattern will work best with people creating new projects (namespaces) manually on their cluster. They can simply give a specific Argo CD instance named “example” permissions to the namespace “myproj” by issuing the following command:
+
+`$ kubectl label namespace myproj argocd.argoproj.io/managed-by=example`
+
+Likewise, revoking permissions is as simple as running
+
+`$ kubectl label namespace myproj argocd.argoproj.io/managed-by-`
+
+By leveraging project templates, this could be already automated at project creation time.
+
+Given a scenario where the Argo CD instance has permissions to create Namespace resources in the cluster, and such a Namespace resource exists in the application’s manifests, it is not clear yet whether the approach will work. Argo CD will create the namespace from the resource, possibly with the `managed-by` annotation, as the first action of the initial sync and continue with the other resources. However, the Operator might not have created appropriate RBAC resources yet, and the sync will fail due to permission denied. I believe the auto-retry feature on sync will succeed the sync on the next retry, however, this has to be proven.
+
+### RBAC resources managed by the operator
+
+The Role and RoleBinding resources created by the Operator should be clearly indicated as such. The Operator must explicitly set the ownerReferences on the resources, and the proposal is to use an additional label for easier indexing and retrieval of the resources. The proposed label is the same as for the Namespace resource:
+
+    `argocd.argoproj.io/managed-by: <name of Argo CD instance>`
+
+The `ownerReferences` will instruct the Garbage Collector of Kubernetes to remove the resources whenever the Operator’s Operand is uninstalled from the cluster, so that a proper cleanup is done automatically.
+
+In the MVP implementation of this proposal, the Role should give namespace admin permissions. Going forward, we can think of ways to provide templates for Roles that will get reconciled, so that permissions can be further locked down.
+Reconciliation process
+The  Operator will perform reconciliation of appropriate Role and RoleBinding namespaces that are annotated as proposed above.
+
+The Operator will establish a watch on Namespace resources, and if it sees such a label is being added, modified or removed, reconcile appropriate Cluster and ClusterRole resources into that namespace.
+
+The Operator knows which instances of Argo CD currently exist, and it also has the appropriate permissions for reconciling Cluster and ClusterRole resources everywhere.
+
+When a namespace is annotated with the `argocd.argoproj.io/managed-by: <value> `label, the  Operator will:
+
+- Check for existing Role and RoleBinding resources in the namespace that carry a label of `argocd.argoproj.io/managed-by`, and if it matches the value of the annotation with the same name set on the Namespace
+
+- If values differ between the `argocd.argoproj.io/managed-by` on the RBAC resources and the Namespace resource, the operator will delete the existing Role and RoleBinding resources from the Namespace
+
+- If values are the same, the Operator will reconcile the existing Role and RoleBinding resources to the version as deemed correct by the Operator
+
+- If no such Role and RoleBinding with a label `argocd.argoproj.io/managed-by` are found, the Operator will create them
+
+### Further possible enhancements
+
+Permission levels / templates
+Another annotation, e.g. `argocd.argoproj.io/permission-level`: <value>, could be specified on the namespace to indicate what kind of permissions Argo CD application controller should receive for this namespace.
+
+Using this annotation, we could also provide some predefined permission levels additional to “admin” permissions, and also let the user define their own permission templates in the operand, which they can refer to from the annotation.
+
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+

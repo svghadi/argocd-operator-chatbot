@@ -1,0 +1,41 @@
+ConfigMap `argocd-cm` is automatically overwritten
+**Describe the bug**
+A lot of the official documentation and other resources refer to editing the `argocd-cm` directly.
+In later versions of the operator manual edits to the configmap will be overwritten.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Deploy the argocd-operator, i.e. the OpenShift Gitops Operator
+2. Configure an `ArgoCD` resource
+3. Edit the `argocd-cm` configmap, add e.g. `data:\n  accounts.deployer: apiKey`
+4. Output the configmap and see that the change has been reverted
+
+**Expected behavior**
+That the configmap was left unchanged, or that official documentation refered to the new way of configuring the configmap.
+
+**Screenshots**
+N/A
+
+**Additional context**
+N/A
+
+Refering to https://github.com/argoproj-labs/argocd-operator/releases an `extraConfig` configuration option was added in `argocd-operator-0.4.0`.
+
+There is however no reference to this in https://argocd-operator.readthedocs.io/en/latest/reference/argocd/.
+This has been raised in in #858 
+
+Reference to fixes was found in:
+
+* https://access.redhat.com/solutions/6970884 (behind login)
+* https://medium.com/@Tal-Hason/having-issues-updating-argocd-cm-with-openshift-gitops-caa5a0c4653e
+
+Example usage:
+
+```yaml
+# kubectl edit argocd
+spec:
+  extraConfig:
+    accounts.deployer: apiKey
+```
+
+Closing this issue as resolved, as there **is** a fix for this issue regarding the `argocd-cm` configmap being overwritten, and that the documentation issue is / should be followed up in issue 858.

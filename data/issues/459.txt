@@ -1,0 +1,21 @@
+Docs builds are failing from a past couple of weeks.
+**Describe the bug**
+Readthedocs builds are failing from a past couple of weeks. 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. This can also be reproduced locally. 
+2. You need to install few plugins -> mkdocs, Material for MkDocs
+3. Run `mkdocs serve`
+
+**Expected behavior**
+Docs builds should pass.
+
+**Screenshots**
+![Screenshot 2021-10-18 at 11 09 02 AM](https://user-images.githubusercontent.com/43399466/137674875-d74d907e-96bc-49ca-99f0-4a153e9433f1.png)
+
+
+**Additional context**
+![Screenshot 2021-10-18 at 11 09 50 AM](https://user-images.githubusercontent.com/43399466/137674940-3943fd41-4594-485c-9b65-97fe5a716081.png)
+
+

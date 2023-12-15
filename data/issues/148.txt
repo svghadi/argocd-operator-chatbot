@@ -1,0 +1,16 @@
+Add Support for Argo CD v1.7+
+Argo CD v1.7.1 is the  current release and the operator should deploy this version by default.
+Hi, at a minimum, it looks like new GPG feature breaks latest deployment 1.7.2 ..
+```
+oc logs example-argocd-repo-server-865968777d-cfg4d
+time="2020-08-30T02:38:48Z" level=info msg="Initializing GnuPG keyring at /app/config/gpg/keys"
+time="2020-08-30T02:38:48Z" level=fatal msg="stat /app/config/gpg/keys/trustdb.gpg: permission denied"
+```
+I am also using an operator and wonder when do you plan to support v1.7 ?
+Starting work on this and will go out in the next release.
+It looks like this bug still exists, but a PR has been opened on the Helm repo with a fix.
+
+https://github.com/argoproj/argo-helm/pull/450
+
+I am going to investigate if this approach can be taken by the operator as well.
+Hi, I've noticed a pull request closes this issue. After that, will the release be ready? Currently I'm using the previous version and we get some syncing issues which might be fixed by the new version.  Thank you.

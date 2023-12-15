@@ -1,0 +1,54 @@
+Publish latest operator build to quay workflow is failing.
+**Describe the bug**
+It appears that the workflow that publishes the latest operator build to quay has been failing. From looking at the latest push to `master`, the logs suggest that it's because it isn't using the appropriate credentials to talk to quay.
+
+```
+Run make docker-push
+docker push ***/argocd-operator:latest
+The push refers to repository [***/argocd-operator]
+29b337577a2a: Preparing
+9cfd2c8d9aea: Preparing
+636092609a0e: Preparing
+6d75f23be3dd: Preparing
+unauthorized: access to the requested resource is not authorized
+make: *** [Makefile:105: docker-push] Error 1
+Error: Process completed with exit code 2.
+```
+
+Earlier in the workflow it should authenticate against the docker repository with the following secrets:
+
+```
+      - name: Login to Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+```
+
+This is likely because of one of the following:
+- These are not the appropriate secret names that we should be using
+- They are the appropriate secret names, but don't have the expected values.
+
+**To Reproduce**
+Verify that the last push to `master` had a failed workflow
+On any subsequent pushes to `master`, this workflow will continue to fail
+
+
+**Expected behavior**
+Each time a push to master occurs, the latest version of the operator should be pushed to the `latest` tag on quay.
+
+**Screenshots**
+
+https://github.com/argoproj-labs/argocd-operator/runs/4216376173?check_suite_focus=true
+
+**Additional context**
+N/A
+We need to fix this on priority. Its been a quite a good time we are seeing this issue.
+@iam-veeramalla Agreed. Happy to help out where/if I can. Feel free to reach out as I'm the one who implemented the workflow I believe. Just don't have any visibility to what those values are on the backend (my suspicion is that the creds are probably fine and it's more around `REGISTRY_URL` not being configured as expected).
+> @iam-veeramalla Agreed. Happy to help out where/if I can. Feel free to reach out as I'm the one who implemented the workflow I believe. Just don't have any visibility to what those values are on the backend (my suspicion is that the creds are probably fine and it's more around `REGISTRY_URL` not being configured as expected).
+
+Thanks @tylerauerbeck , I will take a look at it asap.
+@iam-veeramalla No problem. For reference, the PR that merged this in is here: https://github.com/argoproj-labs/argocd-operator/pull/365
+
+If you look at the notes it expects REGISTRY_URL to be quay.io/argocd-operator. So if the secret isn't set to that, then we can just make a small change to the workflow to utilize some other envvar's that are available in GHA to piece together the appropriate URL.

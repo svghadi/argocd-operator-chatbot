@@ -1,0 +1,14 @@
+ExecTimeout parameter not respected
+**Describe the bug**
+(Repo-server)ExecTimeout option sets ARGOCD_EXEC_TIMEOUT env variable as integer value. Acording to docs: https://argo-cd.readthedocs.io/en/stable/operator-manual/high_availability it should be in Go time duration string format.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Set execTimeout option to value 160
+
+**Expected behavior**
+Pod got environment variable: ARGOCD_EXEC_TIMEOUT=160s
+
+**Screenshots**
+![image](https://user-images.githubusercontent.com/65604752/224386248-e012ed0d-8118-4f3b-bc30-25ad140fdab8.png)
+Thanks @tr3mor

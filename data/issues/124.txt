@@ -1,0 +1,148 @@
+Argocd failed to deploy (openshift - argocd 0.0.11)
+Hello,
+
+we are using OpenShift 4.4 deploying ArgoCD using the Operator fails starting from 0.0.11 because of this:
+```
+  - dependents:
+    - group: rbac.authorization.k8s.io
+      kind: PolicyRule
+      message: namespaced rule:{"verbs":["get"],"apiGroups":[""],"resources":["endpoints"]}
+      status: NotSatisfied
+      version: v1beta1
+    group: ""
+    kind: ServiceAccount
+    message: Policy rule not satisfied for service account
+    name: argocd-redis-ha
+    status: PresentNotSatisfied
+    version: v1
+```
+
+When checking the created Rolebindings i couldnt find the needed rolebinding 
+```
+➜  ~ oc get rolebindings
+NAME                                            AGE
+argocd-operator.v0.0.11-59498cfd4d-867fc7d49d   27m
+argocd-operator.v0.0.11-5c4f7fbff8-6d77f974ff   27m
+argocd-operator.v0.0.11-5c678c7876-5b6ccc9858   27m
+argocd-operator.v0.0.11-79c565f65-65f799c44f    27m
+argocd-operator.v0.0.11-7fb6c5c758-84475f47d    27m
+system:deployers                                29m
+system:image-builders                           29m
+system:image-pullers                            29m
+```
+```
+➜  ~ oc get rolebindings argocd-operator.v0.0.11-59498cfd4d-867fc7d49d -o yaml         
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+..
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-operator.v0.0.11-59498cfd4d
+subjects:
+- kind: ServiceAccount
+  name: argocd-application-controller
+  namespace: argocd
+```
+```
+➜  ~ oc get rolebindings -o yaml argocd-operator.v0.0.11-5c4f7fbff8-6d77f974ff
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+...
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-operator.v0.0.11-5c4f7fbff8
+subjects:
+- kind: ServiceAccount
+  name: argocd-server
+  namespace: argocd
+```
+```
+➜  ~ oc get rolebindings -o yaml argocd-operator.v0.0.11-5c678c7876-5b6ccc9858                                             
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+...
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-operator.v0.0.11-5c678c7876
+subjects:
+- kind: ServiceAccount
+  name: argocd-operator
+  namespace: argocd
+```
+```
+➜  ~ oc get rolebindings -o yaml argocd-operator.v0.0.11-79c565f65-65f799c44f                                             
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  ...
+subjects:
+- kind: ServiceAccount
+  name: argocd-redis-ha-haproxy
+  namespace: argocd
+```
+```
+➜  ~ oc get rolebindings -o yaml argocd-operator.v0.0.11-7fb6c5c758-84475f47d                                            
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  ...
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-operator.v0.0.11-7fb6c5c758
+subjects:
+- kind: ServiceAccount
+  name: argocd-dex-server
+  namespace: argocd
+```
+After further review, I am not sure that this is a dup. :) Looking at this now as I am getting this on OpenShift 4.5.0-rc.7, however everything works as expected for new installs on OpenShift 4.4
+I installed a fresh cluster on bare metal yesterday on 4.4.11 and it failed, another colleague had the same issue on aws. Ill reinstall my cluster this week and will test if this issue persists. 
+I tested on 4.4.10 (AWS), so that is strange. Will try 4.4.11 and see what I get. One thing that I noticed is that the rules are the same for the `argocd-redis-ha` AND `argocd-redis-haproxy`. So I am wondering if there is an issue now when OLM sees that the two are identical, so fails to create the second "duplicate" role as it's parsing the CSV. 
+
+Still testing on my end and will report back what I find.
+Just confirmed that I am seeing the same failure on 4.4.11, so that appears to be the version where something changed that causes this issue. 
+If i rember correct the cluster where a deployment worked was 4.4.10 but good news it still works after an update to 4.4.11 :) 
+If u give me some hints i could maybe try to make a PR for the fix :)) 
+My colleague has opened up a bug with the OLM team on this and I will report back with what they say. 
+This does appear to be an OLM issue.
+
+https://github.com/operator-framework/operator-lifecycle-manager/issues/1625
+
+I have a possible workaround for this that I am testing now and would result in a new release for the operator.
+Hi, FWIW .. i am seeing the same thing on a 4.5.1 cluster .. seems related to this permission (and OLM bug referenced)
+```
+    Group:      
+    Kind:       ServiceAccount
+    Message:    
+    Name:       argocd-dex-server
+    Status:     Present
+    Version:    v1
+    Dependents:
+      Group:    rbac.authorization.k8s.io
+      Kind:     PolicyRule
+      Message:  namespaced rule:{"verbs":["get"],"apiGroups":[""],"resources":["endpoints"]}
+      Status:   NotSatisfied
+      Version:  v1
+```
+and looks same as debug here: https://bugzilla.redhat.com/show_bug.cgi?id=1855088
+
+this is a bit draconian (don't do this, lolz !) .. but for now .. i can get past this by giving these sa's cluster edit privilege, i was using 
+```
+oc describe csv argocd-operator.v0.0.11
+```
+to figure out which requirements were missing. hack workaround:
+```
+oc adm policy add-cluster-role-to-user edit system:serviceaccount:$(oc project -q):argocd-dex-server
+oc adm policy add-cluster-role-to-user edit system:serviceaccount:$(oc project -q):argocd-redis-ha
+oc adm policy add-cluster-role-to-user edit system:serviceaccount:$(oc project -q):argocd-redis-ha-haproxy
+```
+A workaround for this issue has been merged into master and will go out in the next release.
+@jmckind  When this operator will be pulled on the "community operators"
+The PRs for both Operator Hubs have been submitted and the new version should be available after these get merged. Thanks!
+
+https://github.com/operator-framework/community-operators/pull/2007
+https://github.com/operator-framework/community-operators/pull/2008
+

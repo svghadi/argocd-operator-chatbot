@@ -1,0 +1,5 @@
+Update Operator to Argo CD v1.5.5
+The operator should support the latest version of Argo CD, currently [v1.5.54](https://github.com/argoproj/argo-cd/releases/tag/v1.5.5).
+Changing to 1.5.4 that was just released.
+Changing to 1.5.5 that was released. 
+This has merged into #87 and will go in the v0.0.9 release.

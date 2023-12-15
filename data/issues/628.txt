@@ -1,0 +1,15 @@
+ApplicationSet resources are not cleared after config is removed from CR 
+**Describe the bug**
+ApplicationSet resources (deployment, serviceaccont, roles, rolebindings) are not deleted from cluster when appset controller is disabled by deleting `.spec.applicationSet`
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Deploy Argo CD operator on a cluster and create an Argo CD instance
+2. edit the Argo CD CR and add `.spec.applicationSet` and set it to empty
+3. Watch the appset resources show up on cluster
+4. Delete `.spec.applicationSet`
+5. All the appset resources remain as they are instead of getting deleted
+
+**Expected behavior**
+Appset resources should be cleaned up appropriately when `.spec.applicationSet` is removed 
+

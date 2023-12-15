@@ -1,0 +1,54 @@
+Namespace Isolation Forced? 
+**Describe the bug**
+Namespace isolation mode is forced with operator install
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install the operator described via docs
+
+**Expected behavior**
+Docs describe no method to install argocd via operator with namespace isolation mode off.  A
+
+**Additional context**
+I'd prefer to continue using argocd operator to install argocd. Otherwise i have to use generic install.yaml from argocd repo without understanding why i cant just turn it off with the operator
+
+Hi @EHSchmitt4395 , are you using Argo CD Operator version 0.1.0 ?
+
+Do you want to use a single Argo CD instance for the whole cluster ?
+Hey ! yeah using  0.1.0  - i do ! Would prefer to either be able to allow all namespaces as managed or just turn off namespace isolation all together. Thanks for the reply! 
+@iam-veeramalla is there another way thats not obviously stated that enables such functionality :o ? (to disable namespace isolation and enable all namespaces to be managed?)
+also setting 
+```
+
+All Namespaces
+```
+in cluster settings does not work as expected 
+<img width="608" alt="Screen Shot 2021-12-20 at 10 26 37 AM" src="https://user-images.githubusercontent.com/58869136/146815186-9bba4f3c-cd84-42ca-a8fd-62e8efe40daa.png">
+
+
+solved with subscription setting 
+```
+    env:
+      - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+        value: '*'
+      - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+        value: 'true'
+```
+Hey a question, where do I need to add those settings? Is it the deploy/subscription.yaml like this:
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd-operator
+spec:
+  channel: alpha
+  name: argocd-operator
+  source: argocd-catalog
+  sourceNamespace: olm
+  config:
+    env:
+      - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+        value: '*'
+      - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+        value: 'true'
+```

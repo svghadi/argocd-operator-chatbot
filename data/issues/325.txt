@@ -1,0 +1,12 @@
+Automatically create images with tag `latest` from the master branch
+### Is your task related to a problem? Please describe.
+The `latest` tag of the image `quay.io/redhat-cop/argocd-operator` is the same as the last release which makes it difficult to continuously verify and test the recent changes before an actual release, especially if there are many changes between two releases.
+
+### Describe the solution you'd like
+Create a CI/CD pipeline that automatically creates an image after every commit to the master branch and pushes it into a registry with the tag `latest`. Furthermore, it would be great if this pipeline is also part of the project (e.g. use GitHub Actions).
+
+### Describe alternatives you've considered
+Building an image of the master branch by creating my own pipeline.
+
+
+The change looks good but do we all agree on pushing image on each PR merge on master branch?   If so, @jannfis will need to provision the secret on the repository. 

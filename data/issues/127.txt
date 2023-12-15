@@ -1,0 +1,3 @@
+Upgrade to Operator SDK v0.18.0
+The project currently uses v0.17.0 of the operator-sdk. This should be upgraded to the latest version in anticipation of the move to SDK v1.
+This enhancement has been merged into master and will go out in the next release.

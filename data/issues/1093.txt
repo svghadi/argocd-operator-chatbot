@@ -1,0 +1,26 @@
+Feature Request: Customizable Cluster Name in ArgoCD Operator
+**Is your feature request related to a problem? Please describe.**
+Currently, when deploying an ArgoCD cluster via operator, it defaults to the name "in-cluster" and runs under the server https://kubernetes.default.svc. There seems to be no direct option to rename this default cluster during initial setup.
+
+**Describe the solution you'd like**
+Enable setting a custom name for the "in-cluster" directly in the ArgoCD custom resource during deployment.
+
+**Describe alternatives you've considered**
+The cluster name can be changed post-deployment via the UI or by updating the secret directly.
+
+**Additional context**
+If there's an existing solution we've missed, please inform us. Otherwise, we're open to contributing a pull request to implement this feature.
+
+Hi @ItsKev , thanks for raising the enhancement request!
+
+As I understand, you are looking for a way to change name of default "in-cluster" cluster without needing to do it manually via UI or cli after the ArgoCD cluster is up. 
+I'm  curious to understand the use-cases behind renaming the default cluster. One scenario that comes to mind is related to Appset's cluster generator. Could you provide more details if you have any specific use-case and how updating it automatically via operator would be helpful? 
+
+AFAIK, there is no existing solution for this in operator. 
+
+Hi @svghadi, thank you for the quick reply. 
+
+We've identified two primary use cases. The first matches your description. Regarding the second, our platform team creates templates for other teams. When the other teams are working with the template we've encountered repeated confusion about the term "in-cluster". Our templates installs the main ArgoCD instance in the production cluster, with mock instances in testing and external clusters. These are labeled as "in-cluster", "testing", and "external", causing confusion because the "production" cluster is missing. Renaming "in-cluster" to "production" could significantly reduce this confusion.
+Okay, this makes sense. 
+
+The operator currently creates `<argocd-name>-default-cluster-config` secret with `in-cluster` cluster details [here](https://github.com/argoproj-labs/argocd-operator/blob/c238af601bb59097ae446f9727807e77b259f04b/controllers/argocd/secret.go#L424-L499). This is where we should probably look into. 

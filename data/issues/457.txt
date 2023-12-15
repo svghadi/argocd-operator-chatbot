@@ -1,0 +1,53 @@
+Example for grafana does not work
+**Describe the bug**
+The example available for Argo CD with grafana does not seem to work. Operator is running into the error state.
+Example:
+https://raw.githubusercontent.com/argoproj-labs/argocd-operator/master/examples/argocd-route.yaml
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: route
+spec:
+  grafana:
+    enabled: true
+    route:
+      enabled: true
+  prometheus:
+    enabled: true
+    route:
+      enabled: true
+  server:
+    route:
+      enabled: true
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1.  Install the operator from Operator Hub or `make run`.
+2.  Create Argo CD Instance with grafana and openshift route as mentioned above.
+3.  Verify that the Argo CD workloads are not created and operator throws the below error.
+```
+2021-10-13T09:22:20.927Z  ERROR controller-runtime.manager.controller.argocd  Reconciler error  {"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "example-argocd", "namespace": "default", "error": "open /var/lib/grafana/templates: no such file or directory"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+  /remote-source/deps/gomod/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.5/pkg/internal/controller/controller.go:253
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+  /remote-source/deps/gomod/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.5/pkg/internal/controller/controller.go:214
+```
+
+**Expected behavior**
+No error.
+
+**Additional context**
+Add any other context about the problem here.
+
+I am experiencing this issue as well. After looking at it, it seems the error comes from [this line](https://github.com/argoproj-labs/argocd-operator/blob/master/controllers/argocd/grafana.go#L135). I cannot find anything that would create the `/var/lib/grafana/templates` directory or populate any `.tmpl` files. I looked through the git blame and it doesn't look like anything has changed since the code was introduced.
+
+Is there a missing configuration option?
+If u start Prometheus Operator in local-machine (not container) - need to copy files from directory `grafana` to `/var/lib/grafana` like it's do in [DockerFile](https://github.com/argoproj-labs/argocd-operator/blob/master/Dockerfile).
+
+Or use environment variable `GRAFANA_CONFIG_PATH` to change dir path from `/var/lib/grafana` to `<PROJECT_PATH>/grafana`
+
+Of change `ArgoCDDefaultGrafanaConfigPath` in `common/defaults`

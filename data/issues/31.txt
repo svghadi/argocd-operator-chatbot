@@ -1,0 +1,11 @@
+Login with Openshift 
+I was trying to deploy the operator with Code Ready Containers using this example:
+https://github.com/argoproj-labs/argocd-operator/blob/master/examples/argocd-oauth.yaml
+
+I am not seeing the "Login with Openshift" button. Is there any other setup that is required to get it to work?
+
+Thanks!
+@werne2j , you also have to follow the instructions in this blog post:
+https://blog.openshift.com/openshift-authentication-integration-with-argocd/
+@werne2j , I was discussing this with @jmckind today and it should work "out of the box" in version 0.0.5.
+Thanks @pittar 

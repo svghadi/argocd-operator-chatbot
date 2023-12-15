@@ -1,0 +1,4 @@
+OpenShift OAuth Broken After Cluster Restart
+It appears that the Dex pod must be deleted/recreated when restarting the entire OpenShift cluster in order for OAuth to function correctly after the restart. Need to investigate if there is something that the operator can do to help prevent the need to recreate the Dex pod in this scenario.
+I have created #60 as a fix for this issue. My theory is that when the cluster restarts, the Dex Service Account token changes. This causes the client secret for the Dex configuration to change. The Dex Pod needs to be restarted to pick up the new client secret. 
+Released in v0.0.8

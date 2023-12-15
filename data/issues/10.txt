@@ -1,0 +1,7 @@
+Publish to community operators
+The argocd-operator should get published in both [community-operators](https://github.com/operator-framework/community-operators/tree/master/community-operators) and [upstream-community-operators](https://github.com/operator-framework/community-operators/tree/master/upstream-community-operators). 
+
+Publishing to  _community-operators_ would automatically load the argocd operator into the embedded OperatorHub in OpenShift which would allow users to install it with a few clicks. Currently it's only published in the _upstream-community-operators_.
+Thanks @siamaksade I will create a [community-operators](https://github.com/operator-framework/community-operators/tree/master/community-operators) PR for that.
+I have [submitted a PR](https://github.com/operator-framework/community-operators/pull/1161) to add the operator to the OpenShift 4.x Operator Hub. Should be available in OpenShift once merged and added to the Catalog.
+This has been [merged](https://github.com/operator-framework/community-operators/pull/1161) into community-operators and should land in the OpenShift embedded Operator Hub shortly.  

@@ -1,0 +1,15 @@
+Question: Relationship between operator versions and argocd versions
+This is a question about how/whether the operator is intended to support different versions of argocd.
+
+The operator has a default docker image tag for the argocd images. This is a very specific sha tag. But there's also a version field in the spec for me to provide my own version.
+However, looking at the code, it looks like the intention is that operator version 0.0.13 is only intended to be able to install Argo 1.6.1.
+
+So my question is what the design goal is here, what the philosophy is. My guess is that a version of the operator is only intended to be able to support one (at least one minor) version of argocd. Maybe in future the operator might branch so that 0.0.x would support only the 1.6 argocd line, and 0.1.x would support the 1.7 argocd line. But the intention wouldn't ever be to try and write one version of operator source with conditional logic in it that says "if argocd1.7 is required, do this, else do that"?
+
+Apologies if this is documented somewhere, I couldn't find anything.
+Hi @tomqwpl, your assessment is correct in that I did not want to get in the position where the operator has to have conditional logic based on the version of Argo CD running. My intention early on was to have each release of the operator deploy a certain version of Argo by default, but give you the mechanism to override that if you need to for whatever reason.
+
+Ideally however, the operator would have the ability to migrate your cluster in an upgrade from 1.6 to 1.7 for example if there is something changed drastically between versions. It doesn't do that right now and just updates the cluster to the new version when a new version of the operator is rolled out.
+
+I don't know if that really answers your question but I have been waiting to see what people need the operator to do for them in this area, now that there is a good mass of people using it.
+That's fine. That was what I was expecting, I just wanted to confirm.

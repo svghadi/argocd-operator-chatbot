@@ -1,0 +1,26 @@
+Cannot add repo with argocd repo add command
+When I run the following command to add a repo
+
+```
+argocd repo add https://github.com/christianh814/gitops-examples
+```
+
+It does not actually add it. It seems like it's getting overwritten by the operator.
+
+When I add a repo via the operator...
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+spec:
+  repositories: |
+    - url: https://github.com/christianh814/another-repo
+```
+
+It'll add the repo...but I still can't add additional repos via the CLI.
+
+I would like to be able to add additional repos, not only ones managed by the operator.
+Thanks for reporting this @christianh814! This bug will also affect the SSH Known hosts and TLS certs as well.
+Released in v0.0.8

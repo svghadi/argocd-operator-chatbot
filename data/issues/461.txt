@@ -1,0 +1,63 @@
+update operator-sdk version in the go.mod
+**Describe the bug**
+`operator-sdk` version in the go.mod is very old. We need to update it to `v1.11.0`. Operator prints the sdk version using this dependency which will create a confusion to the users about the sdk version being used.
+
+While it looks simple and straight forward, it is slightly complicated. The new version of operator-sdk has structural changes w.r.t to packages. Some of the packages like `k8sutil` which is used by the `argocd-operator` no longer exists in the new version of `operator-sdk`. It is an internal package in the new version.
+Reference:
+https://github.com/operator-framework/operator-sdk/issues/3792
+
+**Expected behavior**
+Update the `operator-sdk` version
+
+@iam-veeramalla 
+
+could we bundle the argo-cd version change from `v1.8.7` to `v2.1.2` in this issue?
+That should be a different issue @jaideepr97 . Can you create one with the details ?
+@iam-veeramalla created https://github.com/argoproj-labs/argocd-operator/issues/462
+Thanks
+Hello! I would like to help out with this issue.
+
+From what I read, I have been following the linked issue, and there seems to be a migration [guide from pre 1.0.0 versions (0.18+ in this case)](https://sdk.operatorframework.io/docs/building-operators/golang/migration/#migrate-maingo), but it involves recreating the project and mapping the APIs again. That does not sound like the right way to me, and I feel like I should only find replacements for the now private packages. So far I've found the following.
+
+**For the k8sutils**
+The only usage I found was to retrieve the namespace being watched.
+```go
+namespace, err := k8sutil.GetWatchNamespace()
+```
+
+My idea is to replace it with the same function but in the operator codebase, as it only reads from a predefined env variable and returns a string.
+
+**The Operator SDK version**
+Since the linked issue mentions
+
+> Your project should no longer depend directly on operator-sdk
+
+I believe we should no longer print this out to the logs. I created a newly scaffolded project with the latest operator-sdk version and there's no trace of the operator-sdk libraries in the `main.go` file.
+
+**The tlsutil usage**
+
+Looking at the code, I found the usage of the type `tlsutil.CertConfig`, which is very similar to the CertManager's [CertificateSpec](https://github.com/jetstack/cert-manager/blob/538683bdf38fb9e273cc5e91a1141a712a93057a/pkg/apis/certmanager/v1/types_certificate.go#L89). It's basically being used as a way to abstract a certificate definition and translate it into a secret inside the operator reconciliation process. Also, in issue [#498 of the operator-sdk](https://github.com/operator-framework/operator-sdk/issues/498#issuecomment-520628154), they mention cert-manager as a more reliable source for cert issuance and management than they maintaining their own lib.
+
+```go
+cfg := &tlsutil.CertConfig{
+  CertName:     secret.Name,
+  CertType:     tlsutil.ClientAndServingCert,
+  CommonName:   secret.Name,
+  Organization: []string{cr.ObjectMeta.Namespace},
+}
+```
+The properties in use are basically the same provided by the latter. The possible mapping could be:
+
+* `tlsutil.CertConfig.CertName` => `CertificateSpec.SecretName`
+* `tlsutil.CertConfig.CertType` => Not required, explained below
+* `tlsutil.CertConfig.CommonName` => `CertificateSpec.CommonName`
+* `tlsutil.CertConfig.Organization` => `CertificateSpec.Subject. Organizations`
+
+The field `tlsutil.CertConfig.CertType` would no longer be needed, because looking at the `NewSignedCertificate` [function](https://github.com/argoproj-labs/argocd-operator/blob/755639898c156155085e1fcbe2c3c5e74fec332d/controllers/argoutil/tls.go#L104), although there's a switch statement, in the entire codebase, the only type ever [assigned](https://github.com/argoproj-labs/argocd-operator/blob/3936899199533a26a71c952050ae2a088817bc77/controllers/argocd/secret.go#L121) is `tlsutil.ClientAndServingCert`, thus, we could constraint it to only be that type; moreover, because it's not a configurable parameter.
+
+I just looked at the test, but this is my plan so far. Please let me know what you think.
+
+As a disclaimer, although I have written go code and some small services before with it, I'm still learning to become more and become more fluent/confortable with it.
+
+Thanks in advance.
+

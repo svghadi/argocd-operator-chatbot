@@ -1,0 +1,8 @@
+RFE: Support for disabling Dex
+As ArgoCD works quite well with already existing OIDC providers it would be nice to have the option to completely disable the deployment of the bundled Dex server. 
+Thanks for the suggestion @lhw! That is something that I also noticed in the past and meant to come back to fix. 
+@iam-veeramalla I believe this can be done with the `DISABLE_DEX` var correct? So I think this issue can be closed.
+> @iam-veeramalla I believe this can be done with the `DISABLE_DEX` var correct? So I think this issue can be closed.
+
+Thanks @tylerauerbeck  .. true.
+Can this be re-opened? The var is not working and we see dex deployed.

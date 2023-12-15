@@ -1,0 +1,3 @@
+Add the ability to customize the OpenShift route that is created
+Currently the operator provides the ability to customize the Ingress object that gets created, however right now the route setting in the operator is pretty vanilla. It would nice to be able to adjust some of the specifics of the Route object that gets created in a similar manner: `InsecureEdgeTerminationPolicy`, `host`, etc.
+Actually looks like the settings I need are already present, but looks like some enhancement would be needed for some of the additional configs (TLS, etc.) per convo in https://github.com/argoproj-labs/argocd-operator/pull/70 and captured in #74 

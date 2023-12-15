@@ -1,0 +1,14 @@
+Add support for ArgoCD RBAC policy matcher mode.
+**Is your feature request related to a problem? Please describe.**
+Add support to allow users to choose RBAC policy matcher mode. There are currently two options `glob` and `regex`.
+https://github.com/argoproj/argo-cd/issues/3717
+
+**Describe the solution you'd like**
+Add support to allow users to configure this in Argo CD CR.
+
+**Describe alternatives you've considered**
+NA
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+

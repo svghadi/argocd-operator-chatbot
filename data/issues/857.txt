@@ -1,0 +1,22 @@
+`controller` has no `logFormat` parameter
+**Is your feature request related to a problem? Please describe.**
+In the ArgoCD resource `controller` has no `logFormat` parameter like `server`, `repo`, and `applicationSet`.
+
+**Describe the solution you'd like**
+Adding the parameter `logFormat` to `controller`.
+
+**Describe alternatives you've considered**
+-
+
+**Additional context**
+-
+
+This is a confusing issue. The title change made things more ambiguous.
+
+From my investigation::
+
+For `ApplicationSetController`:
+- The docs say `logFormat` is supported, but it doesn't reflect that in the CRD or the controller's code.
+
+For `ApplicationController`:
+- The docs don't say `logFormat` is supported, but the CRD and the code seems to reflect support.

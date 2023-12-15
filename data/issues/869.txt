@@ -1,0 +1,29 @@
+Add support for auto importing of third party cluster registry into ArgoCD
+**Is your feature request related to a problem? Please describe.**
+There are third party projects that has a concept of cluster registry or cluster inventory. These clusters are usually represented by a CRD. For example, in [OCM-io](https://open-cluster-management.io/) the API is [ManagedCluster](https://open-cluster-management.io/concepts/managedcluster/). When a user install the argocd-operator, it will be nice to have an option that allows for auto importing of all these clusters into ArgoCD without the user having to manually add them one by one.
+
+**Describe the solution you'd like**
+Add a new optional spec `ThirdPartyAutoImport` to specify a third party provide for cluster registry auto importing. 
+If the field is populated, the ArgoCD operator will evaluate the value and perform the auto importing in a case by case basis.
+
+**Describe alternatives you've considered**
+Scripting the import is possible but not user friendly.
+
+**Additional context**
+In [OCM-io](https://open-cluster-management.io/), there is a CR that can convert a set of ManagedClusters into the ArgoCD [cluster secrets](https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#clusters). So for the provider implementation of the spec, I imagine it to be creating this import CR using a dynamic client which makes it relatively straight forward.
+CC @iam-veeramalla
+Hi @mikeshng , Thanks for the enhancement request. 
+
+Can I say on a high level, you are looking for a way to automate the manual cluster adding process (argocd cluster add) ? This looks like a very good enhancement request to me :). If the clusters information is already available as part of `ManagedCluster` or any other APIs, it makes sense to eliminate the manual effort, specially when the number of clusters is high.
+
+May be we can can add a new controller to the operator which will create a `CronJob` or a `Job` that reads the clusters from the `ThirdPartyAPIs` like `ManagedCluster` and runs a few `argocd cluster add` commands using a shell script. We do something similar for Export functionality using the `ArgoCDExport` controller.
+
+(or) if a new controller is not required, we should think of a way to add this logic to the Argo CD Controller.
+
+Let me know your thoughts 👍🏽 
+@iam-veeramalla this is exactly what we are looking for! 
+
+`ThirdPartyAPIs` sounds good to me. As for the implementation, a new controller that behaves like `ArgoCDExport` is exactly what we are looking for as well! 
+
+If this initial idea is acceptable, we will draft a more detailed enhancement proposal based on your suggestion. Thank you!
+@mikeshng sure, please feel free to create a detailed enhancement request and link this. 

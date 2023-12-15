@@ -1,0 +1,56 @@
+oidc secret
+**Is your feature request related to a problem? Please describe.**
+On the page https://argocd-operator.readthedocs.io/en/latest/usage/basics/#secrets it is stated:
+
+> There is a Secret that is used by Argo CD named argocd-secret. The argocd-server component reads this secret to obtain the admin password for authentication.
+This Secret is managed by the operator and should not be changed directly.
+
+For the configuration of OIDC the secret 'argocd-secret' has to be changed:
+https://argoproj.github.io/argo-cd/operator-manual/user-management/microsoft/#azure-ad-app-registration-auth-using-oidc
+
+I found no way to configure the secret using the argocd CRD.
+
+**Describe the solution you'd like**
+Currently the 'admin.password' gets synced from the 'argocd-cluster' secret to the 'argocd-secret' secret. A similar syncing mechanism could be implemented for the oidc client secret.
+
+**Describe alternatives you've considered**
+The policy that it isn't recommended to change the 'argocd-secret' directly could be changed.
+
+
+@castleadmin did you ever find a workaround for this problem? I'm running into the same issue as well where I need to manually append the oidc client secret into `argocd-secret`. Would be great if we had a sync mechanism similar to how [tls secrets](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#tls-options) sync to `argocd-secret`.
+After some digging I was able to find documentation about [secrets Alternatives](https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#alternative). Where within the operator deployment yaml I just need to references the secret file and key value. Format will look like this:
+```
+spec:
+  oidcConfig: |
+    name: AzureAD
+    issuer: <redacted issuer URL>
+    clientID: <redacted clientID>
+    clientSecret: $argocd-oidc:oidc.azuread.clientSecret
+    # Optional set of OIDC scopes to request. If omitted, defaults to: ["openid", "profile", "email", "groups"]
+    requestedScopes: ["openid", "profile", "email"]
+    # Optional set of OIDC claims to request on the ID token.
+    requestedIDTokenClaims: {"groups": {"essential": true}}
+ ```
+ 
+ So now in the `argocd-cm` the `clientSecret` will look for a secret called `argocd-oidc` with a key called `oidc.azuread.clientSecret`. 
+
+My secret looks like this, since we use `ExternalSecrets` I had to learn how to inject the proper annotation but thanks to 
+[this issue](https://github.com/external-secrets/kubernetes-external-secrets/issues/137) I was able to find the proper formatting  `app.kubernetes.io/part-of: argocd` of my ArgoCD oidc secret. The ExternalSecret now looks like this:
+```
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: argocd-oidc
+  namespace: argocd
+spec:
+  backendType: vault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: "argocd"
+  data:
+    - name: oidc.azuread.clientSecret
+      key: <redacted kv path>
+      property: OIDC_CLIENT_SECRET
+```
+

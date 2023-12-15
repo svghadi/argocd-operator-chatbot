@@ -1,0 +1,22 @@
+Missing Doc pages entries in mkdocs.yaml
+**Describe the bug**
+We missed to add the entry of few recently added docs in the mkdocs.yaml due to which the docs are not published on our `readthedocs`.
+
+I learnt this by running `mkdocs serve` locally.
+
+<img width="1234" alt="Screenshot 2022-06-02 at 1 54 07 PM" src="https://user-images.githubusercontent.com/43399466/171588029-612399f6-2f36-4c08-9385-839af00150ba.png">
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Learn `mkdocs serve` locally.
+
+**Expected behavior**
+All the docs are published.
+
+**Additional context**
+NA
+
+Passing now
+<img width="1020" alt="Screenshot 2022-07-19 at 7 03 52 PM" src="https://user-images.githubusercontent.com/43399466/179763271-c0d35fd0-e220-4687-ba87-b6d0d86b7e86.png">
+
+

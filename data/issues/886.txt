@@ -1,0 +1,13 @@
+(Question) Downsides of running a newer version of argo than officially supported by operator
+I need to run argocd with a later version (2.7) and found it's possible to accomplish this with something like this (also documented [here](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#version):
+
+```
+ image: quay.io/argoproj/argocd:v2.7.0-rc1
+ version: sha256:3f18ffb6320ad3c4979e3958abe5a8ec991e3e225d0d86e1a346a13e5cb35b63
+```
+
+This works for me and I'm able to use the new features we require; however, I'm wondering if there are any signifcant downsides to running like this? I.e. should we expect anything to break as the default version supported by the operator seems to still be 2.5.3.
+Hi @nwhinkle , When you run your version of Argo CD, in most of the cases, it would work absolutely fine. 
+
+However, lets say there is a feature that is introduced in `v2.7` that requires a new `env` var or Command `args` or any others.  Operator would not create that for you as it is not aware of the changes. 
+Great thank you for clarifying!

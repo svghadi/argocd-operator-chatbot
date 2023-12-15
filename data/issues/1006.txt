@@ -1,0 +1,36 @@
+Probes failure results in RH-SSO pod crash
+**Describe the bug**
+The latest version of RH-SSO (rh-sso-76) pod crashes intermittently due to the liveness and readiness probes failure.
+
+```
+Readiness probe failed: {
+    "probe.eap.dmr.EapProbe": "Error sending probe request: Expecting value: line 1 column 1 (char 0)",
+    "probe.eap.dmr.HealthCheckProbe": "Error sending probe request: Expecting value: line 1 column 1 (char 0)"
+}
+INFO Using the 'FSydNEtvOaSJCPTKgQVfqRCMaAyVbqmZ' username to authenticate the probe request against the JBoss DMR API.
+INFO Using the 'FSydNEtvOaSJCPTKgQVfqRCMaAyVbqmZ' username to authenticate the probe request against the JBoss DMR API.
+```
+
+```
+Liveness probe failed: {
+    "probe.eap.dmr.EapProbe": "Error sending probe request: Expecting value: line 1 column 1 (char 0)",
+    "probe.eap.dmr.HealthCheckProbe": "Error sending probe request: Expecting value: line 1 column 1 (char 0)"
+}
+INFO Using the 'FSydNEtvOaSJCPTKgQVfqRCMaAyVbqmZ' username to authenticate the probe request against the JBoss DMR API.
+INFO Using the 'FSydNEtvOaSJCPTKgQVfqRCMaAyVbqmZ' username to authenticate the probe request against the JBoss DMR API.
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Enable keycloak as sso using `.spec.sso.provider: keycloak` in the Argo CD CR.
+2. Wait for the keycloak pod to crash.
+
+**Expected behavior**
+Keycloak pod is up and running.
+
+**Screenshots**
+Error message provided above.
+
+**Additional context**
+This can probably be fixed by increasing the `initialdelayseconds` and `timeoutseconds`. 
+

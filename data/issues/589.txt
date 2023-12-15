@@ -1,0 +1,5 @@
+feat: remove shared repo volume between repo-server and cmp-server
+ArgoCD has changed how the repo-server communicates with the cmp-server to generate manifests (GenerateManifests) and check if the repo is supported (MatchRepository) by the plugin.  Need to update the ArgoCD Operator once ArgoCD has released the change and the operator adds support for that version of ArgoCD.
+
+Seehttps://github.com/argoproj/argo-cd/pull/8600
+Feel free to ping me if any clarification is required regarding https://github.com/https://github.com/argoproj/argo-cd/pull/8600.

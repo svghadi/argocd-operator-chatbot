@@ -1,0 +1,70 @@
+Reconcile Pause For Custom Resource? 
+**Is your feature request related to a problem? Please describe.**
+Hey guys is there any available featuresets that allow for reconciliation to pause? I have a custom repo-server deployment that relies on some env vars. Reconciling and making sure i have my correct custom deployment of repo-server is a constant battle..
+
+**Describe the solution you'd like**
+Ideally i could avoid the reconcile feature of the repo-server specifically. 
+**Describe alternatives you've considered**
+possibly a way to pause reconcile ? 
+
+**Additional context**
+Appreciate the wisdom ! Is there a possible work around to do this ? I deploy argo operator with kustomize and basically over write the deployment for repo-server. So the reconcile slaps back.
+Hey @EHSchmitt4395 , Why dont you add those Env vars to the Argo CD CR ? 
+hey @iam-veeramalla  ---- its more than env vars -- its basically the viaduct sops setup for integrating mozilla sops and kustomize plugins to the repo server  :/ 
+https://github.com/viaduct-ai/kustomize-sops
+> https://github.com/viaduct-ai/kustomize-sops
+
+I think you have to use a custom build of ArgoCD operator and move repo-server out of reconciliation loop.
+@iam-veeramalla   that sounds like allllooot more work than just stopping the operator from reconcile -- anything else i can do ? Shorter time frame?  -- something in the operator code? Or ? Thanks for the hasty replys !!
+where is reconcile loop for repo server -- maybe i can just comment out and rebuild the dockerfile? 
+> where is reconcile loop for repo server -- maybe i can just comment out and rebuild the dockerfile?
+
+Here you go 
+https://github.com/argoproj-labs/argocd-operator/blob/2f43a08b7aa806a4468ba7e6c64404bdbb8fbacf/controllers/argocd/deployment.go#L333
+
+@iam-veeramalla awesome many thanks!~ Ill give that a go ! 
+
+@iam-veeramalla 
+
+Quick question -- Developer Docs demonstrate using 
+```
+ARGOCD_CLUSTER_CONFIG_NAMESPACES=argocd-e2e-cluster-config make install run
+```
+for modifying namespaces 
+The make install comand is just doing 
+```
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+```
+But there is no reference to this var anywhere in the kustomization in the config/crd directory?   How would i add this manually if i dont want to use go? I just want kustomize to do this for me ? 
+
+in config/default kustomization there is a vars: section --- is this essentially what we are doing with the go command? 
+
+What would that look like ?
+```
+vars: 
+   
+- name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+  objref:
+    kind: Namespace
+    version: v1
+    name: '*'
+``` 
+
+Thanks so much!! 
+
+
+i want to run completely open --  before i would add to my subscription file 
+```
+  config:
+    env:
+      - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+        value: '*'
+      - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+        value: 'true'
+```
+
+This would allow me to deploy to any cluster.  Now through manual method of deploying CRDS and build - i get strict namespace scope to where argo was deployed + a 
+  ```
+  Cluster level CustomResourceDefinition "applications.argoproj.io" can not be managed when in namespaced mode
+  ```
+error :/ 

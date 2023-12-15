@@ -1,0 +1,27 @@
+Changing log level or log format for repo server doesn't trigger reconciliation
+**Describe the bug**
+
+The Operator doesn't change the Deployment spec when `.repo.logLevel` or `.repo.logFormat` is changed, if the Deployment resource existed before.
+
+**To Reproduce**
+
+1. Create basic minimal `ArgoCD` Operand, i.e.
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec: {}
+```
+2. Wait for reconciliation
+3. Inspect `argocd-repo-server` deployment's container command line: `kubectl get deployment argocd-repo-server -o jsonpath='{.spec.template.spec.containers[0].command}'`. Observe `--loglevel info` and `--logformat text` command line parameters.
+4. Patch the `ArgoCD` Operand to change log level and format for the repository server: `kubectl patch argocd argocd --type=merge --patch '{"spec": {"repo": {"logFormat": "json", "logLevel": "debug"}}}'`
+5. Inspect `argocd-repo-server` deployment's container command line again: `kubectl get deployment argocd-repo-server -o jsonpath='{.spec.template.spec.containers[0].command}'`. Observe command line parameters have not been changed from step 3
+6. Delete `argocd-repo-server` deployment: `kubectl delete deployment argocd-repo-server`
+7. Observe that Operator recreates the deployment resource
+8. Inspect `argocd-repo-server` deployment's container command line again: `kubectl get deployment argocd-repo-server -o jsonpath='{.spec.template.spec.containers[0].command}'`. Observe `--loglevel debug` and `--logformat json` command line has been succesfully reconciled.
+
+**Expected behavior**
+Reconciliation happens even when the argocd-repo-server Deployment already exists
+
+

@@ -1,0 +1,4 @@
+Add Support for Backups to an Azure Storage Container 
+The operator should support storing exports/backups in an Azure storage container.
+Working on this in the [azure_export](https://github.com/argoproj-labs/argocd-operator/tree/azure_export) branch.
+Merged into master and will go out in the v0.0.9 release.

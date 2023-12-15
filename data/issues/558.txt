@@ -1,0 +1,38 @@
+Changing host does not update ingress
+**Describe the bug**
+When setting up an `ArgoCd`, and later changing the host the ingress will not be updated with the new host information.
+
+**To Reproduce**
+Do a kubectl apply on something like:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+  server:
+    ingress:
+      enabled: true
+```
+
+followed by a kubectl apply on something like:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+  server:
+    host: foo.bar
+
+    ingress:
+      enabled: true
+```
+
+then the host will still be set to the default value when describing the ingress
+
+**Expected behavior**
+That the ingress will be updated with the new host
+Is there any news on this please? Its a bit counter intuitive to have an operator but its still needed to alter the ingress directly after installation.

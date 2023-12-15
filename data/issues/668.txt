@@ -1,0 +1,87 @@
+RFE: Add the ability to define a destination k8s cluster(s) where ArgoCD is deployed
+**Is your feature request related to a problem? Please describe.**
+
+A nice to have feature would be the ability to optionally define a target k8s cluster(s) that indicates where the ArgoCD instance is to be installed in the `Server` component of the ArgoCD CR as a secret. This would help us remove the cluster level scoping of the ArgoCD Operator that currently exists.
+
+**Describe the solution you'd like**
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: server
+spec:
+  server:
+     destinationCluster:
+        clusterSecret:  acme-cluster-secret
+        clusterSecretNamespace: acme-cluster
+ ---
+ apiVersion: v1
+kind: Secret
+metadata:
+  name: acme-cluster-secret
+  namespace: acme-cluster
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  name: acme-cluster  
+  server: https://cluster.acme.com
+  config: |
+    {
+      "bearerToken": "<authentication token>",
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": "<base64 encoded certificate>"
+      }
+    }
+ ``` 
+
+```yaml
+clusterSecret:  acme-cluster-secret
+clusterSecretNamespace: acme-cluster
+```
+
+The `clusterSecret` and `clusterSecretNamespace` would exist in the k8s cluster where the operator is deployed
+
+**Describe alternatives you've considered**
+
+> Use my central Argo CD instance as a "hub and spoke" design and just deploy your Applications from there using the other K8S clusters as destination clusters
+> 
+> Use my central Argo CD installation in order to install the Argo CD Operator at your destination clusters (Argo CD managing a fleet of Argo CD installations)
+
+Although the alternate solutions solve the problem for my use case, having the ability to specify something like the above is a nice to have
+
+
+ +cc @jannfis  @iam-veeramalla  @jopit 
+@shashanklmurthy If I understand the request correctly, you would like to see Argo CD Operator install Argo CD on a different cluster ? So, do you want to manage the Argo CD Installations for multiple clusters using a single operator ?
+
+As suggested in the Alternative, you can achieve this already using the below 2 steps.
+1. Add target k8s clusters to Argo CD.
+2. Deploy Argo CD as an application to the target clusters.
+
+Can you please highlight the advantage of implementing this feature over the above suggested approach.
+@iam-veeramalla Yes. I'd like to manage multiple ArgoCD installations in multiple clusters using a single operator.
+
+One advantage I see is that the operator that has such a capability allows us to manage the configuration of these different Argocd instances (regardless of whether they are in-cluster or external) from a central location. For context, we are contemplating using a management k8s cluster to provision cluster infrastructure add-ons (including ArgoCD) to other k8s clusters.
+
+Coming to the alternatives suggested,
+
+1. Maybe I am mistaken here but one disadvantage I see with using one single ArgoCD to deploy applications to multiple clusters is that horizontally scaling the application controller would become a real hassle if we have an uneven distribution of Applications in different clusters.
+
+2. Deploying ArgoCD itself as an application to target clusters is possible and might be one that we will opt for in our present use case (we're already in an environment where we have a dedicated ArgoCD per k8s cluster). But that brings about an interesting question to my mind, what would the use of an operator that deploys multiple Argocd instances only in a single k8s cluster scope be? Seems to be an arbitrary limitation in my mind.
+
+
+Thanks for following up!
+
+Thanks for the details @shashanklmurthy .
+
+> what would the use of an operator that deploys multiple Argocd instances only in a single k8s cluster scope be ?
+A cluster can have n number of Argo CD Instances(may be each for a project or a bunch of namespaces), Argo CD operator will be used to manage the configuration, upgrades and reconciliations for all these Argo CD Instances.
+
+> Coming to the alternatives suggested 
+Yeah, managing multiple clusters with a single Argo CD instance might be a costly process even when you have setup HA and sharding. However, you can continue using one Argo CD per cluster model, do you see any harm ?
+
+I would like to keep this issue on low priority for now, as there are alternative approaches available to fix the problem. We will accept this  as RFE, Thanks :)

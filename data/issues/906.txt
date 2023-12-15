@@ -1,0 +1,30 @@
+Multi-source app with plugin doesn't fill ref variable with source path
+**Describe the bug**
+App like this:
+```
+project: default
+destination:
+  server: 'https://kubernetes.default.svc'
+  namespace: gitlab-runner
+syncPolicy:
+  syncOptions:
+    - CreateNamespace=true
+sources:
+  - repoURL: 'https://gitlab.com/gitlab-org/charts/gitlab-runner.git'
+    path: .
+    targetRevision: v0.52.0
+    plugin:
+      name: argocd-vault-plugin-helm
+      parameters:
+        - name: VALUES_FILE
+          string: $values/gitlab-runner/values.yaml
+  - repoURL: 'git@gitlab.internal:deployment.git'
+    targetRevision: main
+    ref: values
+```
+Sends `PARAM_VALUES_FILE=$values/gitlab-runner/values.yaml` variable instead of replacing `$values` with path to second source.
+
+Same thing with direct helm (not plugin) works as intended.
+
+**Additional context**
+argo version: 2.7.1

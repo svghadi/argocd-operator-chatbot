@@ -1,0 +1,20 @@
+Tolerations & nodeselectors in argocd CRD.
+**Describe the bug**
+I can't seem to find a way to add toleration's & node-selectors to the pods that the operator deploys, I can add toleration's to the operator pod but not sure how to do it for the other pods.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+Look at operator docs & API spec.
+Write an argocd resource.
+
+**Expected behavior**
+A option in the argocd resource definition for toleration's & node-selector
+
+**Screenshots**
+N\A
+
+**Additional context**
+For now I patch the deployments with the toleration's & node-selectors after the pods have been deployed, they seem to get moved to the right nodes.
+Since I'm using a cloud based Kubernetes cluster I'm unable to set the podtolerationrestriction admission controller.
+
+Please assign this to me

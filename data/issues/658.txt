@@ -1,0 +1,14 @@
+ArgoCD operator is more customizable: volumes / initContainers on deployment
+**Is your feature request related to a problem? Please describe.**
+We are trying to use the ArgoCD operator combined with kapitan and are seeing difficulties editing certain components of the installation with custom stuff.
+
+**Describe the solution you'd like**
+Add a possibility to edites volumes and initContainers on the argo-cd-repo deployment.
+
+**Describe alternatives you've considered**
+/
+
+**Additional context**
+[kapitan compile repo](https://gist.github.com/skinny/0645c5d3cd7196234748183940b5b253)
+
+Hi @says-sag , are you looking for this https://argocd-operator.readthedocs.io/en/latest/usage/customization/ . This is already supported. 

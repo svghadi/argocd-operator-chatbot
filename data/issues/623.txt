@@ -1,0 +1,20 @@
+Repo Server Image should use spec.version if spec.repo.version is not set
+**Describe the bug**
+When using a different ArgoCD version than the default version set by the operator, we set spec.version in the CR.
+Documentation states for spec.version: "**The tag to use with the container image for all Argo CD components**." (https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#version)
+
+The repo server, however, does not respect this value but only looks at spec.repo.version or falls back to defaults 
+https://github.com/argoproj-labs/argocd-operator/blob/68e1197b38ab9ce2461d8825765564eece2e1e4d/controllers/argocd/util.go#L149-L159
+
+https://github.com/argoproj-labs/argocd-operator/blob/68e1197b38ab9ce2461d8825765564eece2e1e4d/controllers/argocd/util.go#L168-L172
+
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install ArgoCD with operator version 0.3.0 
+2. Create an ArgoCD instance and set spec.version to 2.2.5
+3. Observe repo server deployment - it has the image SHA digest of ArgoCD image 2.3.3
+
+**Expected behavior**
+Repo Server falls back to spec.version if spec.repo.version ist not set
+

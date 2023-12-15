@@ -1,0 +1,18 @@
+Update the documentation for build process.
+**Describe the bug**
+Creating this issue to track the documentation changes w.r.t build process.
+Old Docs:
+https://argocd-operator.readthedocs.io/en/latest/contribute/development/#build
+https://github.com/argoproj-labs/argocd-operator/blob/master/docs/contribute/development.md
+
+**Expected behavior**
+Update the new documentation where build process is made easy by the operator-sdk upgrade.
+
+This issue is partially fixed by #451.
+
+we need to update the below doc.
+https://argocd-operator.readthedocs.io/en/latest/contribute/development/#build
+@iam-veeramalla It seems to me like all of the docs have been updated. Is there anything else that you think is still missing?
+> @iam-veeramalla It seems to me like all of the docs have been updated. Is there anything else that you think is still missing?
+
+This can be closed. Thanks @tylerauerbeck 

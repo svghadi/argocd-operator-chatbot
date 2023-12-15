@@ -1,0 +1,77 @@
+Incompatible with OLM 0.22.0?
+**Describe the bug**
+Following the instructions on RTD using the 0.4.0 release codebase, I end up being unable to add the catalog:
+
+```
+$ kubectl get pods -n olm -l olm.catalogSource=argocd-catalog
+NAME                   READY   STATUS             RESTARTS        AGE
+argocd-catalog-4z5nk   0/1     CrashLoopBackOff   6 (3m30s ago)   9m20s
+```
+
+Checking the logs for the pod, I see:
+
+```
+$ kubectl logs -n olm argocd-catalog-4z5nk
+Error: open /etc/nsswitch.conf: permission denied
+Usage:
+   [flags]
+
+Flags:
+  -d, --database string          relative path to sqlite db (default "bundles.db")
+  -h, --help                     help for this command
+  -p, --port string              port number to serve on (default "50051")
+      --skip-migrate             do  not attempt to migrate to the latest db revision when starting
+  -t, --termination-log string   path to a container termination log file (default "/dev/termination-log")
+
+time="2022-11-04T19:18:48Z" level=panic msg="open /etc/nsswitch.conf: permission denied"
+panic: (*logrus.Entry) (0x1132a20,0xc00024c150)
+
+goroutine 1 [running]:
+github.com/sirupsen/logrus.Entry.log(0xc0000e0000, 0xc000032900, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, ...)
+        /build/vendor/github.com/sirupsen/logrus/entry.go:239 +0x2db
+github.com/sirupsen/logrus.(*Entry).Log(0xc00024c0e0, 0xc000000000, 0xc00017ff40, 0x1, 0x1)
+        /build/vendor/github.com/sirupsen/logrus/entry.go:268 +0xeb
+github.com/sirupsen/logrus.(*Logger).Log(0xc0000e0000, 0x0, 0xc00017ff40, 0x1, 0x1)
+        /build/vendor/github.com/sirupsen/logrus/logger.go:192 +0x7d
+github.com/sirupsen/logrus.(*Logger).Panic(...)
+        /build/vendor/github.com/sirupsen/logrus/logger.go:233
+github.com/sirupsen/logrus.Panic(...)
+        /build/vendor/github.com/sirupsen/logrus/exported.go:129
+main.main()
+        /build/cmd/registry-server/main.go:51 +0xbe
+```
+
+This looks identical to an issue from 2020: https://github.com/operator-framework/operator-lifecycle-manager/issues/1806
+
+However, since 0.4.0 was cut in July 2022 I would assume it was working at the time.
+
+This is on Docker for Desktop running Kubernetes v1.25.0 on Mac OS X 12.1. 
+
+**To Reproduce**
+1. Install OLM
+2. Install the catalog source as described in the 0.4.0 release.
+
+**Expected behavior**
+It should work.
+
+It looks like this probably would be resolved by just updating the `registry` image to be based off of the OLM v1.26 builder image, since the current base registry image seems wildly out of date.
+
+However I can't get the operator or registry image to build locally on OS X so that's just a guess:
+```
+go fmt ./...
+go vet ./...
+/Users/shakefu/git/argoproj-labs/argocd-operator/bin/setup-envtest use 1.21
+unable to find a version that was supported for platform darwin/arm64
+make: *** [envtest] Error 2
+```
+Hello.
+
+As mentioned by @shakefu, we try to use the latest registry version 0.4.0:
+quay.io/argoprojlabs/argocd-operator-registry@sha256:a541110c0d2bde77e19643cf191d82937d4ed6e96f3bc2c38d2126f27351cb46
+or
+quay.io/argoprojlabs/argocd-operator-registry:v0.4.0
+
+and the result remain the same when we deploy the catalog_source :
+Error: open /etc/nsswitch.conf: permission denied
+
+Can you update the argocd-operator-registry please?

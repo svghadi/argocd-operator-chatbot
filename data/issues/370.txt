@@ -1,0 +1,15 @@
+appSync option is missing from controller options documentation
+**Describe the bug**
+Controller options documentation needs to be updated to show use of appSync option
+
+**To Reproduce**
+Information regarding setting the appSync value for the ArgoCD controller is missing. View the documentation to see that it is not there.
+
+**Expected behavior**
+Appropriate documentation should be provided.
+
+**Screenshots**
+N/A
+
+**Additional context**
+N/A

@@ -1,0 +1,29 @@
+ability to set annotations+labels on pods created by argocd
+**Is your feature request related to a problem? Please describe.**
+Hi, we need to set annotations on any pods running on our cluster, but I can't find the option to do so on pods deployed by argo.
+
+**Describe the solution you'd like**
+Something like:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+...
+controller:
+  podAnnotations:
+    some: anno
+  labels:
+    some: label
+...
+server:
+  podAnnotations:
+    ana: da
+```
+A better question to ask is: Why does the operator not support the exact same options as the helm charts? Istio Operator does the same, as do other operators. It would be trivial and super beneficial
+@Morriz I agree it is very useful, but I see a concern with operator reconciling the labels and annotations. There is a good chance that operator may removes annotations/labels set by admission controllers. WDYT ?
+> @Morriz I agree it is very useful, but I see a concern with operator reconciling the labels and annotations. There is a good chance that operator may removes annotations/labels set by admission controllers. WDYT ?
+
+That is a matter of having a mature operator that allows for labels it does not manage. That is why one namespaces them, in order to filter.
+LGTM. Would you like to work on this one ? If not I can add the label `help-wanted` and remove `traige-required`.
+
+Thanks @Morriz 
+I am no Go dev unfortunately, and my calendar is rather full ;|

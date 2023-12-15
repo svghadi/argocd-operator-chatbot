@@ -1,0 +1,28 @@
+User defined service monitors get deleted if name would match ones that supposed to be created by operator.
+**Describe the bug**
+Not sure if this is a bug, but rather surprising behaviour.
+User defined service monitors get deleted if name would match ones that supposed to be created by operator if deployment of 
+prometheus enabled. Basically operator checks if there are any currently defined service monitors in the namespace and if there are and their name is matching ones that operator would create, operator is deleting them. Please see part of the code on following link - https://github.com/argoproj-labs/argocd-operator/blob/516e937f537b4463965c941290ca51477a03bb1e/controllers/argocd/prometheus.go#L121-L156
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Create service monitors in the namespace with following names:
+CLUSTERNAME-metrics
+CLUSTERNAME-server-metrics
+CLUSTERNAME-repo-server-metrics
+2. Deploy argocd cluster with name CLUSTERNAME
+3. operator will wipe created service monitors if prometheus deployment is not enabled for argocd cluster in its manifest.
+
+**Expected behavior**
+Service monitors would still exist.
+
+**Screenshots**
+N/A
+
+**Additional context**
+I would expect to check service monitor matching not only by name, but also by labels maybe? As a workaround of this problem I just change the names of service monitors and appended -custom suffix to it.
+
+Holy shit, thank you for this issue. I was going crazy over this. 🤡 
+> Holy shit, thank you for this issue. I was going crazy over this. 🤡
+
+I am glad this helped you. I spent half a day to troubleshoot this. The best to fix this would be giving thumbs up to the original post 👍🏻 I guess :)

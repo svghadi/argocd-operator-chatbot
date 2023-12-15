@@ -1,0 +1,3 @@
+Upgrade Operator SDK Dependency
+Currently the operator depends on v0.12.0 of the operator-sdk. The operator needs to be updated to use the current version of the operator-sdk to prevent getting too far behind, resulting in a more challenging upgrade in the future. 
+Merged into master and will be released in v0.0.9

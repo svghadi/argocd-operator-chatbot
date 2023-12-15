@@ -1,0 +1,12 @@
+Keycloak/RHSSO login yields in certificate signed by unknown authority
+**Describe the bug**
+Argo CD Operator can make use of RHSSO & KeyCloak through OIDC in addition to Dex. However, with a recent security fix applied, the certificate of RHSSO  or Keycloak cannot be validated in some scenarios. 
+
+Single Sign On with Argo CD Operator can fail with the error message "x509: certificate signed by unknown authority" under the following circumstances:
+```
+    You are using RHSSO or KeyCloak as SSO provider and
+    You are using a self-signed certificate for your route endpoints, or you are using a private CA to issue certificates
+```
+
+This behavior is a result of a [security fix](https://github.com/argoproj/argo-cd/security/advisories/GHSA-7943-82jg-wmw5) in Argo CD, which enforces a strict validation of TLS certificates on the configued OIDC endpoints.
+

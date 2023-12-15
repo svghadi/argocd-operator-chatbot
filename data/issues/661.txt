@@ -1,0 +1,8 @@
+Update Doc for local openshift developement and installation after operator-sdk upgrade
+**Describe the bug**
+The documentation for [development](https://argocd-operator.readthedocs.io/en/latest/contribute/olm-env/) and [installation](https://argocd-operator.readthedocs.io/en/latest/install/openshift/) is  not up to date with the latest steps 
+
+**Expected behavior**
+Steps like `make install` and `make run`
+
+closed as duplicate of https://github.com/argoproj-labs/argocd-operator/issues/539

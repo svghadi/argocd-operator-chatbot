@@ -1,0 +1,32 @@
+[BUG] Issues install with permissions via Kustomize 
+**Describe the bug**
+
+I am getting permissions issue with argocd-operator via kustomize on this file [kustomization.yaml](https://github.com/argoproj-labs/argocd-operator/raw/master/deploy/kustomization.yaml)
+
+
+Logs:
+
+```
+{"level":"info","ts":1619630631.783934,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1619630631.8853924,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+E0428 17:23:51.893882       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:23:53.186341       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:23:56.353828       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:23:59.823528       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:24:10.046512       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:24:23.615903       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:25:06.938505       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+E0428 17:25:45.991909       1 reflector.go:178] pkg/mod/k8s.io/client-go@v0.18.2/tools/cache/reflector.go:125: Failed to list *v1.ClusterRoleBinding: clusterrolebindings.rbac.authorization.k8s.io is forbidden: User "system:serviceaccount:argocd:argocd-operator" cannot list resource "clusterrolebindings" in API group "rbac.authorization.k8s.io" at the cluster scope
+{"level":"info","ts":1619630781.287958,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1619630781.3895748,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"argocd-controller","source":"kind source: /, Kind="}
+```
+**Expected behaviour**
+We should not see those errors with permission if you are using kustomize install.
+
+I think it is required to add 2 extra lines in the file above as a fix for these permission issues:
+
+```
+- cluster_role.yaml
+- cluster_role_binding.yaml
+```
+Thank you.

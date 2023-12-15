@@ -1,0 +1,5 @@
+Configure Grafana to Use OpenShift OAuth When Enabled
+The operator can be configured to automatically set up Argo CD to use the OAuth server present in OpenShift. It would be nice for the operator to also enable OAuth in Grafana as well.
+@jmckind any update on this? Having Openshift Oauth for **Grafana** and **Prometheus** both would be a nice to have.
+Also can you update this issue to incorporate Prometheus as well?
+

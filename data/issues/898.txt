@@ -1,0 +1,384 @@
+ArgoCD Operator 0.6 does not process ApplicationSet manifests
+Checklist:
+
+* [x] I've searched in the docs and FAQ for my answer: https://bit.ly/argocd-faq.
+* [x] I've included steps to reproduce the bug.
+* [x] I've pasted the output of `argocd version`. 
+
+
+
+**Describe the bug**
+
+We are using operatorhub.io to install and manage ArgoCd. Our ApplicationSets do not create applications anymore. (It was working before)
+
+**To Reproduce**
+`chart`
+```yaml
+apiVersion: v2
+name: argocd-operator
+description: Deploys the OLM resources to start an ArgoCD operator
+type: application
+version: 0.1.0
+appVersion: "v0.3.0"
+```
+
+`applicationset manifest`
+```yaml
+# Source: team-ns/templates/argocd/argocd-applicationset.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: team-admin-nodejs-helloworld
+  namespace: argocd # ApplicationSets must always be in the argocd namespace
+spec:
+  generators:
+  - git:
+      repoURL: https://gitea.174.138.106.115.nip.io/otomi/values.git
+      revision: HEAD
+      files:
+      - path: "env/teams/workloads/admin/nodejs-helloworld.yaml"
+  template:
+    metadata:
+      name: 'team-admin-nodejs-helloworld'
+    spec: 
+      project: 'team-admin' # project is restricted
+      source:
+        repoURL: 'https://github.com/redkubes/nodejs-helloworld.git'
+        targetRevision: 'HEAD' 
+        path: 'chart/hello-world' 
+        chart: ''  
+        helm:
+          # The argocd template the values parameter is taken from the git generator path
+          values: '{{values}}'
+          releaseName: 'nodejs-helloworld'
+      syncPolicy:
+        automated:
+          allowEmpty: false
+          prune: false
+          selfHeal: true
+        retry:
+          backoff:
+            duration: 10s
+            factor: 3
+          limit: 3
+        syncOptions: []
+      destination:
+        server: 'https://kubernetes.default.svc' 
+        namespace: 'team-admin'
+        # helm-specific config
+---
+```
+
+**Expected behavior**
+
+Application should popup within argocd console.
+
+**Screenshots**
+`Describe(argocd/team-admin-nodejs-helloworld)`
+```yaml
+Name:         team-admin-nodejs-helloworld
+Namespace:    argocd
+Labels:       app.kubernetes.io/managed-by=Helm
+Annotations:  meta.helm.sh/release-name: team-ns-admin
+              meta.helm.sh/release-namespace: team-admin
+API Version:  argoproj.io/v1alpha1
+Kind:         ApplicationSet
+Metadata:
+  Creation Timestamp:  2023-04-30T20:00:18Z
+  Generation:          1
+  Managed Fields:
+    API Version:  argoproj.io/v1alpha1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .:
+          f:meta.helm.sh/release-name:
+          f:meta.helm.sh/release-namespace:
+        f:labels:
+          .:
+          f:app.kubernetes.io/managed-by:
+      f:spec:
+        .:
+        f:generators:
+        f:template:
+          .:
+          f:metadata:
+            .:
+            f:name:
+          f:spec:
+            .:
+            f:destination:
+              .:
+              f:namespace:
+              f:server:
+            f:project:
+            f:source:
+              .:
+              f:helm:
+                .:
+                f:releaseName:
+                f:values:
+              f:path:
+              f:repoURL:
+              f:targetRevision:
+            f:syncPolicy:
+              .:
+              f:automated:
+                .:
+                f:allowEmpty:
+                f:prune:
+                f:selfHeal:
+              f:retry:
+                .:
+                f:backoff:
+                  .:
+                  f:duration:
+                  f:factor:
+                f:limit:
+              f:syncOptions:
+    Manager:         helm
+    Operation:       Update
+    Time:            2023-04-30T20:00:18Z
+  Resource Version:  27198
+  UID:               2d8c1f2e-12b2-4ef4-a222-114543c34f44
+Spec:
+  Generators:
+    Git:
+      Files:
+        Path:    env/teams/workloads/admin/nodejs-helloworld.yaml
+      Repo URL:  https://gitea.52.215.106.110.nip.io/otomi/values.git
+      Revision:  HEAD
+  Template:
+    Metadata:
+      Name:  team-admin-nodejs-helloworld
+    Spec:
+      Destination:
+        Namespace:  team-admin
+        Server:     https://kubernetes.default.svc
+      Project:      team-admin
+      Source:
+        Helm:
+          Release Name:   nodejs-helloworld
+          Values:         {{values}}
+        Path:             chart/hello-world
+        Repo URL:         https://github.com/redkubes/nodejs-helloworld.git
+        Target Revision:  HEAD
+      Sync Policy:
+        Automated:
+          Allow Empty:  false
+          Prune:        false
+          Self Heal:    true
+        Retry:
+          Backoff:
+            Duration:  10s
+            Factor:    3
+          Limit:       3
+        Sync Options:
+Events:  <none>
+
+```
+Notice that there is no Status and no Events either.
+
+**Version**
+
+```shell
+ArgoCD Version: v2.6.3+e05298b
+```
+
+**Logs**
+
+olm/olm-operator
+```
+time="2023-04-30T23:44:28Zlevel=debug msg="failed to get the owner subscription csv=packageserver                                                      
+time="2023-04-30T23:44:28Zlevel=debug msg="no env var to inject into csvcsv=packageserver                                                              
+time="2023-04-30T23:44:28Zlevel=debug msg="skipping copy for OwnNamespace operatorgroupcsv=packageserver id=9RZ/t namespace=olm phase=Succeeded        
+time="2023-04-30T23:44:28Zlevel=debug msg="skipping copy for OwnNamespace operatorgroupcsv=argocd-operator.v0.6.0 id=F+Ztq namespace=argocd phase=Succ 
+time="2023-04-30T23:44:43Zlevel=debug msg="Processing olmConfig                                                                                        
+time="2023-04-30T23:46:20Zlevel=debug msg="syncing CSVcsv=packageserver id=Abhp+ namespace=olm phase=Succeeded                                         
+time="2023-04-30T23:46:20Zlevel=debug msg="syncing CSVcsv=argocd-operator.v0.6.0 id=hzRJ5 namespace=argocd phase=Succeeded                             
+time="2023-04-30T23:46:20Zlevel=debug msg="annotations correctannotationTargets=olm opgroupTargets=olm                                                 
+time="2023-04-30T23:46:20Zlevel=debug msg="annotations correctannotationTargets=argocd opgroupTargets=argocd                                           
+time="2023-04-30T23:46:20Zlevel=debug msg="csv in operatorgroupcsv=packageserver id=yWlNd namespace=olm opgroup=olm-operators phase=Succeeded          
+time="2023-04-30T23:46:20Zlevel=debug msg="csv in operatorgroupcsv=argocd-operator.v0.6.0 id=UQ4/M namespace=argocd opgroup=argocd-operator phase=Succ 
+time="2023-04-30T23:46:20Zlevel=debug msg="no intersecting operatorgroups provide the same apisapis=PackageManifest.v1.packages.operators.coreos.com c 
+time="2023-04-30T23:46:20Zlevel=debug msg="no intersecting operatorgroups provide the same apisapis="AppProject.v1alpha1.argoproj.io,Application.v1alp 
+time="2023-04-30T23:46:20Zlevel=debug msg="checking packageserver                                                                                      
+time="2023-04-30T23:46:20Zlevel=debug msg="checking if csv is replacing an older version                                                               
+time="2023-04-30T23:46:20Zlevel=debug msg="checking argocd-operator.v0.6.0                                                                             
+time="2023-04-30T23:46:20Zlevel=debug msg="checking if csv is replacing an older version                                                               
+time="2023-04-30T23:46:20Zlevel=debug msg="unable to get previous csverror="clusterserviceversions.operators.coreos.com \"argocd-operator.v0.5.0\not 
+time="2023-04-30T23:46:20Zlevel=debug msg="perm.ServiceAccountName: olm-operator-serviceaccount                                                        
+time="2023-04-30T23:46:20Zlevel=debug msg="perm.ServiceAccountName: argocd-operator-controller-manager                                                 
+time="2023-04-30T23:46:20Zlevel=debug msg="failed to get the owner subscription csv=packageserver                                                      
+time="2023-04-30T23:46:20Zlevel=debug msg="no env var to inject into csvcsv=packageserver                                                              
+time="2023-04-30T23:46:20Zlevel=debug msg="perm.ServiceAccountName: argocd-operator-controller-manager                                                 
+time="2023-04-30T23:46:20Zlevel=debug msg="skipping copy for OwnNamespace operatorgroupcsv=argocd-operator.v0.6.0 id=hzRJ5 namespace=argocd phase=Succ 
+time="2023-04-30T23:46:20Zlevel=debug msg="skipping copy for OwnNamespace operatorgroupcsv=packageserver id=Abhp+ namespace=olm phase=Succeeded
+```
+
+hi @leiarenee 
+is `.spec.applicationSet` enabled in your Argo CD CR? Sounds like the appset-controller may not be deployed on the cluster
+Hi @leiarenee , which helm chart are you using to deploy this operator ? Can you please provide more steps and information ? To me, it looks like an invalid issue for this repo. 
+
+
+> Hi @leiarenee , which helm chart are you using to deploy this operator ? Can you please provide more steps and information ? To me, it looks like an invalid issue for this repo.
+
+Hi @iam-veeramalla You can see it in our open source repo here
+fixed version:
+https://github.com/redkubes/otomi-core/tree/main/charts/argocd-operator
+
+My colleague implemented a workaround by explicitly defining version as 0.5 
+
+Previous version which was working fine until it was broken around same time when 0.6 is released:
+https://github.com/redkubes/otomi-core/tree/0f83d9a22417c07b0ded54287df229288b6001f2/charts/argocd-operator
+Hi @leiarenee , we are not the maintianers of that opensource project that helps you install the Argo CD operator. Please use the instructions in the repo to install the operator or you can also install from operatorhub.io
+Hi there,
+There is similar issue with operator in version 0.7.0. 
+I am using OLM to deploy the operator
+
+In below snippet there is a very basic config for the applicationSet controller.
+The operator seems to ignore it. I can't see any logs. The rest of the argocd deployments are created and configured as expected. In the status property you can also see the status `applicationSetController: Unknown`
+
+I am a bit puzzled here as the same configuration was working with operator v0.5.0.
+Was there any change preventing applicationSet controller deployment?
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  annotations:
+    meta.helm.sh/release-name: argocd-operator-cr
+    meta.helm.sh/release-namespace: argocd
+  creationTimestamp: "2023-10-04T06:00:24Z"
+  finalizers:
+  - argoproj.io/finalizer
+  generation: 2
+  labels:
+    app: argocd-operator-cr
+    app.kubernetes.io/instance: argocd-operator-cr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: argocd-operator-cr
+  name: argocd
+  namespace: argocd
+  resourceVersion: "16989046297"
+  uid: 29e5dbd8-ec2b-4999-bf97-f68fb25be05f
+spec:
+  applicationSet:
+    webhookServer:
+      ingress:
+        enabled: false
+      route:
+        enabled: false
+  controller:
+    logLevel: info
+    processors: {}
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256M
+    sharding: {}
+  grafana:
+    enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: false
+  ha:
+    enabled: false
+  initialSSHKnownHosts: {}
+  monitoring:
+    enabled: false
+  notifications:
+    enabled: false
+  oidcConfig: <redacted> 
+  prometheus:
+    enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: false
+  rbac:
+    defaultPolicy: ""
+    policy: |
+      # image updater
+      p, role:image-updater, applications, get, */*, allow
+      p, role:image-updater, applications, update, */*, allow
+      g, image-updater, role:image-updater
+      # admin
+      g, admin, role:admin
+  redis:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256M
+  repo:
+    logLevel: info
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256M
+    volumeMounts:
+    - mountPath: /etc/ssl/certs/custom-ca-certificates.crt
+      name: custom-ca
+      subPath: custom-ca-certificates.crt
+    volumes:
+    - name: custom-ca
+      secret:
+        defaultMode: 420
+        secretName: custom-ca
+  server:
+    autoscale:
+      enabled: false
+      hpa:
+        maxReplicas: 3
+        minReplicas: 1
+        scaleTargetRef:
+          apiVersion: extensions/v1
+          kind: Deployment
+          name: otomi-argocd
+        targetCPUUtilizationPercentage: 70
+    grpc:
+      ingress:
+        enabled: false
+    host: argocd.example.com
+    ingress:
+      enabled: false
+    insecure: true
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256M
+    route:
+      enabled: false
+    service:
+      type: ""
+  tls:
+    ca: {}
+    initialCerts:
+      gitea.example.com: 
+        -----BEGIN CERTIFICATE-----
+        <redacted>
+        -----END CERTIFICATE-----
+status:
+  applicationController: Running
+  applicationSetController: Unknown
+  dex: Unknown
+  phase: Available
+  redis: Running
+  repo: Running
+  server: Running
+  ssoConfig: Unknown
+```

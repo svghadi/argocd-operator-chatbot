@@ -1,0 +1,112 @@
+Dex resources not deleted when `.spec.dex` & `DISABLE_DEX` is set
+**Describe the bug**
+When dex is configured using `.spec.dex` and later disabled using `DISBALE_DEX` env variable, the dex resources are not cleaned up properly. Dex `role`, `rolebinding` & `service account` is deleted however `deployment` & `service` is left behind.
+
+**NOTE: This issue is not always reproducible. It sometimes happen on slower & smaller clusters.** 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install the argocd-operator & create a argocd
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+spec:
+  dex:
+    openShiftOAuth: true
+```
+2. Wait for dex resources to come up
+3. Disable dex by setting `DISABLE_DEX` env var in operator subscription
+```yaml
+spec:
+  config:
+    env:
+    - name: DISABLE_DEX
+       value: "true"
+```
+5. Check deployments, services, roles, rolebindings & service accounts
+```bash
+$ kubectl get deployments
+NAME                 READY   UP-TO-DATE   AVAILABLE   AGE
+argocd-dex-server    1/1     1            1           36m
+
+$ kubectl get services
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+argocd-dex-server       ClusterIP   10.43.48.159    <none>        5556/TCP,5557/TCP   36m
+
+$ kubectl get roles
+NAME                                   CREATED AT
+argocd-argocd-application-controller   2023-05-31T05:37:55Z
+argocd-argocd-grafana                  2023-05-31T05:37:55Z
+argocd-argocd-redis                    2023-05-31T05:37:55Z
+argocd-argocd-redis-ha                 2023-05-31T05:37:55Z
+argocd-argocd-server                   2023-05-31T05:37:55Z
+
+$ kubectl get rolebindings
+NAME                                   ROLE                                        AGE
+argocd-argocd-application-controller   Role/argocd-argocd-application-controller   41m
+argocd-argocd-grafana                  Role/argocd-argocd-grafana                  41m
+argocd-argocd-redis                    Role/argocd-argocd-redis                    41m
+argocd-argocd-redis-ha                 Role/argocd-argocd-redis-ha                 41m
+argocd-argocd-server                   Role/argocd-argocd-server                   41m
+
+$ kubectl get serviceaccounts
+NAME                                   SECRETS   AGE
+argocd-argocd-application-controller   0         41m
+argocd-argocd-grafana                  0         41m
+argocd-argocd-redis                    0         41m
+argocd-argocd-redis-ha                 0         41m
+argocd-argocd-server                   0         41m
+```
+DEX `role`, `rolebinding` & `serviceaccount` is deleted however `deployment` & `service` exists.
+
+**Expected behavior**
+All dex resources should be removed.
+
+**Additional context**
+In operator controller logs, we can see a dex related error during reconciliation
+`"error": "ServiceAccount \"argocd-argocd-dex-server\" not found"`
+```bash
+1.6855119748585215e+09	INFO	controller.argocd	Reconciling ArgoCD	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "default", "namespace": "default", "name": "argocd"}
+1.6855119748613307e+09	INFO	controller_argocd	reconciling SSO
+1.6855119748719842e+09	INFO	controller_argocd	reconciling status
+1.6855119749034252e+09	INFO	controller_argocd	reconciling roles
+1.685511974905413e+09	INFO	controller_argocd	deleting the existing Dex role because dex is not configured
+1.6855119749172773e+09	INFO	controller_argocd	reconciling roles for source namespaces
+1.6855119749174168e+09	INFO	controller_argocd	performing cleanup for source namespaces
+1.6855119749174821e+09	INFO	controller_argocd	reconciling rolebindings
+1.6855119750200965e+09	INFO	controller_argocd	deleting the existing Dex service account because dex uninstallation requested
+1.685511975026273e+09	INFO	controller_argocd	deleting the existing Dex roleBinding because dex uninstallation is requested
+1.6855119750360234e+09	INFO	controller_argocd	reconciling service accounts
+1.6855119750419111e+09	INFO	controller_argocd	reconciling certificate authority
+1.6855119750419734e+09	INFO	controller_argocd	reconciling CA secret
+1.6855119750423326e+09	INFO	controller_argocd	reconciling CA config map
+1.6855119750426521e+09	INFO	controller_argocd	reconciling secrets
+1.685511975165774e+09	ERROR	controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "default", "error": "ServiceAccount \"argocd-argocd-dex-server\" not found"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:227
+1.6855119751674433e+09	INFO	controller.argocd	Reconciling ArgoCD	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "default", "namespace": "default", "name": "argocd"}
+1.6855119751676958e+09	INFO	controller_argocd	reconciling SSO
+1.6855119751677718e+09	INFO	controller_argocd	reconciling status
+1.6855119751787515e+09	INFO	controller_argocd	reconciling roles
+1.685511975183736e+09	INFO	controller_argocd	reconciling roles for source namespaces
+1.6855119751837907e+09	INFO	controller_argocd	performing cleanup for source namespaces
+1.6855119751838064e+09	INFO	controller_argocd	reconciling rolebindings
+1.6855119751888754e+09	INFO	controller_argocd	reconciling service accounts
+1.6855119751940534e+09	INFO	controller_argocd	reconciling certificate authority
+1.6855119751941032e+09	INFO	controller_argocd	reconciling CA secret
+1.6855119751941624e+09	INFO	controller_argocd	reconciling CA config map
+1.6855119751942225e+09	INFO	controller_argocd	reconciling secrets
+1.6855119753125482e+09	ERROR	controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "default", "error": "ServiceAccount \"argocd-argocd-dex-server\" not found"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:227
+1.6855119753128474e+09	INFO	controller.argocd	Reconciling ArgoCD	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "default", "namespace": "default", "name": "argocd"}
+1.6855119753130524e+09	INFO	controller_argocd	reconciling SSO
+1.685511975313111e+09	INFO	controller_argocd	reconciling status
+```
+

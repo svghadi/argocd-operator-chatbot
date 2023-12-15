@@ -1,0 +1,16 @@
+Question: Custom Tools
+Is it possible to add custom tools as described here: https://argoproj.github.io/argo-cd/operator-manual/custom_tools/
+
+Hi @nwalens, you could use an alternate container image by specifying your custom image in the Spec.Image and Spec.Version properties on the ArgoCD custom resource. The Version property is the container image tag to use. This is similar to what is described in the Build Your Own Image section.
+
+https://argoproj.github.io/argo-cd/operator-manual/custom_tools/#byoi-build-your-own-image
+
+That would replace the image for all of the Argo CD components though, not just the repo-server but I would think that should be fine for most.
+
+The custom tools as described (using init-containers, etc.) is not currently possible but could be something we can add to the operator. Is there a specific use-case you are looking to solve?
+Hi @jmckind, thanks for reply. Indeed there is a use case where I want to add SOPS to the argocd repo server.
++1 
+Being able to access the spec allows us to provide credentials securely to repo-server (via mounting secrets etc.) so it may decrypt sops encrypted files. 
+@HumairAK , @nwalens,
+
+Until this is implemented, one can use a [KubeMod](https://github.com/kubemod/kubemod) ModRule to customize any of the resource specs produced by the operator.

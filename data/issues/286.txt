@@ -1,0 +1,15 @@
+GPG config map not mounted to repo server pod
+**Describe the bug**
+
+The GnuPG feature in Argo CD requires the `argocd-gpg-keys-cm` ConfigMap to be volume mounted to the repository server's pods. Currently, the repo server deployments created by Argo CD Operator do not create this volume mount. This renders GPG feature of Argo CD unusable.
+
+**To Reproduce**
+
+* Reconcile ArgoCD resource named `default`
+* Run `kubectl describe deployment default-repo-server`
+* Check for volume mount of `argocd-gpg-keys-cm` ConfigMap to `/app/config/gpg/source`
+
+**Expected behavior**
+
+ConfigMap correctly mounted to repo server pods
+

@@ -1,0 +1,16 @@
+Unable to get a working install, bare metal kubeadm 1.18
+Greetings, thanks for such a promising tool set!
+
+I'm trying to install the operator using the OLM on bare metal k8s 1.18 via Kubeadm. Not having much luck. The manifests off operatorhub.io use a namespace of `my-argocd-operator` and that's the only place I can put an `ArgoCD` CR that it will get picked up. 
+
+Once it does, the sample app in the primary docs does not work to the default namespace:
+
+```
+services is forbidden: User "system:serviceaccount:argocd:argocd-application-controller" cannot create resource "services" in API group "" in the namespace "default"
+```
+
+Not sure where to go from here..
+@briantopping I believe this is expected. Using OLM, you should be able to deploy the argocd-operator to any namespace that you want. However, with the current implementation of this operator, it will only pick up ArgoCD CR's in the namespace that the operator is deployed in. There is an open issue for this one here: #107 
+
+As for the second part of your issue, it looks like this is just because that serviceaccount doesn't have access to deploy to the `default` namespace. That error looks a bit odd though because from what you're saying you deployed to the `my-argocd-operator` namespace, but that error refers to a serviceaccount in the `argocd` namespace. This may just be an artifact of working from an example though. I would recommend just making sure that all of the examples your working from are deploying/referencing things in the right namespace -- but happy to help out more if you can provide further details.
+Hi @tylerauerbeck thanks a bunch for the quick response! I'm going to close this for now as "expected behavior" and see if I can figure it out.

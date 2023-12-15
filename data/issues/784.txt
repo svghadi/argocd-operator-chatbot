@@ -1,0 +1,25 @@
+ArgoCD Redis HA-Proxy service account missing prefix when got upgraded
+**Describe the bug**
+An Argo-CD Operator upgrade to a 0.4.0 version (provided by Argo CD Community) led to an Argo-CD malfunction, did not sync any app anymore and a lot of application resources were not showed in UI console.
+Taking a look to ArgoCD application controller logging showed this message:
+`level=error msg="Failed to cache app resources: error setting app resource tree: dial tcp 172.30.138.187:6379: connect: connection refused"`
+With that endpoint, all services were ckecked.So, found "prd-redis-ha-haproxy" service had no pods as endpoint.
+"prd-redis-ha-haproxy" replicaSet had 1 as desired state and 0 current. Logs showed this cause:
+` Error creating: pods "prd-redis-ha-haproxy-54575b64d9-" is forbidden: error looking up service account argocd/argocd-redis-ha: serviceaccount "argocd-redis-ha"  not found`
+Service account provided by Argo-CD is "prd-argocd-redis-ha" instead of "argocd-redis-ha", 
+So in order to fix manually this issue, we had to modify prd-redis-ha-proxy ReplicaSet from:
+` Service Account:  argocd-redis-ha ->  Service Account:  prd-argocd-redis-ha`
+
+**To Reproduce**
+Argo-CD is running in an Openshift Hub cluster. An Openshift cluster update from 4.8 to 4.9.46 version can reproduce the issue. This push an Argo-CD  Operator update to a 0.4.0 version.
+
+**Expected behavior**
+Deploying a new version of Argo-CD should not cause Redis proxy connection issues. It should not be necessary to manually repair replicaset entity.
+
+
+Hi @carlostaffe , sorry for getting back late on this one. 
+
+Which version of Argo Operator did you upgrade from ? Is it `< 0.1.0` to `0.4.0` ?  We introduced some breaking changes in `0.1.0`. After `0.1.0` the API is stable.  
+Hi Iam,
+As far as I remember ArgoCD operator installed last year was 0.0.15 .
+Thanks for ask.

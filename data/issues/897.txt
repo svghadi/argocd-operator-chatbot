@@ -1,0 +1,9 @@
+Operator Version 0.6.0 is not part of redhat-openshift community-operators
+The new operator version is not yet part of the openshift community-operators index. It used to be available there as well and should be updated to the most recent version.
+Hi @bo0ts , I requested the team to merge 
+https://github.com/redhat-openshift-ecosystem/community-operators-prod/pull/2542
+@iam-veeramalla I doubt this will ever get merged as long as 4.8 is not supported, which is a real problem since this breaks updates for almost all OpenShift users.
+Hi, I just noticed the PR in redhat-openshift-ecosystem/communti-operators-prod-repo regarding argocd-operator release 0.6.0 was closed.
+
+Will we see 0.6.0 in OpenShift OperatorHub?
+@jonaslar I don't think so, the new PR is still not there.

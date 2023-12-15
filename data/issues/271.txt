@@ -1,0 +1,3 @@
+Allow RepoServer to be configured
+Currently (based off of the docs), it looks like we have the ability to configure all most components through the ArgoCD CR. However I recently noticed that the RepoServer is missing from this list after being asked if it was possible to configure what image the RepoServer used. We should look at allowing this component to be configured in the same manners the others are.
+👍 

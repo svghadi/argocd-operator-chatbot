@@ -1,0 +1,10 @@
+Add support for RH-SSO 7.6 as RH-SSO 7.5 is deprecated
+> if your feature request is a large change and requires a formal proposal or design doc, please read the docs for [contributing](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/developer-guide/contributing.md) first. You may need to submit an additional Pull Request using the [enhancement proposal template](https://github.com/argoproj-labs/argocd-operator/blob/master/docs/proposals/001-proposal-template.md).
+
+
+**Is your feature request related to a problem? Please describe.**
+RH-SSO 7.5 is deprecated, The default version of RH-SSO used by Argo CD Operator currently is RH-SSO 7.5. This is not good sign for the users as the deprecated version is no longer supported.
+
+**Describe the solution you'd like**
+Add support for RH-SSO 7.6 as RH-SSO 7.5 is deprecated
+

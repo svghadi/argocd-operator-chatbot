@@ -1,0 +1,24 @@
+Error updating docs. 
+**Describe the bug**
+CI builds on readthedocs are failing from past few weeks with the below error
+```
+[33mWARNING  -  [0mConfig value: 'site_url'. Warning: This option is now required. Set to a valid URL or an empty string to avoid an error in a future release.
+[33mWARNING  -  [0mConfig value: 'site_url'. Warning: The 'use_directory_urls' option has been disabled because 'site_url' contains an empty value. Either define a valid URL for 'site_url' or set 'use_directory_urls' to False.
+```
+[argocd-operator-docs-builds](https://readthedocs.org/projects/argocd-operator/builds/)
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Make changes to the docs and verify the build status in the readthedocs argocd-operator project.
+[argocd-operator-docs-builds](https://readthedocs.org/projects/argocd-operator/builds/)
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+Fix build issues.
+
+**Screenshots**
+<img width="1083" alt="Screenshot 2021-06-11 at 3 20 40 PM" src="https://user-images.githubusercontent.com/43399466/121670851-85639580-cacb-11eb-9f79-98975a224b4c.png">
+
+**Additional context**
+NA
+

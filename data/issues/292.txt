@@ -1,0 +1,242 @@
+Log in into Grafana
+**Describe the bug**
+I have followed the documentation from https://argocd-operator.readthedocs.io/en/latest/usage/insights/ in order to monitor through Grafana the ArgoCD operator and its instances. When I create a `CR` of type `ArgoCD` I specify `Grafana`, `ingress` and `prometheus` as `enabled`, which creates some services such as `example-argocd-grafana`. Going to that route it asks me for my password (I assume the user is `asmin`) and I have not set it. In the documentation of the example https://argocd-operator.readthedocs.io/en/latest/usage/ingress/#ui it says to use the _Name of the server Pod_, which in my case does not work.
+**To Reproduce**
+- Running in Openshift 4
+- Operator version: _0.0.14_ 
+
+Steps to reproduce the behavior:
+1. Create the template
+```
+$ cat example-argocd.yaml
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: argo-example
+  annotations:
+    description: Template to deploy Argo CD example.
+    tags: argo
+    openshift.io/provider-display-name: Red Hat, Inc.
+    openshift.io/support-url: https://access.redhat.com
+objects:
+- apiVersion: argoproj.io/v1alpha1
+  kind: ArgoCD
+  metadata:
+    name: example-argocd
+    labels:
+      example: insights
+  spec:
+    grafana:
+      enabled: true
+    ingress:
+      enabled: true
+    prometheus:
+      enabled: true
+    server:
+      insecure: true
+```
+2. Run it and see objects created:
+```
+oc process -f example-argocd.yaml | oc apply -f -
+$ oc get svc
+NAME                            TYPE           CLUSTER-IP       EXTERNAL-IP                            PORT(S)             AGE
+argocd-operator-metrics         ClusterIP      172.30.45.208    <none>                                 8383/TCP,8686/TCP   3h22m
+example-argocd-dex-server       ClusterIP      172.30.97.171    <none>                                 5556/TCP,5557/TCP   127m
+example-argocd-grafana          ClusterIP      172.30.126.230   <none>                                 80/TCP              10m
+example-argocd-metrics          ClusterIP      172.30.9.164     <none>                                 8082/TCP            127m
+example-argocd-redis            ClusterIP      172.30.10.209    <none>                                 6379/TCP            127m
+example-argocd-repo-server      ClusterIP      172.30.118.57    <none>                                 8081/TCP,8084/TCP   127m
+example-argocd-server           ClusterIP      172.30.63.53     <none>                                 80/TCP,443/TCP      127m
+example-argocd-server-metrics   ClusterIP      172.30.11.157    <none>                                 8083/TCP            127m
+frontend                        NodePort       172.30.10.54     <none>                                 80:31958/TCP        162m
+kubernetes                      ClusterIP      172.30.0.1       <none>                                 443/TCP             5d22h
+openshift                       ExternalName   <none>           kubernetes.default.svc.cluster.local   <none>              5d22h
+prometheus-operated             ClusterIP      None             <none>                                 9090/TCP            10m
+redis-master                    ClusterIP      172.30.8.62      <none>                                 6379/TCP            162m
+redis-slave                     ClusterIP      172.30.114.54    <none>                                 6379/TCP            162m
+
+$ oc get routes
+NAME                      HOST/PORT                                                           PATH   SERVICES                  PORT           TERMINATION            WILDCARD
+argocd-operator-metrics   argocd-operator-metrics-default.apps.apps.sandbox1684.opentlc.com          argocd-operator-metrics   http-metrics                          None
+argocd-server             argocd-server-default.apps.apps.sandbox1684.opentlc.com                    argocd-server             https          passthrough/Redirect   None
+example-argocd-grafana    example-argocd-grafana-default.apps.apps.sandbox1684.opentlc.com           example-argocd-grafana    http                                  None
+frontend                  frontend-default.apps.apps.sandbox1684.opentlc.com                         frontend                  80                                    None
+
+$ oc get pods
+NAME                                                     READY   STATUS    RESTARTS   AGE
+argocd-operator-67bb56d5f6-wnffq                         1/1     Running   0          3h23m
+example-argocd-application-controller-7896758995-fffms   1/1     Running   0          127m
+example-argocd-dex-server-7d985f7c7d-z88q8               1/1     Running   0          127m
+example-argocd-grafana-5cdcc55994-7j8vl                  1/1     Running   0          10m
+example-argocd-redis-5cc8b58ff9-r9c87                    1/1     Running   0          127m
+example-argocd-repo-server-7c955bb447-pkdq6              1/1     Running   0          127m
+example-argocd-server-6c67cc9c8b-js4wb                   1/1     Running   0          127m
+frontend-6c6d6dfd4d-lt2l9                                1/1     Running   0          162m
+frontend-6c6d6dfd4d-mbvnt                                1/1     Running   0          162m
+frontend-6c6d6dfd4d-svcl4                                1/1     Running   0          162m
+prometheus-example-argocd-0                              2/2     Running   1          10m
+prometheus-operator-6b9754d8bb-6kwkh                     1/1     Running   0          142m
+redis-master-f46ff57fd-bbrwc                             1/1     Running   0          162m
+redis-slave-7979cfdfb8-fjxl7                             1/1     Running   0          162m
+redis-slave-7979cfdfb8-rsq2j                             1/1     Running   0          162m
+spark-operator-844dd6bc95-b8sdl                          0/1     Error     53         4h9m
+
+$ oc get routes
+NAME                      HOST/PORT                                                           PATH   SERVICES                  PORT           TERMINATION            WILDCARD
+argocd-operator-metrics   argocd-operator-metrics-default.apps.apps.sandbox1684.opentlc.com          argocd-operator-metrics   http-metrics                          None
+argocd-server             argocd-server-default.apps.apps.sandbox1684.opentlc.com                    argocd-server             https          passthrough/Redirect   None
+example-argocd-grafana    example-argocd-grafana-default.apps.apps.sandbox1684.opentlc.com           example-argocd-grafana    http                                  None
+frontend                  frontend-default.apps.apps.sandbox1684.opentlc.com                         frontend                  80                                    None
+```
+
+When I access **example-argocd-grafana-default.apps.apps.sandbox1684.opentlc.com** it appears the login window from Grafana.  As I said, I have already tried **example-argocd-server-6c67cc9c8b-js4wb** as password
+
+**Expected behavior**
+Know the password
+
+Moreover,I have followed https://argocd-operator.readthedocs.io/en/latest/usage/basics/#secrets and use the value of the secrets to access and I still cannot manage it.
+I have the following secrets:
+
+```
+$ oc get secret
+NAME                                            TYPE                                  DATA   AGE
+argocd-application-controller-dockercfg-nn529   kubernetes.io/dockercfg               1      9h
+argocd-application-controller-token-48zh5       kubernetes.io/service-account-token   4      9h
+argocd-application-controller-token-75f2x       kubernetes.io/service-account-token   4      9h
+argocd-dex-server-dockercfg-r5xpk               kubernetes.io/dockercfg               1      9h
+argocd-dex-server-token-l4229                   kubernetes.io/service-account-token   4      9h
+argocd-dex-server-token-ncsth                   kubernetes.io/service-account-token   4      9h
+argocd-operator-dockercfg-h7mgj                 kubernetes.io/dockercfg               1      9h
+argocd-operator-token-5rdbc                     kubernetes.io/service-account-token   4      9h
+argocd-operator-token-mnwnx                     kubernetes.io/service-account-token   4      9h
+argocd-redis-ha-dockercfg-plz4z                 kubernetes.io/dockercfg               1      9h
+argocd-redis-ha-token-ppsh2                     kubernetes.io/service-account-token   4      9h
+argocd-redis-ha-token-xwfqc                     kubernetes.io/service-account-token   4      9h
+argocd-secret                                   Opaque                                5      9h
+argocd-server-dockercfg-bsn96                   kubernetes.io/dockercfg               1      9h
+argocd-server-token-khslc                       kubernetes.io/service-account-token   4      9h
+argocd-server-token-lnfj9                       kubernetes.io/service-account-token   4      9h
+builder-dockercfg-7phwl                         kubernetes.io/dockercfg               1      9h
+builder-token-k87vp                             kubernetes.io/service-account-token   4      9h
+builder-token-vhdvw                             kubernetes.io/service-account-token   4      9h
+default-dockercfg-rmtrk                         kubernetes.io/dockercfg               1      9h
+default-token-4zc6x                             kubernetes.io/service-account-token   4      9h
+default-token-vsbp8                             kubernetes.io/service-account-token   4      9h
+deployer-dockercfg-mjgr5                        kubernetes.io/dockercfg               1      9h
+deployer-token-2p7gc                            kubernetes.io/service-account-token   4      9h
+deployer-token-8n7fd                            kubernetes.io/service-account-token   4      9h
+example-argocd-ca                               kubernetes.io/tls                     3      9h
+example-argocd-cluster                          Opaque                                1      9h
+example-argocd-grafana                          Opaque                                3      9h
+example-argocd-tls                              kubernetes.io/tls                     2      9h
+prometheus-example-argocd                       Opaque                                1      9h
+prometheus-example-argocd-tls-assets            Opaque                                0      9h
+prometheus-k8s-dockercfg-5ptc4                  kubernetes.io/dockercfg               1      9h
+prometheus-k8s-token-bkxrz                      kubernetes.io/service-account-token   4      9h
+prometheus-k8s-token-dvsjl                      kubernetes.io/service-account-token   4      9h
+prometheus-operator-dockercfg-gdrh9             kubernetes.io/dockercfg               1      9h
+prometheus-operator-token-wgxvg                 kubernetes.io/service-account-token   4      9h
+prometheus-operator-token-zhw2f                 kubernetes.io/service-account-token   4      9h
+```
+And I have tried to use the `example-argocd-cluster` and `example-argocd-grafana` to access Grafana with no luck
+
+
+Hi @hect1995 , Thanks for reaching us out. Let me take a look at this. 
+The Grafana is deployed by the `ArgoCD` object:
+
+```
+- apiVersion: argoproj.io/v1alpha1
+  kind: ArgoCD
+  metadata:
+    name: example-argocd
+    labels:
+      example: insights
+  spec:
+    grafana:
+      enabled: true
+    ingress:
+      enabled: true
+    prometheus:
+      enabled: true
+    server:
+      service:
+        type: LoadBalancer
+      route:
+        enabled: true
+      insecure: true
+```
+Hi @hect1995 , I was able to login to grafana. 
+
+ArgoCD Object -> Same as yours (Just added route.enabled) in the grafana section
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  creationTimestamp: '2021-04-28T10:05:26Z'
+  generation: 3
+  labels:
+    example: insights
+  name: example-argocd
+  namespace: argocd
+  resourceVersion: '97072'
+  uid: 03bb69a3-04c1-4316-8e4b-1ae8699a03fc
+spec:
+  grafana:
+    enabled: true
+    route:
+      enabled: true
+  ingress:
+    enabled: true
+  prometheus:
+    enabled: true
+  server:
+    insecure: true
+    route:
+      enabled: true
+```
+
+Get the grafana route
+```
+----->  oc get route -n argocd
+NAME                     HOST/PORT                                                                        PATH   SERVICES                 PORT   TERMINATION     WILDCARD
+example-argocd-grafana   example-argocd-grafana-argocd.apps.dev-svc-4.8-042807.devcluster.openshift.com          example-argocd-grafana   http                   None
+```
+
+Get the grafana password:
+--------------------------
+Username - Admin
+Password is saved in base64 format  in`example-argocd-cluster` secret.
+
+-----> oc edit secret example-argocd-cluster -n argocd
+
+Decode the base64 password using the below command.
+```
+echo -n "MURhWm15TlVzOGN1cFFMNHhTTWk5Q1JQcnZGT0VqejI=" | base64 --decode | xargs
+``` 
+
+Oooh it worked with the __decode__. How can I set the password directly when creating the Grafana object using `ArgoCD`. If not what is the fastest way to change it?
+I tried:
+```
+kubectl -n argocd patch secret example-argocd-cluster \
+  -p '{"stringData": {
+    "admin.password": "xxxxxxxxx"
+  }}'
+```
+But it does not work
+
+The best option for my problem would be to directly put the password I want for Grafana when declaring the `ArgoCD` object, in order to have it everything embedded into the CR object, but I do not see it in the documentation
+
+
+@hect1995 Storing the password in the CR would not be a good option. Secrets are used to store passwords. You should be able to overwrite the default password in `example-argocd-grafana`
+But can I just import a secret into the CR definition? So I store the password in a secret and then pass the secret to the CR. I cannot see this functionality, which forces me to manually do
+```
+kubectl -n argocd patch secret example-argocd-cluster \
+  -p '{"stringData": {
+    "admin.password": "xxxxxxxxx"
+  }}'
+```
+Yes we do not have such functionality. Please raise a enhancement request with us if you think this is important :)
+@hect1995 I have updated the docs for this issue in the PR 
+https://github.com/argoproj-labs/argocd-operator/pull/297
+
+Please let us know if this will stop other users from running into this issue ?

@@ -1,0 +1,21 @@
+route creation in Openshift
+Hello,
+I'm trying to create ArgoCD with Routes in my OCP 4.4 following this page: https://argocd-operator.readthedocs.io/en/latest/usage/routes/
+ArgoCD operator `0.0.9 provided by Argo CD Community `
+
+
+```bash
+$ echo "
+> apiVersion: argoproj.io/v1alpha1
+> kind: ArgoCD
+> metadata:
+>   name: main-argocd
+>   namespace: argocd
+> spec:
+>   server:
+>     route:
+>       enabled: true
+> " | oc apply -f -
+The ArgoCD "main-argocd" is invalid: spec.server.route: Invalid value: "object": spec.server.route in body must be of type boolean: "object"
+```
+I was using example from 0.0.10 operator version while running 0.0.9, my bad :)

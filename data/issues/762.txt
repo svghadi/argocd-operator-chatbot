@@ -1,0 +1,41 @@
+HelpChat cannot be disabled via Operator-Property
+**Describe the bug**
+When setting `helpChatURL: ''` within ArgoCD custom resource, the value is not propagated to the argocd-cm ConfigMap
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Configure ArgoCD custom resource with
+```
+spec:
+  helpChatURL: ''
+```
+2. Look at ConfigMap argocd-cm. There it says:
+```
+  help.chatUrl: 'https://mycorp.slack.com/argo-cd'
+```
+
+An empty string would hide the "Chat" button within ArgoCD. With the URL set, the button is always shown.
+
+**Workaround**
+It is possible to configure the ArgoCD custom resource as follows to get the `''` in argocd-cm
+
+```
+spec:
+  extraConfig:
+    help.chatUrl: ''
+```
+
+**Expected behavior**
+The empty string should appear in argocd-cm.
+
+**Additional context**
+
+The root cause seems to be the `len(...) > 0` here:
+https://github.com/argoproj-labs/argocd-operator/blob/150519d954d16c0f60675e1b22a5f06671d53fad/controllers/argocd/configmap.go#L87-L89
+
+
+What would the requirement of an empty url string be?
+An empty URL string seems to be the only way to hide the chat button on the lower right side of ArgoCD UI. As we do not have a help chat, the button is rather pointless, so I tried to remove it from the UI.
+
+https://github.com/argoproj/argo-cd/blob/1804d771c7fceacc0710de82b8edc3cc891f23b3/ui/src/app/ui-banner/ui-banner.tsx#L97-L103
+Makes sense @MichaelWarnecke, I will fix this behaviour. 

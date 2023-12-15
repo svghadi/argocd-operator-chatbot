@@ -1,0 +1,12 @@
+Documentation: update application-set controller default image
+### Is your task related to a problem? Please describe.
+The default applicationset-controller image in the [documentation](https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#applicationset-controller-options) points to the old appicationset-controller image.
+
+### Describe the solution you'd like
+Update the documentation with the information that the applicationset-controller is now part of the regular argocd container image.
+
+Thank you for addressing this issue so fast, guys! However, I think the image is still wrong as the applicationset controller moved into the regular `argoproj/argocd` to my knowledge. 
+
+When I migrated from 0.3.0 to 0.4.0, I had to switch to that image. The `quay.io/argoproj/argocd-applicationset` that is now in the docs failed to start with a missing security context and hasn't been updated in 5 months.
+
+Can you please verify? The [README](https://github.com/argoproj/applicationset) of the old applicationset controller repository says pretty much the same.

@@ -1,0 +1,4 @@
+Add Support for Backups to a GCP Bucket
+The operator should support storing exports/backups in a GCP bucket.
+PR #69 added for this. Working through the last of the documentation and should merge soon.
+Merged into master and will go out in the v0.0.9 release.

@@ -1,0 +1,25 @@
+Missing syntax-highlighting, toggle button for screen mode in argocd-operator docs
+**Describe the bug**
+I noticed that the argocd-operator documentation is missing the toggle change button at the top and syntax highlighting for the code blocks, which are present in the argocd-docs. These features provide better ease of use and enhance the overall appearance of the documentation website.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+Check current argocd-operator docs and argocd-docs to see the difference
+
+
+**Current behavior**
+
+<img width="949" alt="Screenshot 2023-09-19 102327" src="https://github.com/argoproj-labs/argocd-operator/assets/91555602/9fc1beee-dbd3-4b6b-9e08-24298bdcf6d7">
+
+
+**Expected behavior**
+
+<img width="921" alt="Screenshot 2023-09-19 103428" src="https://github.com/argoproj-labs/argocd-operator/assets/91555602/8f5f6def-f83e-40dd-927f-cd1478495f7b">
+<img width="939" alt="Screenshot 2023-09-19 102240" src="https://github.com/argoproj-labs/argocd-operator/assets/91555602/c7a8b1a4-37ae-48f8-b20a-0d13fd43f026">
+
+
+**Additional context**
+the above expected behavior screenshots are from my local mkdocs server by adding few changes int the mkdocs.yaml and requirements file
+Add any other context about the problem here.
+
+Implemented with #1002 

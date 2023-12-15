@@ -1,0 +1,6 @@
+Application-scoped Argo instance fails to sync when a managed namespace is deleted
+**Describe the bug**
+
+See https://github.com/redhat-developer/gitops-operator/issues/229 for details
+
+

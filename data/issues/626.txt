@@ -1,0 +1,50 @@
+Add ingressClassName to ArgoCDIngressSpec
+**Is your feature request related to a problem? Please describe.**
+The `kubernetes.io/ingress.class` annotation is deprecated and replaced by the `ingressClassName` parameter in the latest ingress spec.
+
+**Describe the solution you'd like**
+Allow setting `ingressClassName` in `ArgoCDIngressSpec`. Setting `ingressClassName` should override any defaults that might be set currently.
+
+**Additional context**
+I'm happy to work on this feature if we agree on the details.
+
+Hi @sagikazarmark , I was about raise the similar issue. Thanks :)
+
+Yes, Ingress Class annotation is deprecated(never formally support) and moved to IngressClassName in the spec.
+
+I would like to see the below.
+1. Remove the hard coded Nginx related Ingress annotations(IngressClass, SSLRedirect ..).
+2. Allow users to provide their  IngressClassName through Argo CD CRD.
+3. Allow users to provide custom annotations supported by their Ingress controller through Argo CD CRD.
+
+@sagikazarmark Do we agree on the above ?
+@sagikazarmark you have shown interest in working on this issue. Please let me know if you would like me to assign this to you. Thanks :)
+
+@iam-veeramalla Yep, I'm happy to take this one.
+
+A couple notes though:
+
+> Remove the hard coded Nginx related Ingress annotations(IngressClass, SSLRedirect ..).
+
+This would be a breaking change. Is that acceptable?
+(The behavior would change from using "nginx" to using the default ingress controller)
+Also, I'd rather classify this as an enhancement, not necessarily a bug. My two cents.
+@sagikazarmark how about having nginx as default and allow users to configure a custom one through CRD ? If a custom Ingress controller is configured through CRD, we can remove the default Nginx.
+
+That way this wouldn't be a breaking change. 
+Well, it's not that simple unfortunately. When the `ingressClassName` in an `Ingress` resource is unspecified/`nil`, Kubernetes automatically falls back to the default Ingress Controller.
+
+It would certainly be a reasonable expectation that the Ingress configuration for the CRD works the same way (which contradicts with the current behavior).
+
+To be clear: I think breaking the current behavior is the easiest solution here (especially because not everyone uses nginx as their ingress controller, so one could argue this opinionated default doesn't make much sense in the first place).
+
+An alternative I can imagine is introducing a temporary switch, like `--disable-default-ingress-annotations` to tell the controller not to apply those annotations at all. But that's more complicated and would result in a second breaking change down the line (when the switch is removed).
+@sagikazarmark I would agree with you. 
+
+The current behavior would not work down the line anyways as it is deprecated annotation. We can mention about the annotation removal in the release notes and also steps to configure the new Ingress Class. 
+Ok. I'll get to work.
+@iam-veeramalla please see the linked PR.
+Hi @sagikazarmark Hope you are doing well. Just curious, would this change resolve the issue mentioned here https://github.com/argoproj-labs/argocd-operator/discussions/603
+
+Thank you for your support :) 
+@bitvijays I don't think it's related.

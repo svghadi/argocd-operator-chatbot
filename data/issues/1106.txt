@@ -1,0 +1,50 @@
+Errors in ClusterServiceVersion 'argocd-operator.v0.8.0': OwnNamespace InstallModeType not supported, cannot configure to watch own namespace
+**Describe the bug**
+The installation of the argocd-operator fails in the last step, no argocd-operator pods are being started. The reason might be the error visible in the clusterServiceVersion argocd-operator.v0.8.0
+
+```
+Events:
+  Type     Reason                    Age                    From                        Message
+  ----     ------                    ----                   ----                        -------
+  Warning  UnsupportedOperatorGroup  2m35s (x2 over 2m35s)  operator-lifecycle-manager  OwnNamespace InstallModeType not supported, cannot configure to watch own namespace
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+Follow the [documentation](https://argocd-operator.readthedocs.io/en/latest/install/olm/) and copy&paste snippets from the git repository at [./deploy/](https://github.com/argoproj-labs/argocd-operator/tree/v0.8.0/deploy).
+
+Be sure to patch the olm namespace to work around #945 
+
+- `catalogsource` is created successfully
+- catalog pod is started successfully
+- `operatorgroup` is created successfully
+- `subscription` is created successfully
+- `installplan` is created successfully, but shows the error above
+- NO argocd-operator pods are being started
+
+**Expected behavior**
+The `installplan` should not show errors and the argocd-operator pod show start.
+
+**Additional context**
+k3s singlenode cluster running on openSUSE Leap 15.5
+olm installed via their latest instructions (v0.26.0)
+Putting the operatorgroup and the subscription into a third namespace `argocd-operator` brings up this error in the csv:
+
+```
+Events:
+  Type     Reason                    Age                From                        Message
+  ----     ------                    ----               ----                        -------
+  Warning  UnsupportedOperatorGroup  99s (x2 over 99s)  operator-lifecycle-manager  SingleNamespace InstallModeType not supported, cannot configure to watch one namespace
+```
+
+Putting the operatorgroup into `argocd-operator` and the subscription into `argocd` errors out, because `csv in namespace with no operatorgroups`
+Removing the `targetNamespaces` from the `operatorgroup`, which makes this a "global" operatorgroup, leads to the installation of the ArgoCD Operator being successfully. And I can then successfully install a ArgoCD instance into the `argocd` namespace.
+Hi @johanneskastl , argocd-operator no longer supports namespace install mode. We had to drop the namespace install mode inorder to support conversion webhook for api upgrades. 
+
+There are few more breaking changes in 0.8.0 release. Please refer [release notes](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.8.0) for more details.
+@svghadi Thanks for the fast reply! Then I guess the example deployment files should be adapted?
+
+https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/operator_group.yaml#L6
+
+This still contains the `targetNamespaces`...

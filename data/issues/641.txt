@@ -1,0 +1,13 @@
+Allow users to add entries to Argo CD configmap to consume new Argo CD features.
+**Describe the bug**
+
+Problem Statements
+As the Argo CD upstream project evolves, new features are continuously added and new config-cm configurations are constantly introduced. Argocd Operator is virtually impossible to keep up with Argo CD’s new configurations. Argocd Operator is lagging behind to support new Argo CD features in months or more
+Oftentimes to support a new feature, it is as simple as reconciling a config-cm entry. For example,https://github.com/argoproj-labs/argocd-operator/pull/598 introduced a map entry application.resourceTrackingMethod. However, the code to make this a first class configuration as a field Argocd CR required to touch 10+ files. It takes quite  a bit of engineering effort to reconcile just one new config-cm entry. Since we make a new field in Arogcd CR, the user will have to read the Argocd Operator’s manual in order to figure out the name of the field even though the user may already know the config-cm entry key.
+
+**To Reproduce**
+NA
+
+**Additional context**
+Add any other context about the problem here.
+

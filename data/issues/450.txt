@@ -1,0 +1,29 @@
+ApplicationSets, Keycloak deployments does not respect NodeSelector and Tolerations in the Argo CD CR.
+**Describe the bug**
+#410  adds support to NodeSelectors and Tolerations. When NodeSelectors and Tolerations are added to the Argo CD CR as described in the #410 all the workloads gets scheduled on the expected Node. 
+
+However, ApplicationSets and Keycloak are exceptions. Both ApplicationSets and Keycloak are not installed OOTB, A user needs to update them in the CR explicitly. When they are explicitly mentioned in the CR, they do not seem to respect the NodeSelector and Tolerations in the Argo CD CR.
+
+**To Reproduce**
+Run the operator locally using `make install && make run`
+Create the Argo CD CR with spec as shown below.
+```
+spec:
+  applicationSet: {}
+  sso:
+    provider: keycloak
+  nodePlacement:
+    nodeSelector:
+      abc: abc
+    tolerations:
+      - effect: NoSchedule
+        key: abc
+        value: abc
+```
+
+**Expected behavior**
+All the workloads including AppSets and Keycloak should get scheduled on the requested Node.
+
+**Additional context**
+NA
+

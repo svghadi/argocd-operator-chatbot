@@ -1,0 +1,60 @@
+OLM version mismatch/initialSSHKnownHosts validation error
+Hello! Looks like OLM CatalogSource still holds 0.12 hash, after replacing it to `sha256:5c5aae9e6fae7ec03b92185389178fd20749a47f881ed520a24492ee347d4a77` I was able to install 0.13 operator, but it looks like 0.13 feature with inclusion of default ssh hosts won't work
+Adding this to ArgoCD yaml:
+```
+  initialSSHKnownHosts:
+    excludedefaulthosts: false
+    keys: |
+      gitlab.e-queo.xyz ssh-ed25519 AAAAC...
+```
+Produces validation error on apply - 
+
+> The ArgoCD "argocd-main" is invalid: spec.initialSSHKnownHosts: Invalid value: "object": spec.initialSSHKnownHosts in body must be of type string: "object"
+Going to look into this @Unb9rn.
+
+As a side note, the 0.0.13 version should show up in the Operator Hub soon, as the PRs have been submitted to upgrade to v0.0.13.
+Same problem here. Deploying the Operator with this yaml file on OpenShift v4.5.9:
+```yaml
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd-operator
+  namespace: argocd
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: argocd-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: argocd-operator.v0.0.13
+```
+Generates this CRD:
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: argocds.argoproj.io
+spec:
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+...
+              initialSSHKnownHosts:
+                description: InitialSSHKnownHosts defines the SSH known hosts data
+                  upon creation of the cluster for connecting Git repositories via
+                  SSH.
+                type: string
+...
+```
+While the application expects a map since https://github.com/argoproj-labs/argocd-operator/pull/134.
+Why did the operator installed from scratch with v0.0.13 deployed the CRD of v0.0.12?
+BTW, why did you do incompatible changes in the CRD definition without increasing its version to `v1alpha2`?
+The CRD for the OLM catalog still refers to the old version of the CRD : https://github.com/argoproj-labs/argocd-operator/blob/8c2aae890864a975031f4aa7dd5aa4c4c9d17a73/deploy/olm-catalog/argocd-operator/0.0.13/argoproj.io_argocds_crd.yaml#L341-L344
+I guess this is why we retrieve the old CRD when using OLM.
+I just faced the same issue... Is there any work in progress or possibility to have it fixed in next release?
+Hi @dsanchor, yes working on the next release (v0.0.14) right now that will include the fix for this issue.

@@ -1,0 +1,46 @@
+Operator deployment failed on a disconnected OKD 4.6 using image mirror
+Hello,
+
+I am trying to install the ArgoCD operator using the OLM catalog subscription on our disconnected (air-gapped) OKD 4.6 cluster.
+Before the installation of the operator, I mirror all catalog-indexes using the `oc adm catalog mirror` and `oc image mirror` according to this guide:
+[](https://docs.okd.io/latest/operators/admin/olm-restricted-networks.html)
+
+### 1st problem:
+The first problem I have identified is, that a mirror of "quay.io/openshift-community-operators/argocd-operator" is missing in the created "ImageContentSourcePolicy.yaml" of the catalog manifests. 
+However, in the according "mapping.txt" file, the correct mirror entry can be found:
+e.g.
+`quay.io/openshift-community-operators/argocd-operator:v0.0.14=<my-registry-mirror-url>/openshift-community-operators/argocd-operator:v0.0.14`
+
+**Cause:**
+Because the entry in the ImageCountentSourcePolicy is missing, podman will also try to pull from quay.io rather than from the mirror-registry. Furthermore the operator doesn't use digest, why the default mirror options defined in /etc/containers/registries.conf doesn't work.
+
+**Workaround:**
+Applying a a MachineConfig which adds the image mirror with option "mirror-by-digest-only = false" to the cluster as add-in file to /etc/containers/registries.conf.d/
+example:
+` #[[registry]]
+            #  prefix = ""
+            #  location = "quay.io/openshift-community-operators/argocd-operator"
+            #  mirror-by-digest-only = false
+            #
+            #  [[registry.mirror]]
+            #    location = "<my-registry-mirror-url>/openshift-community-operators/argocd-operator"`
+
+### 2nd problem:
+Once the operator got deployed, and I want to install an ArgoCD Application, the deployment of some pods fails, as the `argoproj/argocd@sha256:b835999eb5cf75d01a2678cd971095926d9c2566c9ffe746d04b83a6a0a2849f ` image can't be pulled. The full URL is missing, therefor the clusters default registry is used.
+(In a OKD default installation, the default registry is set to "registry.redhat.io". This can't be reached of course in a disconnected cluster)
+
+**Cause:**
+The operator doesn't use the "relatedImages" parameter in CSV. (see here [](https://docs.openshift.com/container-platform/4.6/operators/admin/olm-restricted-networks.html)
+
+> List any related images, or other container images that the Operator might require to perform their functions, in the relatedImages parameter of its ClusterServiceVersion (CSV) object.
+
+> Reference all specified images by a digest (SHA) and not by a tag.
+
+**Workaround:**
+Applying a a MachineConfig which changes the default registry (unqualified-search-registries) as add-in file to /etc/containers/registries.conf.d/
+example
+` #unqualified-search-registries = ['<my-registry-mirror-url>']`
+
+
+Thanks for your help!
+argocd operator currently does not support air-gapped cluster.   This [repo](https://github.com/redhat-developer/gitops-operator/) does but it has some dependency on Pipelines Operator.  It imports code from argocd operator.  The built operator and bundle images can be found [here](https://catalog.redhat.com/software/containers/search?q=gitops%20operator&p=1). 

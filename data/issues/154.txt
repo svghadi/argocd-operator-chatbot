@@ -1,0 +1,99 @@
+Security issue due to wide permissions
+Hi,
+
+I'm seeing that the controller has read access on all the resources of a cluster: https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/olm-catalog/argocd-operator/0.0.13/argocd-operator.v0.0.13.clusterserviceversion.yaml#L520
+
+Are these permissions necessary  even in namespaced installs ?
+
+Regards
+and for multi-tenant clusters this security issue has a very big impact
+Hi @aelbarkani. The operator was set up this way as per the guidance from the official Argo CD documentation.
+
+https://argoproj.github.io/argo-cd/operator-manual/security/#cluster-rbac
+
+Perhaps raising the issue upstream could get more insight into why Argo CD is designed this way.
+
+That said, we can probably come up with a documented process that people who are concerned with the default behavior can follow to lock the operator down to a specific namespace or something similar.
+Thanks @jmckind. I see here though that there are two types of installations: standard and namespaced.
+
+https://github.com/argoproj/argo-cd/tree/master/manifests
+ 
+I think having the two options in the operator would be great (and more secure).
+Oh yes :)) 
+
+we had the same concern and opted out to install the operator for our application teams and went back to the normal install for them :) 
+
+I see a huge use case for having multiple namespaced ArgoCD instances in bigger companies :) 
+@Numblesix yes, we are considering the same here. For big companies having multi-tenant clusters in production it's a huge concern. So we are considering uninstalling the operator and get back to normal install.
+> @Numblesix yes, we are considering the same here. For big companies having multi-tenant clusters in production it's a huge concern. So we are considering uninstalling the operator and get back to normal install.
+
+You will still have to either fix a lot of rbac permissions or to blacklist basically everything in argocd which is on cluster-lvl
+@Numblesix thanks for the tip. did you use this manifest https://github.com/argoproj/argo-cd/blob/master/manifests/namespace-install.yaml ? I don't see any ClusterRole or ClusterRoleBinding there...
+@aelbarkani I had some success starting with that namespace-install.yaml, but I also had to make some significant changes before Argo CD was able to manage only namespace-scoped resources in other namespaces.
+
+Regardless, here's some points on how I got it working:
+- Create a rolebinding giving `argocd-application-controller` a namespaced admin role from your namespace
+- Use [resource.inclusions](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#resource-exclusioninclusion) to create a whitelist of resources which Argo CD is allowed to manage (this part sucks, but otherwise you get a bunch of errors that Argo CD failed to get some resource type).
+- Create a [cluster in Argo CD](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#clusters) which is namespaced:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+  name: namespaced-cluster
+type: Opaque
+stringData:
+  config: '{"tlsClientConfig":{"insecure":false}}'
+  name: in-cluster
+  namespaces: my-namespace,my-other-namespace
+  server: https://kubernetes.default.svc
+```
+
+
+If there's more interest in this, I can share a more complete code example, but for now I don't want to have to go through and sanitize any company references from the manifests :)
+thanks @chrisob ! will try that
+https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/olm-catalog/argocd-operator/0.0.13/argocd-operator.v0.0.13.clusterserviceversion.yaml#L520
+
+```
+clusterPermissions:
+      - rules:
+        - apiGroups:
+          - '*'
+          resources:
+          - '*'
+          verbs:
+          - get
+          - list
+          - watch
+        - nonResourceURLs:
+          - '*'
+          verbs:
+          - get
+          - list
+        serviceAccountName: argocd-application-controller
+```
+
+This effectively enables `argocd-application-controller` to read all resources, but without being able to create/update, is this of any use?
+
+I think, the following rolebinding gives `argocd-application-controller` the powers it needs to be able to create/update objects. 
+
+https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/olm-catalog/argocd-operator/0.0.13/argocd-operator.v0.0.13.clusterserviceversion.yaml#L666 
+
+
+In that case, maybe we could even remove the `clusterPermissions` ? Of course, that makes me wonder how argocd would watch cluster-scoped resources.
+It seems there are some improvements in the operator, but the permissions are still too wide :
+https://github.com/argoproj-labs/argocd-operator/blob/master/deploy/olm-catalog/argocd-operator/0.0.15/argocd-operator.v0.0.15.clusterserviceversion.yaml#L574
+Is it really necessary to have all the permissions on all the clusterroles and clusterrolebindings of the cluster ?
+> In that case, maybe we could even remove the `clusterPermissions` ? Of course, that makes me wonder how argocd would watch cluster-scoped resources.
+
+Yes I agree: clusterPermissions should be removed. In my opinion ArgoCD should be independent from the cluster where it is installed. If someone needs to add a cluster managed by ArgoCD then he can add it. Otherwise it is almost impossible to deploy ArgoCD in a multi-tenant cluster (the admins of the namespace may have access to argocd's service account, and perform a privilege escalation to get cluster-admin permissions).
+
+
+I think since quite a while (v0.1.0 or so), this issue seems to be solved.
+
+A default Argo CD instance is always installed in namespace-scoped mode by default, with only RBAC permissions for that particular namespace.
+
+In order to have one or more instances being cluster scoped, with cluster-wide permissions, the Operator itself needs to be supplied with an environment variable defining the allowed namespaces.
+
+I will close this issue now. If people feel that there is still something left regarding the concerns here, feel free to speak up and we will re-open the issue.

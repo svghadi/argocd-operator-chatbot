@@ -1,0 +1,9 @@
+Using the volumes, volumeMounts and initContainers fields in the repo server is invalid
+**Describe the bug**
+
+argocd-operator: v0.1.0
+
+After the volumes, volumeMounts and initContainers fields are invalid in the repo server, the remaining coordination tasks can be completed through the following pr modification.
+
+### > https://github.com/argoproj-labs/argocd-operator/pull/494
+@muicoder Thanks for raising issue with us. Can you please provide more information on this ?

@@ -1,0 +1,34 @@
+kube-rbac-proxy Image with tag hinders disconnected deployments
+Hi community,
+
+after upgrading to ArgoCD operator 0.1.0 from 0.0.15, we experienced issues with the argocd-operator-controller-manager Pod.
+
+**Describe the bug**
+Pod argocd-operator-controller-manager is not able to start, due to failing to access the image gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0 https://github.com/argoproj-labs/argocd-operator/blob/755639898c156155085e1fcbe2c3c5e74fec332d/config/default/manager_auth_proxy_patch.yaml#L13
+
+We are running OpenShift 4.7 in a **disconnected environment**, which is why the image from gcr.io is unpullable.
+Other ArgoCD operator images are mirrored to an internal registry and access is realized with ImageContentSourcePolicies (by this process: https://docs.openshift.com/container-platform/4.7/operators/admin/olm-restricted-networks.html). ImageContentSourcePolicies, however, require images to be referenced by a SHA-digest (see https://access.redhat.com/solutions/4817401 / Red Hat subscription required for access)
+For this image, this does not seem possible, as it is referenced by a tag rather than a SHA-digest and can therefore not be rewritten with ImageContentSourcePolicies.
+
+**To reproduce**
+1. In an OpenShift 4.7. environment without internet access, mirror the OLM catalog and its images to a local registry (as described in https://docs.openshift.com/container-platform/4.7/operators/admin/olm-restricted-networks.html)
+2. Apply the created ImageContentSourcePolicies
+3. Install the ArgoCD operator from Operatorhub
+4. ImageContentSourcePolicies enable access to quay.io/argoprojlabs/argocd-operator@sha256:36a65debc06ec68237e5cb6ce9dd2e5076407b00b05d511654e152bd03f2496a but not to gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+
+**Expected behavior**
+Image kube-rbac-proxy should be referenced with SHA digest rather than a tag to enable usage of ImageContentSourcePolicies.
+Is nobody else experiencing these issues?
+
+The issue should be fixable quite easily, by changing the shown line to:
+
+```
+        image: gcr.io/kubebuilder/kube-rbac-proxy@sha256:db06cc4c084dd0253134f156dddaaf53ef1c3fb3cc809e5d81711baa4029ea4c # kube-rbac-proxy:v0.8.0
+```
+
+It would then also comply to other images being referenced by sha256-digest rather than tag, such as in https://github.com/argoproj-labs/argocd-operator/blob/master/common/defaults.go 
+
+This seems like relatively low-hanging fruit.  I think there are at least two places where the change needs to be made, though -- the manager_auth_proxy_patch.yaml file and the CSV file argocd-operator.clusterserviceversion.yaml.  I suspect that the argocd-operator.v0.7.0.clusterserviceversion.yaml should be changed as well.  And maybe the older versions of the CSV as well, all of which contain the old image reference.  Not sure if it's forbidden to change the older CSVs because those are history, or if this is a simple enough bugfix that it's acceptable.  I'll leave them alone for now.
+
+PR submitted.  I decided to change the old CSV versions as well, because I think it's most likely the right thing to do.  But I think it's possible that this is wrong.  So I would respect any code reviewer who is concerned with changing the old CSV versions.
+

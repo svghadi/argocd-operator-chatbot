@@ -1,0 +1,99 @@
+Where to configure argocd-cm url property in ArgoCD CR?
+The argocd-cm configmap holds a property like:
+```
+data:
+  url: https://example-argocd-server
+```
+I have configured dex.config for openshift oauth and when I click login with openshift it redirects to https://example-argocd-server/api/dex/auth?client_id=argo-cd... (which doesnt resolve)
+
+I guess I need to set url to https://argocd.apps.mydomain.com which is the route name I have created? But not sure how to do this ...
+
+Thanks ...
+
+EDIT:
+The whole CR definition:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  namespace: argocd
+spec:
+  dex:
+    config: |
+      connectors:
+      - type: openshift
+        id: openshift
+        name: OpenShift
+        config:
+          issuer: https://api.mydomain.com:6443
+          clientID: system:serviceaccount:argocd:argocd-dex-server
+          clientSecret: eyJhbGciOiJSUzI1NiIsImtpZCI...
+          redirectURI: https://argocd.apps.mydomain.com/api/dex/callback
+          insecureCA: true
+    image: quay.io/redhat-cop/dex
+    openShiftOAuth: true
+    version: v2.22.0-openshift
+  rbac:
+    defaultPolicy: role:readonly
+    policy: |
+      g, system:cluster-admins, role:admin
+    scopes: '[groups]
+```
+
+The argocd-cm configmap:
+```
+apiVersion: v1
+data:
+  application.instanceLabelKey: ""
+  configManagementPlugins: ""
+  dex.config: |
+    connectors:
+    - type: openshift
+      id: openshift
+      name: OpenShift
+      config:
+        issuer: https://api.mydomain.com:6443
+        clientID: system:serviceaccount:argocd:argocd-dex-server
+        clientSecret: eyJhbGciOiJSUzI1NiIsImtpZCI...
+        redirectURI: https://argocd.apps.mydomain.com/api/dex/callback
+        insecureCA: true
+  ga.anonymizeusers: "false"
+  ga.trackingid: ""
+  help.chatText: ""
+  help.chatUrl: ""
+  kustomize.buildOptions: ""
+  oidc.config: ""
+  repositories: ""
+  resource.customizations: ""
+  resource.exclusions: ""
+  statusbadge.enabled: "false"
+  url: https://example-argocd-server
+  users.anonymous.enabled: "false"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+  namespace: argocd
+  ownerReferences:
+  - apiVersion: argoproj.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ArgoCD
+    name: sfit-argocd
+```
+Hi @gorantornqvist, thank you for trying out the operator!
+
+The url property in `argocd-cm` is managed by the operator.
+
+You said that you are using a route but I don't see routes enabled in the CR you posted. Are you creating the route manually? The operator can do this for you. Is there something about the current implementation that does not work for you? 
+
+https://github.com/argoproj-labs/argocd-operator/blob/master/examples/argocd-route.yaml
+
+There is a [PR](#100) about to merge that give more options for controlling the Route that is managed by the operator. That should be released this week.
+Thanks, setting server: route: true in CR did the trick!
+Being able to change default hostname in CR from example-argocd-server-argocd to just argocd would be nice :)
+
+Thanks for your help ...

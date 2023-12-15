@@ -1,0 +1,27 @@
+default admin password issue
+This issue similar to #62 with another environment
+I installed Argocd operator using operatorHub, enabled the openshift authenticator for dex.
+I successfully patched the admin.password usin 
+
+```
+oc -n argocd patch secret dev-argocd-cluster   -p '{"stringData": { "admin.password": "$2y$10$H89WxK73Qv9kTZhf2O1bteHO/eH5BLb41dGI.QJ5fbRoBcG5/dYt."  }}'
+```
+
+after the pod restarted, I am still not able to login with the admin username and password
+The error message:
+
+```
+argocd login --username admin --insecure dev-argocd-server-argocd.mydomain.com
+Password:
+FATA[0008] rpc error: code = Unauthenticated desc = Invalid username or password
+```
+
+Operator version: argocd-operator.v0.0.14 
+Platform: openshift 4
+Installation method: OperatorHub
+Hi @hhemied The password is (unfortunately) stored unencrypted/unhashed in the secret, that looks like a hashed password?
+
+This is documented here https://argocd-operator.readthedocs.io/en/latest/usage/basics/#secrets
+Thanks, @bigkevmcd for your kind support.
+
+yes, the password is bcrypted, but I now used the plain text and it worked as expected.

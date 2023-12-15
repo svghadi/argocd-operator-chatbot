@@ -1,0 +1,43 @@
+Help Needed: How to set environment variables for pods managed by Operator in Openshift
+**Is your feature request related to a problem? Please describe.**
+We have installed argocd via operator in Openshift. But when I am trying to add a cluster I am getting forbidden error.
+
+```
+$ ./argocd cluster add gitops/console-openshift-console-apps-ocp6-sr1-ag1-sp-xxxx-local:6443/xxxx@xxxxx.com
+WARNING: This will create a service account `argocd-manager` on the cluster referenced by context `gitops/console-openshift-console-apps-ocp6-sr1-ag1-sp-xxx-local:6443/xxxx@xxxxx.com` with full cluster level privileges. Do you want to continue [y/N]? y
+INFO[0002] ServiceAccount "argocd-manager" already exists in namespace "kube-system"
+INFO[0002] ClusterRole "argocd-manager-role" updated  
+INFO[0002] ClusterRoleBinding "argocd-manager-role-binding" updated
+FATA[0002] rpc error: code = Unknown desc = Get "[https://console-openshift-console.apps.ocp6.sr1.ag1.sp.xxx.local:6443/version?timeout=32s":](https://console-openshift-console.apps.xxx.sr1.ag1.sp.ibm.local:6443/version?timeout=32s%22:) Forbidden
+$
+```
+And I figured out that this is coming from our proxy server and need to add the cluster to no_proxy list.
+
+But when I am editing the deployment openshift-gitops-server or openshift-gitops-dev-server, the operator is overriding the changes to the no_proxy variable.  
+
+And current no_proxy variable is already populated with below data. 
+
+```
+ - name: NO_PROXY
+          value: .cluster.local,.svc,10.128.0.0/16,100.71.244.32/27,127.0.0.1,158.87.48.0/24,172.30.0.0/16,ag1nsxt-vc.sp.xxx.local,api-int.ocp4.sr1.ag1.sp.xxxxx.local,apps.ocp4.sr1.ag1.sp.xxxx.local,cluster.ocp2.sr1.ag1.sp.xxx.local,localhost,oauth-openshift.apps.ocp4.sr1.ag1.sp.xxx.local,ocp4.sr1.ag1.spxxx.local
+```
+
+When I try to set it in Argocd object I get the below message.
+
+![image](https://user-images.githubusercontent.com/30533821/176399772-ed982ad2-fd1b-41e6-a287-a535051e8900.png)
+
+When I go the GitOpsService object cluster referenced above, I dont see anything under spec.
+
+![image](https://user-images.githubusercontent.com/30533821/176400138-e0509841-10da-4496-9780-2ff388c9a5d4.png)
+ 
+
+**Describe the solution you'd like**
+So need your help or inputs on how to update the no_proxy variable and also to understand from where this variable already got the above information from.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
+I figured it out myself. We need to add it in cluster wide proxy. Hence closing it.

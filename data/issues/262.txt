@@ -1,0 +1,4 @@
+Argo CD service names should be referenced by their FQDN
+The Argo CD service names should be referenced by their FQDN in order to allow cluster-wide `no_proxy` settings to apply to all instances of Argo CD installed by the operator when a global proxy is set up.
+
+So, instead of e.g. `--repo-server argocd-repo-server:8081`, the reference should be made as `--repo-server argocd-repo-server.<namespace>.svc.cluster.local` - this will also consider an already existing entry of `.cluster.local` in the `no_proxy` env var.

@@ -1,0 +1,9 @@
+ssh-know-host-cm configmap is overwritten
+When I use this command to upgrade ArgoCD ```kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/<version>/manifests/install.yaml``` , ssh-know-host-cm ConfigMap is overwritten. 
+
+After I upgraded, I had to update ssh-know-host again.
+
+Is there a better way for me to avoid performing the operation?
+Hi @sunmd01 , You need to update the Argo CD Image version in the Argo CD Custom Resource.
+Please refer
+https://argocd-operator.readthedocs.io/en/latest/reference/argocd/#image-example

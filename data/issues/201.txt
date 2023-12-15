@@ -1,0 +1,19 @@
+Requirement: Add proxy function to support air-gap environment.
+Support these ENVS:
+
+- http_proxy
+- https_proxy
+- no_proxy
+
+to connect Internet pages(such: github) via proxy.
+This should be fixed when https://github.com/argoproj-labs/argocd-operator/pull/194 is released.
+Unfortunately, #194 only applies the OCP cluster global proxy variables. I currently see no ability to overwrite / specify my own proxy related variables, which can be a huge issue since manually patching does not work either (corrections are welcome if I am wrong here).
+@mpreu You can set these proxy environment variables in the controller container and they are propagated to the workloads by the operator.   It should work in other clusters.   Can you please state your requirements?
+@wtam2018 Thanks for the response.
+
+In my case I am using the OCP GitOps ArgoCD installation. I assume the environment variables can therefore be set/overwritten in the operator deployment within the `openshift-operators` namespace? That is indeed a fact I was missing.
+
+But it still not necessarily solves my problem, as for this kind of `AllNamespace` installation I will change the proxy settings for all ArgoCD instances in the cluster. My requirement would rather be to have settings like this available in the specific namespaced ArgoCD CRD, so configurations are properly encapsulated.
+
+E.g. my IT requires in some isolated/offline clusters that projects provide their own proxy configurations/credentials instead of having them configured cluster-global (or globally in the operator deployment). In combination with a standard OCP GitOps installation monitoring all namespaces, I currently see no way that this is supported?
+@mpreu Currently, it is not possible.   It sounds like we need the ability to set these environment variables in an ArgoCD CR which overrides cluster proxy environment variables.

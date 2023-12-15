@@ -1,0 +1,10 @@
+Disable creating initial secret for ArgoCD export
+**Is your feature request related to a problem? Please describe.**
+Creating a default secret causes conflicts when the actual secret values are synchronized from an external store by some tool (eg. ExternalSecrets).
+
+**Describe the solution you'd like**
+Disable creating a default secret with a default backup key trusting that it will eventually be there.
+
+**Describe alternatives you've considered**
+I've opened an issue in ExternalSecrets to resolve the conflicts when a secret already exists, but I find that to be a more difficult solution compared to just not creating the secret in the first place.
+

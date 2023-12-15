@@ -1,0 +1,18 @@
+Publish on quay.io - v0.1.0
+What's the argocd-operator cadence to be published on quay.io ?
+ 
+https://quay.io/repository/redhat-cop/argocd-operator?tab=tags
+Hi @yuriolisa, You can find it here under `argoprojlabs` org
+https://quay.io/repository/argoprojlabs/argocd-operator?tab=tags
+@iam-veeramalla I've seen a few issues that reference quay.io/argoprojlabs.argocd-operator vs quay.io/redhat-cop/argocd-operator. Is it maybe worth chatting with the CoP folks to see about cleaning up those images to reduce confusion moving forward?
+> @iam-veeramalla I've seen a few issues that reference quay.io/argoprojlabs.argocd-operator vs quay.io/redhat-cop/argocd-operator. Is it maybe worth chatting with the CoP folks to see about cleaning up those images to reduce confusion moving forward?
+
+Makes sense @tylerauerbeck  .. going ahead we will push only to argoprojlabs. 
+@sabre1041 Any chance you or someone from the CoP could lend a hand with this cleanup?
+@tylerauerbeck the concern is potentially breaking existing deployments who are still using images from the CoP.  We could mirror them so they get the updated content and then send out a deprecation announcement/plan
+@sabre1041 That makes sense to me.
+
+@iam-veeramalla Any thoughts? Regardless I think this issue is good to be closed. But maybe open another to track the cleanup/deprecation plan?
+@sabre1041 @tylerauerbeck closing the issue as suggested. I dont have much context about the CoP repo/registry. I am not sure who is maintaining it. 
+
+@tylerauerbeck can you please provide more details on a new request ? Thanks

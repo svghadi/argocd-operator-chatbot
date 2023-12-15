@@ -1,0 +1,37 @@
+Support for using custom certificates instead of self-signed
+Currently the operator is generating a self-signed certificate and storing it in a secret named _name_-tls. In our case, our chosen name is argocd-devops, so our secret that it is generating by default looks like this:
+
+```kind: Secret
+apiVersion: v1
+metadata:
+  namespace: argocd-devops
+  name: argocd-devops-tls
+  labels:
+    app.kubernetes.io/name: argocd-devops-tls
+    app.kubernetes.io/part-of: argocd
+    argocd.argoproj.io/instance: argocd-devops
+data:
+  tls.crt: >-  LS0tLS1CRUdJTiBDRVJU...
+  tls.key: >-  LS0tLS1CRUdJTiBSU0Eg...
+type: kubernetes.io/tls
+```
+
+We use [CertManager](https://cert-manager.io/docs/) in our cluster to interface with our Venafi server to issue certificates with our enterprise CA. We are generating a certificate secret using that and it is being created in the same namespace as a secret named argocd-devops-cert. It looks like this:
+
+```kind: Secret
+apiVersion: v1
+metadata:
+  name: argocd-devops-cert
+  namespace: argocd-devops
+  annotations:
+    cert-manager.io/certificate-name: argocd-devops-cert
+    cert-manager.io/issuer-kind: ClusterIssuer
+    cert-manager.io/issuer-name: venafi
+data:
+  ca.crt: ''
+  tls.crt: >- LS0tLS1CRUdJTiBDR...
+  tls.key: >- LS0tLS1CRUdJTiBSU...
+type: kubernetes.io/tls
+```
+
+We would love to see an option within the CR specify a different key/cert secret that the operator would use for the argocd-server container instead of the argocd-tls self-signed certificate, therefore avoiding the security warning from browsers when hitting the ArgoCD console due to the untrusted self-signed cert.

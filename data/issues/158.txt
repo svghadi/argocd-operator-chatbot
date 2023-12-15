@@ -1,0 +1,22 @@
+ How to Disable Admin User
+I see that you can edit the ArgoCD Config Map in a manual install to disable the operator, but don't see an option you can include in the "kind: ArgoCD" spec to do so with the OLM managed install. 
+
+Manual:
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  **admin.enabled: "false"**
+Hi @jdziedzic, the operator does not support this directly but you should be able to use the approach from the Argo CD docs like you mentioned.
+
+https://argoproj.github.io/argo-cd/operator-manual/user-management/#disable-admin-user
+
+You have a couple of options. You could either add that key/value to the `argocd-cm` ConfigMap after the operator creates it or you could create the `argocd-cm` ConfigMap before you create your ArgoCD custom resource and the operator will update the rest of the properties once it deploys the cluster.
+
+I do think this is a good feature to add to the operator and will open a PR to add the ability to do this directly from the ArgoCD custom resource.
+I think this has been implemented by #184. Closing issue.

@@ -1,0 +1,6 @@
+Custom tool InitContainer
+Sorry if this has been addressed before, but is there a way to specify an initContainer for a custom tool like https://argoproj.github.io/argo-cd/operator-manual/custom_tools/#adding-tools-via-volume-mounts
+
+I see there is a `configManagementPlugins` option but nothing to actually download and load in the custom tool
+I think it's probably a good idea to add something to allow for this (since this is a method that the Argo docs provide for doing things like this). But based off of some experience, it's really better to have a custom repo-server image that has your tool built into it (and then specify using your custom repo-server image instead)
+I believe this is very much similar to the request  here #172

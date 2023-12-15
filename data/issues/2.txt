@@ -1,0 +1,7 @@
+Docs Need Update
+The docs need to be updated to integrate better with [Read the Docs](https://readthedocs.io).
+I have updated the docs to use the same theme as Argo CD itself and the results are pretty good. 
+
+https://argocd-operator.readthedocs.io/en/latest/
+
+This is a good start but more work is needed for documenting all aspects of the operator.

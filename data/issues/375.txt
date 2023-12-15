@@ -1,0 +1,87 @@
+Ability to utilize secret value to populate Dex clientSecret
+Is there a way to utilize a secret to populate the value for clientSecret within the dex config options?  There doesn't seem to be a way to include environment variables on a per component basis? 
+Hi @Kampe Thanks for raising issue with us.
+
+Can you please provide more information on what exactly you are trying to achieve and steps to reproduce. 
+Sure!
+
+Currently, this is the config we can use to set up our client  for DEX:
+
+```
+      dex:
+        config: |
+          connectors:
+            - type: github
+              id: github
+              name: GitHub
+              config:
+                redirectURI: https://localhost:8080/api/dex/callback
+                clientID: 85409387507sd67f6
+                clientSecret: $dex.github.clientSecret
+                orgs:
+                - name: org-name
+```          
+
+However, I can't use my own secret to populate these values, in a perfect world both `clientID` and `clientSecret` can be set via environment variables within the DEX configuration block.  This would be wildly useful to everyone to have available.  Currently you are able to configure this through bolting on secrets to the argocd built ins, so ideally they are not attached to the $dex.github object and can be accessed via their very own secrets, seeing as you'd probably not want to touch argocd internal secrets to get at your own personal environment level variables. 
+Hi @Kampe , You can also use your own kubernetes secrets.
+```
+clientSecret: $dex.github.clientSecret # Alternatively $<some_K8S_secret>:dex.github.clientSecret
+```
+
+Is this what you are looking for ?
+@iam-veeramalla please can you elaborate on this because the documentation still seems to be missing information. 
+
+I have created a secret in the same namespace as argocd.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-github-secret
+  namespace: argocd
+data:
+  clientSecret: 1ce6dfe5134cd281831b2ab648e9caf5e3d36027
+type: Opaque
+```
+
+Then what should the config be?
+
+```yaml
+data:
+  application.instanceLabelKey: argocd.argoproj.io/instance
+  dex.config: |
+    connectors:
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          clientID: 0000000000478c81c342
+          clientSecret: $argocd-github-secret.clientSecret # or $argocd-github-secret:clientSecret
+```
+
+I keep getting this error: `Failed to authenticate: github: failed to get token: oauth2: server response missing access_token`
+@brandon-piner-aruba I have come across the same problem - however reading the docs does help :) For your reference you can peak on the following [doc](https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#sensitive-data-and-sso-client-secrets) 
+
+and for secret itself just use the following:
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sso
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: argocd
+data:
+  dex.github.clientSecret: Oxxxxx==
+type: Opaque
+```
+
+I guess what was missing for this to work was the labels - as the moment I have added those it all worked out of the box! 💪 
+
+We use bank-vaults w/transit so it's easiest for us to use env vars. I found that if you put `$ENV_VAR_NAME` in a value, you'll see a warning, but the value is passed through to the config file and [dex supports env vars](https://github.com/dexidp/dex/issues/1158) in its config.
+
+We set the `env:` value of the dex pod (helm) to have encrypted values, bankvaults decrypts them, and dex plucks them out of the env.
+
+```
+dex-server time="2023-09-25T20:01:50Z" level=warning msg="config referenced '$GOOGLE_OIDC_CLIENT_SECRET', but key does not exist in secret"
+```
+@joshperry Can you show how you did it?

@@ -1,0 +1,77 @@
+Manual installation, controller-manager fails to start
+**Describe the bug**
+I'm installing argocd-operator manually as in documentation. ArgoCD controller manager can't start
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. git clone <argocd-operator-repo>
+2. git checkout v0.2.0
+3. kustomize build config/default > argocd-operator.yaml
+4. kubectl apply -f argocd-operator.yaml
+
+**Expected behavior**
+ArgoCD controller manager is up and running
+
+**Screenshots**
+![argocd-operator-lens-screenshot](https://user-images.githubusercontent.com/3769680/154265057-15bb4552-e99d-43fe-8a0f-760cae99dc6f.jpg)
+
+**Additional context**
+ArgoCD controller manager logs
+1.6450141273152905e+09	INFO	setup	Go OS/Arch: linux/amd64
+1.6450141273153033e+09	INFO	setup	Version of operator-sdk: v0.18.2
+1.6450141273153136e+09	INFO	setup	Version of argocd-operator: 0.2.0
+1.6450141273535385e+09	INFO	setup	Watching namespace ""
+1.6450141275100126e+09	INFO	controller-runtime.metrics	Metrics server is starting to listen	{"addr": "127.0.0.1:8080"}
+1.6450141275105147e+09	INFO	setup	Registering Components.
+1.6450141275360096e+09	INFO	setup	starting manager
+1.6450141275366938e+09	INFO	Starting server	{"path": "/metrics", "kind": "metrics", "addr": "127.0.0.1:8080"}
+1.6450141275368216e+09	INFO	Starting server	{"kind": "health probe", "addr": "[::]:8081"}
+I0216 12:22:07.537058       1 leaderelection.go:248] attempting to acquire leader lease argocd-operator-system/b674928d.argoproj.io...
+1.6450141285766392e+09	INFO	Stopping and waiting for non leader election runnables
+1.6450141285767188e+09	INFO	Stopping and waiting for leader election runnables
+1.6450141285771203e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1alpha1.ArgoCD"}
+1.6450141285772595e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.ConfigMap"}
+1.6450141285772839e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Secret"}
+1.6450141285773113e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Service"}
+1.6450141285773315e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Deployment"}
+1.6450141285773695e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Ingress"}
+1.645014128577389e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Role"}
+1.6450141285774066e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.RoleBinding"}
+1.6450141285774324e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.StatefulSet"}
+1.6450141285774558e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.ClusterRoleBinding"}
+1.6450141285774744e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.ClusterRole"}
+1.6450141285774913e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Secret"}
+1.645014128577509e+09	INFO	controller.argocd	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "source": "kind source: *v1.Namespace"}
+1.6450141285775232e+09	INFO	controller.argocd	Starting Controller	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD"}
+1.6450141285783217e+09	INFO	controller.argocdexport	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport", "source": "kind source: *v1alpha1.ArgoCDExport"}
+1.645014128578372e+09	INFO	controller.argocdexport	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport", "source": "kind source: *v1beta1.CronJob"}
+1.6450141285783916e+09	INFO	controller.argocdexport	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport", "source": "kind source: *v1.Job"}
+1.6450141285784192e+09	INFO	controller.argocdexport	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport", "source": "kind source: *v1.PersistentVolumeClaim"}
+1.6450141285784545e+09	INFO	controller.argocdexport	Starting EventSource	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport", "source": "kind source: *v1.Secret"}
+1.6450141285784736e+09	INFO	controller.argocdexport	Starting Controller	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport"}
+1.645014128586141e+09	ERROR	controller.argocdexport	Could not wait for Cache to sync	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCDExport", "error": "failed to wait for argocdexport caches to sync: timed out waiting for cache to be synced"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:208
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:234
+sigs.k8s.io/controller-runtime/pkg/manager.(*runnableGroup).reconcile.func1
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/manager/runnable_group.go:218
+1.6450141285862527e+09	ERROR	error received after stop sequence was engaged	{"error": "failed to wait for argocdexport caches to sync: timed out waiting for cache to be synced"}
+sigs.k8s.io/controller-runtime/pkg/manager.(*controllerManager).engageStopProcedure.func1
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/manager/internal.go:541
+1.64501412858896e+09	ERROR	controller.argocd	Could not wait for Cache to sync	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "error": "failed to wait for argocd caches to sync: timed out waiting for cache to be synced"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:208
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:234
+sigs.k8s.io/controller-runtime/pkg/manager.(*runnableGroup).reconcile.func1
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/manager/runnable_group.go:218
+1.645014128589026e+09	INFO	Stopping and waiting for caches
+1.6450141285890632e+09	ERROR	error received after stop sequence was engaged	{"error": "failed to wait for argocd caches to sync: timed out waiting for cache to be synced"}
+sigs.k8s.io/controller-runtime/pkg/manager.(*controllerManager).engageStopProcedure.func1
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/manager/internal.go:541
+1.645014128589359e+09	INFO	Stopping and waiting for webhooks
+1.6450141285893834e+09	INFO	Wait completed, proceeding to shutdown the manager
+
+
+Sorry, it's not argocd-operator that caused troubles. I was running kubernetes on crio 1.23. I reinstalled the cluster with crio 1.22 and operator is working like a charm.

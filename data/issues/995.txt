@@ -1,0 +1,26 @@
+Upgrade to argocd-operator:v0.7.0 breaks login with openshift/okd
+**Describe the bug**
+After upgrading  to v0.7.0 the login with openshift button stopped working.
+
+The dex-server logs the following errors:
+
+```
+time="2023-09-11T22:55:19Z" level=warning msg="config referenced '$oidc.dex.clientSecret', but key does not exist in secret"
+time="2023-09-11T22:55:33Z" level=error msg="Failed to authenticate: oidc: failed to get token: oauth2: cannot fetch token: 400 Bad Request\nResponse: {\"error\":\"unauthorized_client\",\"error_description\":\"The client is not authorized to request a token using this method.\"}\n"
+```
+
+The oauth-openshift pod logs the following error:
+
+```
+E0911 22:50:28.920617 1 access.go:177] osin: error=unauthorized_client, internal_error=<nil> get_client=client check failed, client_id=system:serviceaccount:ns-argocd:app-argocd-argocd-dex-server
+E0911 22:51:57.314413 1 access.go:177] osin: error=server_error, internal_error=&errors.errorString{s:"invalid resource name \"system%3Aserviceaccount%3Ans-argocd%3Aapp-argocd-argocd-dex-server\": [may not contain '%']"} get_client=error finding client
+E0911 22:51:57.314564 1 osinserver.go:111] internal error: invalid resource name "system%3Aserviceaccount%3Ans-argocd%3Aapp-argocd-argocd-dex-server": [may not contain '%']
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Update operator to v0.7.0
+
+**Expected behavior**
+The login to work without changes needed.
+

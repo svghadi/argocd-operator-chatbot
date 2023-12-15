@@ -1,0 +1,16 @@
+User-define imagePullPolicy
+When deploying on certain types of clusters, i.e. bandwidth limited edge clusters, it's preferable to not pull images unless absolutely necessary.
+
+It would be great to be able to define a global `imagePullPolicy` for the operator that all ArgoCD instances and their component services respect.
+
+It would also be suitable, though tedious, to be able to pass this config along in the various component config sections of an ArgoCD object (e.g. controller.`imagePullPolicy`, `dex.imagePullPolicy`, etc.)
+
+For context, here's what I'm seeing as "actual" `imagePullPolicy` of or various components:
+argocd-application-controller                    Always
+argocd-dex-server-xxx                      Always
+argocd-operator-xxx                       Always
+argocd-redis-ha-haproxy-xxx               IfNotPresent
+argocd-redis-ha-server                           IfNotPresent,IfNotPresent 
+argocd-repo-server-xxx                    Always
+argocd-server-xxx                          Always
+Would be fantastic if the default for all of these were set to IfNotPresent

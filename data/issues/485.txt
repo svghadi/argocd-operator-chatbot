@@ -1,0 +1,9 @@
+operator v0.1.0 ArgoCDExport Resource stuck in Pending phase
+creating an ArgoCDExport resource (after the ArogCD cluster is up and running) using v0.1.0 doesn't start a kubernetes job, it's just stuck in **Pending** state. Local and AWS backends tested.
+
+![image](https://user-images.githubusercontent.com/5648506/141672793-fed4369b-0eae-4ecb-8e55-ac05ba40ad29.png)
+
+The problem seems to be that it's looking for the service account "argocd-application-controller" while the operator creates "argocd-argocd-application-controller"
+
+I think the issue is caused by this line?
+https://github.com/argoproj-labs/argocd-operator/blob/0be1f6f89a0164e05f4702800f0ac40ce1c9d5c5/controllers/argocdexport/job.go#L177

@@ -1,0 +1,9 @@
+Add the ingress/route URL to `.status`
+Add the ingress/route URL to `.status` in the ArgoCD CR. 
+
+The same applies for general Ingress too:
+https://github.com/argoproj-labs/argocd-operator/blob/master/pkg/apis/argoproj/v1alpha1/argocd_types.go#L418
+
+This would enable users/tools to extract the URL for launching the ArgoCD UI.
+Should this reference the route/ingress or put the actual URL in there?
+

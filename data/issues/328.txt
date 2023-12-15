@@ -1,0 +1,21 @@
+Introduce CI test infra for e2e test
+### Is your task related to a problem? Please describe.
+<!-- A clear and concise description of what the problem is.-->
+Introduce a new CI test infra that helps us to run e2e test against the freshly compiled operator image.
+
+### Describe the solution you'd like
+<!-- A clear and concise description of what you want to happen. -->
+
+https://github.com/argoproj-labs/argocd-operator/pull/318#issuecomment-852030941
+
+### Describe alternatives you've considered
+<!--A clear and concise description of any alternative solutions or features you've considered. -->
+
+Could be we can consider - GitHub Action and a Kubernetes cluster ?
+
+### Additional context
+<!-- Add any other context or screenshots about the task here. -->
+
+ping @sbose78 @wtam2018 @jannfis 
+ping @jopit 
+I think this is addressed here: https://github.com/argoproj-labs/argocd-operator/blob/master/.github/workflows/ci-build.yaml#L44-L152 . Is there anything else that needs added for this?

@@ -1,0 +1,7 @@
+Add possibility to change haproxy image
+Hello,
+
+it seems, that you can change all images via the ArgoCD CRD except for the redis haproxy image, which is unfortunate in a disconnected environment.
+Is it possible to add support for this?
+Hey @ccdgrundhoefer, thanks for trying the operator. This can be added, sorry for the oversight on that image
+Merged into master and will go out in v0.0.13

@@ -1,0 +1,40 @@
+Argo CD Export not working for AWS S3 [aws: command not found]
+**Describe the bug**
+I started exploring Argo CD Export and realized that it is completely broken for AWS. 
+```
+pushing argo-cd backup to aws
+/usr/local/bin/argocd-operator-util: line 64: aws: command not found
+```
+
+**Prerequisites**
+1. AWS account
+2. AWS credentials which needs to be stored in a Argo CD Export Secret later.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Run the operator locally using `make install run`
+3. Create an Argo CD Instance using
+```
+kubectl apply -f examples/<choose-from-multiple-examples>
+```
+4. Create AWS secret and Argo CD Export using
+```
+kubectl apply -f examples/argocdexport-aws.yaml
+```
+5. Wait for the operator to reconcile the Argo CD Export CR and create the export pod.
+6. You can notice that the pod would never come up and goes into the `crashLoopBackOff` state.
+```
+pushing argo-cd backup to aws
+/usr/local/bin/argocd-operator-util: line 64: aws: command not found
+```
+
+**Expected behavior**
+A clean Export to AWS S3.
+
+**Screenshots**
+NA
+
+**Additional context**
+This looks like a simple fix. The AWS CLI installation is missing in the Argo CD Export Dockerfile.
+
+

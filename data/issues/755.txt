@@ -1,0 +1,73 @@
+Terminating namespaces blocks new managed Argo CD namespaces
+**Describe the bug**
+This bug occurs when you are using namespace-scoped Argo CD (e.g. using 'argocd.argoproj.io/managed-by' label on Namespaces).
+
+If you have a managed namespace with the 'argocd.argoproj.io/managed-by' label, and that Namespace is in the process of being deleted ('Terminating'), it prevents any other managed Namespace from being created.
+
+This is likely due to this error reported in the GitOps Operator logs (in 'openshift-operators'):
+```
+1.6595423332492905e+09	INFO	controller.argocd	Reconciling ArgoCD	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "gitops-service-argocd", "namespace": "gitops-service-argocd", "namespace": "gitops-service-argocd", "name": "gitops-service-argocd"}
+1.6595423332494762e+09	INFO	controller_argocd	reconciling SSO
+1.6595423332548385e+09	INFO	controller_argocd	reconciling status
+1.6595423332776158e+09	INFO	controller_argocd	reconciling roles
+1.6595423332777078e+09	INFO	openshift_controller_argocd	configuring policy rule for Application Controller	{"ArgoCD Namespace": "gitops-service-argocd", "ArgoCD Name": "gitops-service-argocd"}
+1.65954233328251e+09	INFO	openshift_controller_argocd	configuring policy rule for Application Controller	{"ArgoCD Namespace": "gitops-service-argocd", "ArgoCD Name": "gitops-service-argocd"}
+1.6595423332867372e+09	INFO	controller_argocd	creating role gitops-service-argocd-argocd-application-controller for Argo CD instance gitops-service-argocd in namespace gitops-service-argocd
+1.659542333289296e+09	ERROR	controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "gitops-service-argocd", "namespace": "gitops-service-argocd", "error": "roles.rbac.authorization.k8s.io \"gitops-service-argocd-argocd-application-controller\" is forbidden: unable to create new content in namespace jane because it is being terminated"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/remote-source/deps/gomod/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/remote-source/deps/gomod/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:227
+```
+This bug occurs because the argocd-operator code should not be creating managed role/rolebindings in Namespaces that are in 'Terminating' state.
+
+Steps to reproduce:
+**Prerequisite**:
+Run the operator locally using `make install run`
+
+1) Install namespace-scoped Argo CD:
+kubectl create ns gitops-service-argocd
+kubectl apply -f https://raw.githubusercontent.com/redhat-appstudio/infra-deployments/main/components/gitops/staging/argo-cd.yaml
+kubectl apply -f https://raw.githubusercontent.com/redhat-appstudio/infra-deployments/main/components/gitops/staging/allow-argocd-to-manage.yaml
+
+2) Create a Namespace managed by Argo CD.
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jane
+  labels:
+    argocd.argoproj.io/managed-by: gitops-service-argocd
+```
+
+3) Create 'ConfigMap' with a finalizer, in Namespace.
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config-map-2
+  namespace: jane  
+  finalizers:
+  - some.random/finalizer 
+data: {}
+```
+4) Delete the 'Namespace', putting it into 'Terminating' state. The Namespace will never finish deleting, due to the finalizer on the 'ConfigMap'.
+
+kubectl delete namespace jane
+
+5) Finally, attempt to create a new managed 'Namespace'
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: john
+  labels:
+    argocd.argoproj.io/managed-by: gitops-service-argocd
+```
+The 'john' Namespace never becomes managed by Argo CD: the Argo CD RoleBinding SHOULD be created (that gives Argo CD access to the 'john' namespace) is never created.
+
+Likewise, if you attempt to deploy into the 'john' Namespace using an Argo CD Application, the Application status field will show an error like:
+'Namespace "e2e-test-bktg" for (...) "build-suite-test-component-git-source-sbfh" is not managed'
+(because the OpenShift GitOps operator has not created the RoleBinding that allows Argo CD to target this namespace)
+
+

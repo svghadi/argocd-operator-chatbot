@@ -1,0 +1,5 @@
+Document Kustomize Deployment
+We added kustomize to the options for deploying this operator but need to go back and update the documentation to reflect that as well. This is a placeholder to remind me to get that updated.
+It would be nice to provide too a single rendered yaml manifest generated from your kustomization, like they do in upstream argocd for manual deployment.
+
+It would help for airgap scenarios when OLM cannot be used or github accessed. 

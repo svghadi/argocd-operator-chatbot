@@ -1,0 +1,16 @@
+Delete old versions of olm-catalog ?
+### Is your task related to a problem? Please describe.
+Can we delete the old versions of olm-catalog ? we currently have versions from 0.0.2 to 0.0.15
+
+### Describe the solution you'd like
+Delete old versions. Probably maintain last 3 if required ?
+
+### Describe alternatives you've considered
+NA
+
+### Additional context
+NA
+
+@wtam2018 will this be removed as part of operator-sdk update ? or is there a specific reason why we are maintaining so many versions ?
+@iam-veeramalla  They will be removed as part of operator-sdk upgrade.
+Thanks @wtam2018 

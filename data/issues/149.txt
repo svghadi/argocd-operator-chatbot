@@ -1,0 +1,3 @@
+argocd-cm is not deleted when instance is deleted
+When removing an argocd instance, the configmap `argocd-cm` hangs around which causes new changes in the instance spec to be ignored when applying a new configuration. For instance, trying to switch from `insecure: false` to `insecure: true` will be ignored unless the configmap is first deleted. 
+Looks to be a transient issue, closing this out. Cleared everything out and could not reproduce the issue again. 

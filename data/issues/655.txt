@@ -1,0 +1,12 @@
+Create/delete notifications config/resources in operator
+The argocd-notifications controller uses the argocd-notifications-cm configmap to manage notifications. The configmap contains the notification triggers configurations as well as the available notification templates. We will have some triggers/templates configured in the cm out of the box.
+
+We agreed not to override cm.  During this phase, we are not managing the content in the cm. We only perform creation and deletion.
+
+**Acceptance criteria:**
+
+unit tests
+ these resources are created when notifications is enabled and deleted when notifications is disabled.
+argocd-notifications-cm
+argocd-notifications-secret
+can be closed?

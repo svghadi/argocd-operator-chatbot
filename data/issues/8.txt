@@ -1,0 +1,13 @@
+OpenShift OAuth Integration
+Per @disposab1e 
+
+> Perhaps something the operator can provide?
+
+argoproj/argo-cd#2574
+
+https://blog.openshift.com/openshift-authentication-integration-with-argocd/
+see:
+https://raw.githubusercontent.com/disposab1e/argocd-operator-helm/927a881d379e841971ac908034a0988d784ef706/deploy/crds/argoproj.io_v1alpha1_argocd_cr.yaml
+Will be adding support for OAuth as the next feature, thanks for sharing this!
+Currently working on this in the [oauth_support](https://github.com/argoproj-labs/argocd-operator/tree/oauth_support) branch.
+This has been [merged](https://github.com/argoproj-labs/argocd-operator/pull/17) into master. Any further enhancements or bugs should use a new issue.

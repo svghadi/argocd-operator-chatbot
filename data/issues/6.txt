@@ -1,0 +1,8 @@
+Support H/A Deployments for Argo CD
+The operator should support being run in H/A mode, outlined in the official documentation.
+
+https://argoproj.github.io/argo-cd/operator-manual/high_availability/
+
+I have starting working on this in the [argo_ha](https://github.com/argoproj-labs/argocd-operator/tree/argo_ha) branch.
+This had been merged into master and will go out with the v0.0.5 release this week.
+Released as part of v0.0.5.

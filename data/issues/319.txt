@@ -1,0 +1,10 @@
+Make .15 available in OpenShift OperatorHub
+### Is your task related to a problem? Please describe.
+The current version in operator hub is still showing as .14
+
+### Describe the solution you'd like
+Make .15 available to upgrade to.
+
+
+
+It showed up on my OCP and upgrade went smoothly.

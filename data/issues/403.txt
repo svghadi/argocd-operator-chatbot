@@ -1,0 +1,65 @@
+ApplicationSet controller Crashloopbackoff
+**Describe the bug**
+I noticed a crashloopbackoff on the ApplicationSet controller. Pasting the error logs for analysis.
+```
+flag provided but not defined: -loglevel
+Usage of applicationset-controller:
+  -argocd-repo-server string
+    	Argo CD repo server address (default "argocd-repo-server:8081")
+  -debug
+    	Print debug logs
+  -dry-run
+    	Enable dry run mode
+  -enable-leader-election
+    	Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.
+  -kubeconfig string
+    	Paths to a kubeconfig. Only required if out-of-cluster.
+  -metrics-addr string
+    	The address the metric endpoint binds to. (default ":8080")
+  -namespace string
+    	Argo CD repo namespace (default: argocd)
+  -policy string
+    	Modify how application is synced between the generator and the cluster. Default is 'sync' (create & update & delete), options: 'create-only', 'create-update' (no deletion) (default "sync")
+  -probe-addr string
+    	The address the probe endpoint binds to. (default ":8081")
+``` 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. run the operator locally using `operator-sdk run local`
+
+**Expected behavior**
+No pods should run into backoff or error state.
+
+**Additional context**
+NA
+
+@tylerauerbeck I think this is introduced due to #371 . Can you please verify ?
+@iam-veeramalla Yepp, that's what did it. Just confirmed what's going on. Looks like the version of the applicationset-controller that is used in the operator by default doesn't have the `loglevel` flag. Does it make more sense to bump the version? Or remove the functionality for now?
+> @iam-veeramalla Yepp, that's what did it. Just confirmed what's going on. Looks like the version of the applicationset-controller that is used in the operator by default doesn't have the `loglevel` flag. Does it make more sense to bump the version? Or remove the functionality for now?
+
+@jgwest would be the best person to help us in this 
+Yup, log level is not in ApplicationSet v0.1.0, it was added in v0.2.0 as part of https://github.com/argoproj-labs/applicationset/pull/249. So the loglevel flag would be invalid until argocd-operator picks up v0.2.0 of AppSets.
+> Yup, log level is not in ApplicationSet v0.1.0, it was added in v0.2.0 as part of [argoproj-labs/applicationset#249](https://github.com/argoproj-labs/applicationset/pull/249). So the loglevel flag would be invalid until argocd-operator picks up v0.2.0 of AppSets.
+
+@jgwest  Does v0.2.0 only work with the latest Argo CD release v2.1.0 ?
+@iam-veeramalla Somewhat related: https://github.com/argoproj-labs/argocd-operator/pull/399#issuecomment-903358053
+
+If the case is that v0.2.0 only works with v2.1.0 of ArgoCD, do we need to start thinking of:
+- what versions of components each version of the operator supports
+- adding logic in the code based off of what version of ArgoCD is being deployed.
+> @iam-veeramalla Somewhat related: [#399 (comment)](https://github.com/argoproj-labs/argocd-operator/pull/399#issuecomment-903358053)
+> 
+> If the case is that v0.2.0 only works with v2.1.0 of ArgoCD, do we need to start thinking of:
+> 
+> * what versions of components each version of the operator supports
+> * adding logic in the code based off of what version of ArgoCD is being deployed.
+
+I think a document or a support matrix should be a good. The CRD currently allows the users to choose the Images of their choice for all the workloads. 
+@iam-veeramalla @tylerauerbeck  ApplicationSet v0.2.0 should work with both Argo CD v2.0 and v2.1 (and should also work with previous versions too, but I have not tested here recently.)
+Thanks @jgwest.
+
+In any case, @tylerauerbeck since v2.1 is also out, we can create a new PR to update the versions of both Argo CD and AppSets which would fix this issue.
+Sounds good @iam-veeramalla I've opened a PR for that.
+
+I'll also open up an issue for discussion around creating documentation for a support matrix.

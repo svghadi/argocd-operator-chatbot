@@ -1,0 +1,3 @@
+Operator Hub out of date
+Howdy! It looks like the operator bits in Operator Hub are out of date, as attempting to install from there will result in the a `Forbidden` error when accessing `argocds/status`. Looks like you just added this and it just hasn't been bubbled up yet?
+@RichiCoder1 Thanks for trying the operator. I am working through getting the PR merged to update to the latest operator version. I will update this issue when it is available on Operator Hub.

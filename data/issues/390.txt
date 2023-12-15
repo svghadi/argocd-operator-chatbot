@@ -1,0 +1,22 @@
+update the deprecated APIs, blocker for kubernetes 1.22.
+**Describe the bug**
+kubernetes 1.22 is End of life for deprecated APIs. 
+
+The apiextensions.k8s.io/v1beta1 API version of **CustomResourceDefinition** will no longer be served in v1.22.
+All beta **Ingress** APIs (the extensions/v1beta1 and networking.k8s.io/v1beta1 API versions)
+
+More information here:
+https://kubernetes.io/blog/2021/07/14/upcoming-changes-in-kubernetes-1-22/#api-changes
+
+**To Reproduce**
+NA
+
+**Expected behavior**
+update the deprecated APIs
+
+
+**Additional context**
+https://kubernetes.io/docs/reference/using-api/deprecation-guide/#v1-22
+
+I did a search for Ingress api in the code base.  This will be fixed by https://github.com/argoproj-labs/argocd-operator/pull/345 operator sdk upgrade.
+Has been fixed by https://github.com/argoproj-labs/argocd-operator/pull/428 and https://github.com/argoproj-labs/argocd-operator/pull/406

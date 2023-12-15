@@ -1,0 +1,33 @@
+Document steps to upgrade the operator from v0.0.14 to v0.0.15
+### Is your task related to a problem? Please describe.
+Many users have reported issues as they upgrade the operator from version 0.0.14 to 0.0.15. 
+#323 
+#322 
+
+### Describe the solution you'd like
+Document steps to upgrade to v0.0.15 with possible work arounds.
+
+### Describe alternatives you've considered
+NA
+
+### Additional context
+#323 
+#322 
+
+Any chance of getting any kind of documentation on the upgrades? We have had major issues during the upgrade from 0.0.14 to 0.0.15 and from 0.0.15 to 0.1.0
+Hi @arjunprasad2143 , sorry that you had a very bad experience with the upgrades. We are trying to make the product stable with each release. 
+
+We are currently on release v0.2.0 and planning to release v0.3.0 in next 2-3 weeks. I am afraid that documenting upgrade steps for `0.0.14 - 0.0.15` is out of our backlog and would not help a lot of users.
+
+I would suggest you to upgrade to the latest version `0.2.0` and we will try to help you in dealing with the breaking changes.
+@iam-veeramalla 
+This case was opened in may 2021 with the fact that some kind of documentation was required for upgrades, but then again we had 2 or more releases without proper documentation. 
+My point is about having some kind of documentation included in the release notes for any upgrades. 
+I fear upgrading my operator anymore coz of the issues that it would bring. If we have some documentation of the issues that we might encounter or atleast basic issues that might happen, we would be careful with it..
+
+Is this being delayed so bad that , you are asking us to move away from the product? Our management has already started questioning us about these issues and the product itself. I wish things were different
+I am sorry for the experience that you had. Please understand that you are running a unstable version(<v0.1.0) of product which is prone to breaking during upgrades.
+
+I understand that we should have documented the upgrade procedure, I will try to work on this -> upgrade from 0.0.14 to 0.2.0
+
+

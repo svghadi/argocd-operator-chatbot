@@ -1,0 +1,19 @@
+`mkdocs serve` doesn't work
+**Describe the bug**
+When trying to verify some docs changes I made, I tried to run `mkdocs serve` but it gave me the error: 
+```
+$ mkdocs build
+ERROR    -  Config value: 'theme'. Error: Unrecognised theme name: 'material'. The available installed themes are: mkdocs, readthedocs
+Aborted with 1 Configuration Errors!
+```
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. run `mkdocs serve`
+
+**Expected behavior**
+Should serve me my locally built docs in a webpage
+
+**Additional context**
+We should update our mkdocs theme to have it the same way argo-cd does it: https://github.com/argoproj/argo-cd/blob/master/mkdocs.yml 
+

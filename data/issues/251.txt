@@ -1,0 +1,6 @@
+Add support for Argo CD ApplicationSet controller installation
+Within the Argo CD project is an [ApplicationSet subproject](https://github.com/argoproj-labs/applicationset/), which adds automation, improved multi-cluster support, and improved cluster multi-tenant support to Argo CD.  
+
+The ApplicationSet controller is installed alongside Argo CD (within the same namespace), and creates one or more Argo CD `Application` resources based on the contents of a new `ApplicationSet` CRD. More information is available from the [ApplicationSet controller docs](https://argocd-applicationset.readthedocs.io/en/latest/).
+
+This issue is opened to allow users to install the ApplicationSet controller via the Argo CD operator (optionally configurable via a field within the existing `ArgoCD` CRD).

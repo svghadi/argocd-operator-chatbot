@@ -1,0 +1,10 @@
+Failures in calls to controllerutil.SetControllerReference when reconciling roles and rolebindings
+**Describe the bug**
+
+As part of the upgrade of the operator-sdk (PR #406), the linter reported errors in existing code where where the return value of calls to controllerutil.SetControllerReference were not being checked. After checks were added, the unit tests started failing which indicates an existing bug in the code.
+
+In order to unblock the sdk upgrade, the checks were changed to log the error and continue.  This issue is being raised to get a proper fix for the problem.
+
+In several places in `role.go` and `rolebinding.go`, the code tries to set an ArgoCD CR as the owner reference for objects which may potentially be either be cluster-scoped or in another namespace from the CR itself.  In both cases the attempt to set the owner reference will fail.
+
+The locations where the problem occurs have been marked with `// TODO handle this error properly` comments

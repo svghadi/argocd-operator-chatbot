@@ -1,0 +1,3 @@
+Need Documentaion for Export Process
+There needs to be documentation added that explains in detail how to perform backup/restore operations using the `ArgoCDExport` resource that includes examples for both supported storage locations (local persistent volume and off-site AWS S3 bucket).
+Merged #67 to master, will go out in the v0.0.9 release. 

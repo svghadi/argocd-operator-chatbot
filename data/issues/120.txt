@@ -1,0 +1,14 @@
+Pull secret setup
+Hello,
+
+Would it be possible to setup a custom pull secret in the ArgoCD CRD?
+
+I'm building a custom ArgoCD image as I need to add binaries for my plugins, and that custom ArgoCD image is available only in a corporate external image registry that requires a pull secret.
+/assign
++1 for this feature
+@saprette I'm realising that you want a custom _image pull_ secret, not a custom Git pull secret.
+
+I'm not quite sure how you'd like this to work, but I can see that if you provide the name of a Secret of type `kubernetes.io/.dockerconfigjson`, the operator ensures that the serviceaccount that's created has access to that secret?
+This would be a great enhancement, especially since there is already the possibility to use a custom image and ArgoCD encourages you to build your own image for specific solutions (f.e. with [custom helm plugins](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-plugins) or [it's unopinionated stance about handling secrets](https://argo-cd.readthedocs.io/en/stable/operator-manual/custom_tools/#byoi-build-your-own-image)).
+
+In general it would be nice if the operator gave more customization control over the instances it deploys. Like handling custom volume mounts / init containers and such. But that is probably a big thing to look at

@@ -1,0 +1,29 @@
+Argo CD Server fails to connect to Dex
+**Describe the bug**
+One of the ways to enable OIDC/OAuth with Argo CD is to use Dex. Argo CD Server connects with Dex to verify the authentication of a user. 
+
+However, this seems to be broken on the master. 
+
+![Screenshot 2022-11-25 at 5 42 04 PM](https://user-images.githubusercontent.com/43399466/203983519-05d3e547-be4d-4915-b0cd-3e754f1fe803.png)
+
+This can also be reproduced by logging into the Argo CD Server Pod
+
+![Screenshot 2022-11-25 at 4 52 34 PM](https://user-images.githubusercontent.com/43399466/203983264-87a8db8d-c853-46a6-9a31-26b5902f66f9.png)
+
+If we look at the above screenshot and the error message, it is evident that HTTPS connection is accepted. 
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Login into the Argo CD Server Pod.
+2. Try to connect to the Dex Service using HTTP.
+`curl <dex-service-name>.<namespace>.svc.cluster.local:5556`
+
+**Expected behavior**
+The above should not throw 400 (`client sent a HTTP request to an HTTPS server`)
+
+**Screenshots**
+Provided above.
+
+**Additional context**
+NA
+

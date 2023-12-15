@@ -1,0 +1,2 @@
+.spec.extraConfig Missing
+The documentation for `.spec.extraConfig` is missing from the document https://argocd-operator.readthedocs.io/en/latest/reference/argocd/

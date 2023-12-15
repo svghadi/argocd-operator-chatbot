@@ -1,0 +1,72 @@
+ConfigMap url
+Hi, I use argocd-operator with kubernetes and istio and custom Dex as shown below yaml
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  oidcConfig: >
+    name: my-dex
+    issuer: DEX_FQDN
+    clientID: id
+    clientSecret: secret
+    requestedScopes: ["openid", "profile", "email"]
+  server:
+    host: ARGOCD_FQDN
+    insecure: true
+  usersAnonymousEnabled: true
+```
+However, redirection url expected ARGO_FQDN, but ServiceName came out when I log-in to Custom Dex.
+
+I find return server.host only if Ingress is set or Route is set
+
+I am using Istio and do not want to be complicated by creating objects such as Ingress
+
+I think function (getArgoServerURI OR getDexOAuthRedirectURI) return ARGO_FQDN when server.host value is set
+
+I apologize for my poor English.
+
+Thanks
+Hello @lcc3108 if I'm understanding this issue correctly, you're configuring the `spec.server.host` and would like that to be the login URL provided to Dex, but because there's no ingress or route, it's not working?
+Yes. When I'm using Istio and I'm not using Ingress and Route, can't login dex.
+
+
+When 
+server.host set ARGOCD_FQDN,
+route and ingress not set
+
+argo-cm
+```
+data:
+  application.instanceLabelKey: ""
+  configManagementPlugins: ""
+  dex.config: ""
+  ga.anonymizeusers: "false"
+  ga.trackingid: ""
+  help.chatText: ""
+  help.chatUrl: ""
+  kustomize.buildOptions: ""
+  oidc.config: |
+    name: my-dex
+    issuer: https://dex.FQDN
+    clientID: argocd
+    clientSecret: argocd
+    requestedScopes: ["openid", "profile", "email", "groups"]
+  repository.credentials: ""
+  resource.exclusions: ""
+  resource.inclusions: ""
+  statusbadge.enabled: "false"
+  url: https://argocd-server # I want change to argocd FQDN
+  users.anonymous.enabled: "false"
+```
+
+![image](https://user-images.githubusercontent.com/38449269/103884533-14860f00-5122-11eb-9ded-54fc1970cc3f.png)
+We have exactly the same issue. We're using ArgoCD on OpenShift. The Routes are managed externally in Git and the certificates are injected by acme-operator (https://github.com/tnozicka/openshift-acme) dynamically (which even will not work in combination with ArgoCD operator).
+
+We are annotating the ServiceAccount `argocd-dex-server` with `serviceaccounts.openshift.io/oauth-redirecturi.argocd: https://argocd-int.foo.bar/api/dex/callback`. But this seems only to work when routes are activated with property `spec.server.route.enabled: true`
+
+Imo there should be the possibility to explicitly set the redirect-url in case when ingresses nor routes are managed by ArgoCD operator. Currently we have no workaround for this issue and can't use the operator.
+SOLVED PR #236  THANKS
+

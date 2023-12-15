@@ -1,0 +1,23 @@
+failures after upgrade to 0.1.0, 0.2.0, or 0.2.1
+**Describe the bug**
+We've been running operator version 0.0.15 with argo-cd 2.1.10.  I tried upgrading to 0.1.0, but started getting a lot of errors like so:
+```
+time="2022-06-02T17:12:55Z" level=info msg="Normalized app spec: {\"status\":{\"conditions\":[{\"lastTransitionTime\":\"2022-06-02T17:12:55Z\",\"message\":\"Namespace \\\"sys-oshift-test-develop\\\" for Rollout \\\"root-rollout\\\" is not managed\",\"type\":\"ComparisonError\"}]}}" application=sys-oshift-test-develop
+```
+The pod `argocd-application-controller-0` is run by service account argocd-argocd-application-controller.  That service account has cluster-admin privs.  So it's not a privilege issue.
+
+Meanwhile, the controller pod is logging:
+```
+2022-06-02T15:29:55.154Z	ERROR	controller-runtime.manager.controller.argocd	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ArgoCD", "name": "argocd", "namespace": "argocd", "error": "roles.rbac.authorization.k8s.io \"argocd-argocd-application-controller\" already exists"}
+```
+
+And it continues to log that even after I deleted the role `argocd-argocd-application-controller`.
+
+This is on openshift 4.7.
+
+I tried upgrading to operator 0.2.0 or 0.2.1.  Same problem.
+
+I tried upgrading the argocd to 2.1.15 by editing the argocd's spec.version.  But with the operator in this state, it ignored the version change.
+
+Any insights?
+

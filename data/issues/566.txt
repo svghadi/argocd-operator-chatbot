@@ -1,0 +1,73 @@
+argocd-operator configured with Dex not working for openshift login
+After installing argocd-operator using Operator Hub and configuring dex with openshift login as described here: https://argocd-operator.readthedocs.io/en/latest/usage/dex/#dex-openshift-oauth-connector . The authentication seems to fail with the following message:
+`Failed to authenticate: openshift: user "<openshift_userid>" is not in any of the required groups.`
+
+I did create the groups and added the openshift_userid into the group (on openshift) as described here: https://argocd-operator.readthedocs.io/en/latest/usage/dex/#role-mappings
+
+_Originally posted by @adarshaj in https://github.com/argoproj-labs/argocd-operator/issues/539#issuecomment-1042662142_
+@adarshaj Can you please provide your dex configuration ? I think you are using the `groups` property, Please remove that from your Argo CD CR or add the openshift user to the group that you mentioned under the `groups` property.
+
+Your Argo CD CR should look something like below, if you dont need the default group features(only user part of this default groups can login).
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: example-argocd
+  labels:
+    example: openshift-oauth
+spec:
+  dex:
+    openShiftOAuth: true
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, cluster-admins, role:admin
+    scopes: '[groups]'
+```
+
+Here's my ArgoCD CR:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: myapp-argocd
+  namespace: argocd
+  labels:
+    myapp: openshift-oauth
+spec:
+  ha:
+    enabled: true
+    redisProxyImage: haproxy
+    redisProxyVersion: "2.0.4"
+  dex:
+    openShiftOAuth: true
+    groups:
+     - default
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, cluster-admins, role:admin
+    scopes: '[groups]'
+  grafana:
+    enabled: true
+    route:
+      enabled: true
+  prometheus:
+    enabled: true
+    route:
+      enabled: true
+  server:
+    route:
+      enabled: true
+```
+
+On Openshift, I've executed these commands:
+```bash
+oc adm groups new cluster-admins
+oc adm groups add-users cluster-admins openshift_userid
+oc adm policy add-cluster-role-to-group cluster-admin cluster-admins
+```
+You were right! Removing the groups key of dex config worked! Shall I send PR to update the codeblock on https://argocd-operator.readthedocs.io/en/latest/usage/dex/#dex-openshift-oauth-connector page?
+Sure, Please :)
+I revisited the documentation and the usage of `groups` is clearly mentioned. @adarshaj If you still find issues with documentation. Please feel free to open a new issue or PR.

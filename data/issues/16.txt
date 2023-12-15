@@ -1,0 +1,7 @@
+Prepare Operator so that is can be installed in Disconnected Environment
+This documents describes partially that Images used by the Operator should be made configurable so that the Operator can be installed in a Disconnected Environments https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/contributors/design-proposals/related-images.md
+
+all images used by the operator should be made configurable via env variables and be referenced via SHAs
+I am planning to start work on this soon, as the operator should support air-gapped installs where an internet connection is unavailable. The images used by the operator should use the SHA tags instead of standard version tags.
+I'm evaluating Argo for air gapped envs, so this feature would be a game changer
+Released as part of v0.0.5.

@@ -1,0 +1,20 @@
+missing gpg configmap after update argocdoperator 0.0.13 to 0.0.14
+Hi. 
+  i found same bug reported [here](https://github.com/argoproj/argo-helm/issues/457) after update operator from 0.0.13 to 0.0.14 (argocd version from 1.6.2 to 1.7.7).
+
+I Resolved issue apply a suggested workaround, create missing cm in argocd namespace 
+
+```yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: argocd-gpg-keys-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-gpg-keys-cm
+    app.kubernetes.io/part-of: argocd
+```
+bye
+Alessandro
+
+This is fixed by #193, released with v0.0.15

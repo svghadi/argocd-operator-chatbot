@@ -1,0 +1,13 @@
+Unable to get route to work in Openshift 4.6
+I have installed the ArgoCD Operator 0.0.14 on OCP 4.6.6 and then an ArgoCD instance. If I choose "Insecure = False" and "Route = True" it creates a passthrough route which enables access to ArgoCD but you need to accept the insecure warning.
+If you select "Insecure = True" instead (and "Route = True")  it creates an edge route but you cannot access ArgoCD and will get a ERR_TOO_MANY_REDIRECTS.
+I have tried various combinations with "Ingress Enabled = True" or not, manually created routes but not yet found a working combination which enables access without having to accept an insecure connection. What am I  missing?
+It seems you need to pick the options you want when you create ArgoCD, you cannot change, at least some of them, once created. So when I choose "Insecure = True" and "Route = True" at the time it is installed it works. If I choose just "Route = True" and realize later that I need "Insecure = True" it will not work, this "--insecure" flag will not be added to the argocd-server command (but the route will change to edge).
+Hello @tormig-softronic apologies, this does indeed look like a bug, I've just opened PR #220 to address this bug and hopefully we'll get a release out shortly.
+
+Thanks for your patience.
+> Hello @tormig-softronic apologies, this does indeed look like a bug, I've just opened PR #220 to address this bug and hopefully we'll get a release out shortly.
+> 
+> Thanks for your patience.
+
+This feature is released and available in the latest versions. Please upgrade.

@@ -1,0 +1,31 @@
+argocd-dex-server pod flapping between CrashLoopBackOff and Running state
+**Describe the bug**
+Usind ArgoCd operator v0.5.0 by ArgoCD Community. The  argocd-dex-server pod has multiple restarts and flaps between CrashLoopBackOff state and Running state
+![ArgoCDError](https://user-images.githubusercontent.com/43112853/209163131-a85bd20a-cb0a-4c70-a6ac-93f717541eb7.PNG)
+ 
+
+**Expected behavior**
+The argocd-dex-server pod should be in a Running state. 
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Additional context**
+There are no errors in the pod log.
+
+Hi @susmitaganguli , You are using a different image `quay.io/redhat-cop/dex`. Why ?
+
+The problem should be with that image.
+Hi @iam-veeramalla,
+The operator comes with this image. 
+What is the correct image to use for the argocd-dex-server?
+
+Thanks,
+Susmita
+@susmitaganguli No, this is the default Image.
+https://github.com/argoproj-labs/argocd-operator/blob/821311a9ed597d7e9aaedcd6790e5baa61379db9/common/defaults.go#L98
+
+Please check if you are overriding the default Image using the CR
+@iam-veeramalla - Thank you ! Problem has been fixed. 
+Unfortunately, I could not authenticate with ghcr.io. Instead pulled the same image from docker.io. 
+

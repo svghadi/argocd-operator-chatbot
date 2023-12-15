@@ -1,0 +1,13 @@
+Unify SSO configuration in Argo CD CR
+**Is your feature request related to a problem? Please describe.**
+Currently, argocd-operator supports both dex and keycloak SSO providers, but the process to configure both of them differs and there's no intuitive, standard way to configure and switch between them. 
+
+**Describe the solution you'd like**
+we should move `dex` configuration from `spec.dex` to `spec.sso` to align it with keycloak. This would allow us to have a more consistent user experience installing the different sso providers supported today and also make it extensible to other potential providers in the future
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
